@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<diary>
+ <entries>
+  <entry year="2002" month="5" day="14">
+   <author></author>
+   <subject>Another Day.</subject>
+   <text>It's
+another
+day.
+</text>
+  </entry>
+  <entry year="2002" month="5" day="15">
+   <author></author>
+   <subject>Still another day.</subject>
+   <text>It's
+still
+another
+day.
+</text>
+  </entry>
+  <entry year="2003" month="5" day="14">
+   <author></author>
+   <subject>Foo.</subject>
+   <text>Bar.
+Ley.
+And.
+Ho.
+Ney.</text>
+  </entry>
+  <entry year="2004" month="2" day="14">
+   <author></author>
+   <subject>Love is good.</subject>
+   <text>This is a grand day.
+A grand day indeed.  Don't you think so?
+I do.
+</text>
+  </entry>
+  <entry year="2005" month="1" day="13">
+   <author>alpilato</author>
+   <subject>Foo</subject>
+   <text>Foo.</text>
+  </entry>
+  <entry year="2005" month="1" day="19">
+   <author>cmpilato</author>
+   <subject>Old and busted.</subject>
+   <text>New hotness.  Hot.</text>
+  </entry>
+  <entry year="2005" month="1" day="30">
+   <author>cmpilato</author>
+   <subject>Boo</subject>
+   <text>Boo
+afsd
+afds
+afds
+afds
+afds
+afd
+afds
+afd
+afd
+afd
+afd
+afd
+afd
+afd
+afd
+afd
+afd
+asdf</text>
+  </entry>
+ </entries>
+</diary>
