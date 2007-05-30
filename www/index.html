@@ -1,0 +1,79 @@
+<html>
+<head>
+<title>ThotKeeper - a personal daily journal application</title>
+<style>
+body {
+  background: white;
+  margin: 1em 2em;
+}
+a {
+  border-bottom: 1px dotted black;
+  text-decoration: none;
+  color: blue;
+}
+a:hover {
+  background: orange;
+}
+
+</style>
+</head>
+<body>
+
+<h1>ThotKeeper &mdash; a personal daily journal application</h1>
+
+<p>ThotKeeper is a simple <a href="http://www.wxpython.org/">wxPython</a> daily journal application written
+   by <a href="http://www.cmichaelpilato.com/">C. Michael Pilato</a> for his wife, Amy.  Amy was recording journal
+   entries on paper or in a growing Microsoft Word document.  Each of
+   these methods has its pros and cons, but the cons frightened Mike.
+   Paper is charming and personal, but gets lost or damaged awfully
+   easily.  Word documents are digital and easy to backup, but bind
+   the user to the availability of software which parses that
+   proprietary format.  Mike figured an XML storage format would work
+   just fine, and with enough GUI goodness to navigate the hunks of
+   information in the file, Amy might actually be encouraged to write
+   more.  So began ThotKeeper.</p>
+
+<p>Being written in <a href="http://www.python.org/">Python</a> means ThotKeeper runs on many different
+   platforms.  And the wxPython toolkit uses native widgets on the
+   various platforms.  So when running on a Windows machine, ThotKeeper
+   looks like a Windows application; when running under Linux, it
+   looks like a Linux/GTK application.</p>
+
+<h2>Screenshots</h2>
+
+<ul>
+<li>ThotKeeper running under <a href="thotkeeper-win32.jpg">Windows
+    2000</a></li>
+<li>ThotKeeper under <a href="thotkeeper-linux.jpg">Ubuntu Linux
+    7.04</a> (feisty fawn)</li>
+</ul>
+
+<h2>What You Need</h2>
+
+<p>To run ThotKeeper, you need a few bits of software.  Unfortunately,
+   this list may be incomplete, and we have no idea what versions of
+   anything are required.  Sorry 'bout that.  Anyway, here's the
+   list:</p>
+
+<ul>
+<li><a href="http://www.python.org/">Python</a> &mdash; the
+    Python programming language </li>
+<li><a href="http://www.wxpython.org/">wxPython</a> - Python
+    interfaces to the <a
+    href="http://www.wxwidgets.org/">wxWidgets</a> cross-platform GUI
+    library</li>
+</ul>
+
+<h2>How To Get It</h2>
+
+<p>ThotKeeper's source code lives in a publicly readable <a
+   href="http://subversion.tigris.org/">Subversion</a> repository.
+   You can get the latest version of ThotKeeper by checking out a
+   working copy of that repository:</p>
+
+<blockquote><pre>
+$ svn checkout <a href="http://svn.red-bean.com/thotkeeper/trunk/">http://svn.red-bean.com/thotkeeper/trunk/</a> thotkeeper
+</pre></blockquote>
+
+</body>
+</html>
