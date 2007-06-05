@@ -21,7 +21,7 @@ import tk_data
 from wxPython.wx import *
 from wxPython.calendar import *
 from wxPython.xrc import *
-
+from wx.html import HtmlEasyPrinting
 
 # Placeholder for the configuration class.
 conf = None
@@ -234,6 +234,37 @@ class ThotKeeperEventCal(wxCalendarCtrl):
             self.SetDayAttr(day, False)
         wxEndBusyCursor()
 
+
+########################################################################
+###
+###  HTMLEASYPRINTER SUBCLASS
+###
+
+class ThotKeeperEntryPrinter(HtmlEasyPrinting):
+    def __init__(self):
+        HtmlEasyPrinting.__init__(self)
+
+    def Print(self, filename, title, author, date, text):
+        self.PrintText(self._HTMLize(title, author, date, text), filename)
+
+    def PreviewText(self, filename, title, author, date, text):
+        HtmlEasyPrinting.PreviewText(self, self._HTMLize(title, author,
+                                                         date, text))
+
+    def _HTMLize(self, title, author, date, text):
+        return """<html>
+<body>
+<h2>%s</h2>
+<p><b><i>by %s, on %s</i></b></p>
+%s
+</body>
+</html>
+""" % (title or "(no title)",
+       author or "(no author)",
+       date or "(no date)",
+       ''.join(map(lambda x: '<p align="justify">' + x + '</p>\n',
+                   text.split('\n'))))
+
     
 ########################################################################
 ###
@@ -273,6 +304,8 @@ class ThotKeeper(wxApp):
         self.file_save_id = self.resources.GetXRCID('TKMenuFileSave')
         self.file_saveas_id = self.resources.GetXRCID('TKMenuFileSaveAs')
         self.file_revert_id = self.resources.GetXRCID('TKMenuFileRevert')
+        self.file_preview_id = self.resources.GetXRCID('TKMenuFilePreview')
+        self.file_print_id = self.resources.GetXRCID('TKMenuFilePrint')
         self.file_quit_id = self.resources.GetXRCID('TKMenuFileQuit')
         self.help_about_id = self.resources.GetXRCID('TKMenuHelpAbout')
         self.open_tool_id = self.resources.GetXRCID('TKToolOpen')
@@ -288,6 +321,9 @@ class ThotKeeper(wxApp):
         self.parser = None
         self.entries = None
 
+        # Setup a printer object.
+        self.printer = ThotKeeperEntryPrinter()
+        
         # Note that our input file is not modified.
         self.is_modified = false
         
@@ -344,6 +380,8 @@ class ThotKeeper(wxApp):
         EVT_MENU(self, self.file_save_id, self._FileSaveMenu)
         EVT_MENU(self, self.file_saveas_id, self._FileSaveAsMenu)
         EVT_MENU(self, self.file_revert_id, self._FileRevertMenu)
+        EVT_MENU(self, self.file_preview_id, self._FilePreviewMenu)
+        EVT_MENU(self, self.file_print_id, self._FilePrintMenu)
         EVT_MENU(self, self.file_quit_id, self._FileQuitMenu)
         EVT_MENU(self, self.help_about_id, self._HelpAboutMenu)
         EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
@@ -477,22 +515,28 @@ class ThotKeeper(wxApp):
         label = date.Format("%A, %B %d, %Y")
         self.frame.FindWindowById(self.date_id).SetLabel(label)
         text = subject = author = ''
-        try:
-            entry = self.entries.get_entry(year, month, day)
+        has_entry = 0
+        entry = self.entries.get_entry(year, month, day)
+        if entry is not None:
             text = entry.get_text()
             author = entry.get_author()
             subject = entry.get_subject()
-        except:
-            pass
         self.frame.FindWindowById(self.author_id).SetValue(author)
         self.frame.FindWindowById(self.subject_id).SetValue(subject)
         self.frame.FindWindowById(self.text_id).SetValue(text)
+        self._TogglePrintMenus(entry and true or false)
         self._SetModified(false)
+        
+    def _TogglePrintMenus(self, enable=true):
+        self.menubar.FindItemById(self.file_print_id).Enable(enable)
+        self.menubar.FindItemById(self.file_preview_id).Enable(enable)
         
     def _SetModified(self, enable=true):
         self.is_modified = enable
         self.menubar.FindItemById(self.file_save_id).Enable(enable)
         self.menubar.FindItemById(self.file_revert_id).Enable(enable)
+        if self.is_modified:
+            self._TogglePrintMenus(true)
         self._SetTitle()
 
     def _FrameClosure(self, event):
@@ -550,13 +594,17 @@ class ThotKeeper(wxApp):
     def _GetEntryFormDate(self):
         pieces = self.date.split('-')
         return map(int, pieces)
-    
+
+    def _GetEntryFormBits(self):
+        year, month, day = self._GetEntryFormDate()
+        author = self.frame.FindWindowById(self.author_id).GetValue()
+        subject = self.frame.FindWindowById(self.subject_id).GetValue()
+        text = self.frame.FindWindowById(self.text_id).GetValue()
+        return year, month, day, author, subject, text
+        
     def _SaveEntriesToPath(self, path=None):
         if self.is_modified:
-            year, month, day = self._GetEntryFormDate()
-            author = self.frame.FindWindowById(self.author_id).GetValue()
-            subject = self.frame.FindWindowById(self.subject_id).GetValue()
-            text = self.frame.FindWindowById(self.text_id).GetValue()
+            year, month, day, author, subject, text = self._GetEntryFormBits()
             self.entries.set_entry(year, month, day, author, subject, text)
         if path is None:
             path = conf.data_file
@@ -670,6 +718,30 @@ class ThotKeeper(wxApp):
         self._SetModified(false)
         self._SetEntryFormDate(int(year), int(month), int(day))
 
+    def _GetCurrentEntryPieces(self):
+        year, month, day, author, subject, text = self._GetEntryFormBits()
+        date = wxDateTime()
+        date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
+                         '%Y-%m-%d %H:%M:%S', date)
+        datestr = date.Format("%A, %B %d, %Y")
+        return datestr, subject, author, text
+        
+    def _FilePreviewMenu(self, event):
+        try:
+            datestr, subject, author, text = self._GetCurrentEntryPieces()
+            self.printer.PreviewText(self.datafile, subject, author,
+                                     datestr, text)
+        except:
+            raise
+    
+    def _FilePrintMenu(self, event):
+        try:
+            datestr, subject, author, text = self._GetCurrentEntryPieces()
+            self.printer.Print(self.datafile, subject, author,
+                               datestr, text)
+        except:
+            pass
+
     def _FileOptionsMenu(self, event):
         def _ChooseFontButton(event2):
             text = self.frame.FindWindowById(self.text_id)
@@ -701,6 +773,7 @@ class ThotKeeper(wxApp):
 
     def OnExit(self):
         FlushConf()
+
 
 def main():
     file = None

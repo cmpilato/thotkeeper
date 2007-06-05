@@ -28,6 +28,16 @@
         <help>Save data.</help>
       </object>
       <object class="separator"/>
+      <object class="wxMenuItem" name="TKMenuFilePreview">
+        <label>Print Preview</label>
+        <help>Preview the printed output for the current entry.</help>
+      </object>
+      <object class="wxMenuItem" name="TKMenuFilePrint">
+        <label>Print...</label>
+        <accel>CTRL+P</accel>
+        <help>Print the current entry.</help>
+      </object>
+      <object class="separator"/>
       <object class="wxMenuItem" name="TKMenuFileOptions">
         <label>Options...</label>
         <help>Configure ThotKeeper.</help>
