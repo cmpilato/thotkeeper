@@ -255,7 +255,7 @@ class ThotKeeperEntryPrinter(HtmlEasyPrinting):
         return """<html>
 <body>
 <h2>%s</h2>
-<p><b><i>by %s, on %s</i></b></p>
+<p><i>by <b>%s</b>, on <b>%s</b></i></p>
 %s
 </body>
 </html>
