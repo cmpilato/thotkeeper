@@ -4,8 +4,7 @@ body {
   font-family: serif;
 }
 a {
-  border-bottom: 1px dotted black;
-  text-decoration: none;
+  text-decoration: underline;
   color: #222;
 }
 a:hover {
