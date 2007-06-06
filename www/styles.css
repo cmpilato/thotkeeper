@@ -1,12 +1,19 @@
 body {
-  background: white;
+  background: #edb690;
   margin: 1em 2em;
+  font-family: serif;
 }
 a {
   border-bottom: 1px dotted black;
   text-decoration: none;
-  color: blue;
+  color: #222;
 }
 a:hover {
-  background: orange;
+  background: #f5d0b0;
+}
+h1 {
+  font-size: 1.3em;
+}
+h2 { 
+  font-size: 1.1em;
 }
