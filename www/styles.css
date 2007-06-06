@@ -1,0 +1,12 @@
+body {
+  background: white;
+  margin: 1em 2em;
+}
+a {
+  border-bottom: 1px dotted black;
+  text-decoration: none;
+  color: blue;
+}
+a:hover {
+  background: orange;
+}
