@@ -444,9 +444,17 @@ class ThotKeeper(wxApp):
             elif create:
                 if os.path.exists(datafile):
                     os.remove(datafile)
-                self.parser.unparse_data(datafile, None)
+                self._SaveData(datafile, None)
             self.frame.SetStatusText('Loading %s...' % datafile)
-            self.entries = self.parser.parse_data(datafile)
+            try:
+                self.entries = self.parser.parse_data(datafile)
+            except tk_data.TKDataVersionException, e:
+                    wxMessageBox("Datafile format used by '%s' is not "
+                                 "supported ." % (datafile),
+                                 "Datafile Version Error",
+                                 wxOK | wxICON_ERROR,
+                                 self.frame)
+                    return
             timestruct = time.localtime()
             years = self.entries.get_years()
             years.sort()
@@ -489,6 +497,9 @@ class ThotKeeper(wxApp):
             self._SetEntryFormDate(timestruct[0], timestruct[1], timestruct[2])
             self.cal.HighlightEvents(self.entries)
 
+    def _SaveData(self, path, entries):
+        self.parser.unparse_data(path, entries)
+        
     def _SetTitle(self):
         title = "ThotKeeper%s%s" \
                 % (self.datafile and " - " + self.datafile or "",
@@ -608,7 +619,7 @@ class ThotKeeper(wxApp):
             self.entries.set_entry(year, month, day, author, subject, text)
         if path is None:
             path = conf.data_file
-        self.parser.unparse_data(path, self.entries)
+        self._SaveData(path, self.entries)
         if path != conf.data_file:
             self._SetDataFile(path, false)
         self._SetModified(false)
@@ -632,7 +643,7 @@ class ThotKeeper(wxApp):
             "%s-%s-%s?" % (data[0], data[1], data[2]), "Confirm Deletion",
             wxOK | wxCANCEL | wxICON_QUESTION, self.frame):
             self.entries.remove_entry(data[0], data[1], data[2])
-            self.parser.unparse_data(conf.data_file, self.entries)
+            self._SaveData(conf.data_file, self.entries)
 
     def _TreeExpandMenu(self, event):
         def _ExpandCallback(id):
