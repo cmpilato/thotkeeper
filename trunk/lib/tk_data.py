@@ -20,6 +20,8 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 import xmllib
 import xml.sax.saxutils
 
+TK_DATA_VERSION = 0
+
 class _item:
     # Taken from ViewCVS. :-)
     def __init__(self, **kw):
@@ -101,6 +103,9 @@ class TKEntries:
         except:
             return None
 
+class TKDataVersionException(Exception):
+    pass
+
 class TKDataParser(xmllib.XMLParser):
     """XML Parser class for reading and writing diary data files."""
 
@@ -116,7 +121,9 @@ class TKDataParser(xmllib.XMLParser):
     def unparse_data(self, datafile, entries):
         """Unparse data into an XML file."""
         fp = open(datafile, 'w')
-        fp.write('<?xml version="1.0"?>\n<diary>\n <entries>\n')
+        fp.write('<?xml version="1.0"?>\n'
+                 '<diary version="%d">\n'
+                 ' <entries>\n' % (TK_DATA_VERSION))
         if not entries:
             entries = TKEntries()
         years = entries.get_years()
@@ -142,6 +149,14 @@ class TKDataParser(xmllib.XMLParser):
         
     ### XMLParser callback functions
         
+    def start_diary(self, attrs):
+        try:
+            version = int(attrs['version'])
+        except:
+            version = 0
+        if version > TK_DATA_VERSION:
+            raise TKDataVersionException("Data version is newer than program "
+                                         "version; please upgrade.")
     def start_entry(self, attrs):
         if self.cur_entry is not None:
             raise Exception("Invalid XML file.")
