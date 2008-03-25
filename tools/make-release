@@ -53,7 +53,7 @@ def make_archive(export_source_url, export_target, eol_style, archive_cmds):
             os.system(cmd)
     finally:
         os.chdir(cur_dir)
-    shutil.rmtree(export_target)
+        shutil.rmtree(export_target)
 
     
 def main():
