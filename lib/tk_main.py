@@ -21,7 +21,7 @@ from wxPython.calendar import *
 from wxPython.xrc import *
 from wx.html import HtmlEasyPrinting
 
-__version__ = "0.1-dev"
+__version__ = "0.2-dev"
 
 # Placeholder for the configuration class.
 conf = None
