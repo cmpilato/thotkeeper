@@ -8,9 +8,7 @@
 # the LICENSE file which can be found at the top level of the ThotKeeper
 # distribution.
 #
-# Contact information:
-#    C. Michael Pilato <cmpilato@red-bean.com>
-#    http://www.cmichaelpilato.com/
+# Website: http://www.thotkeeper.org/
 
 import sys
 import os
