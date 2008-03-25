@@ -77,7 +77,7 @@
                   <object class="unknown" name="TKCalendar"/>
                   <flag>wxALL</flag>
                   <border>5</border>
-                  <minsize>200,150</minsize>
+                  <minsize>220,150</minsize>
                 </object>
                 <object class="sizeritem">
                   <object class="wxButton" name="TKToday">
@@ -103,7 +103,7 @@
                 <object class="sizeritem">
                   <object class="wxFlexGridSizer">
                     <cols>2</cols>
-                    <rows>2</rows>
+                    <rows>3</rows>
                     <object class="sizeritem">
                       <object class="wxStaticText">
                         <label>Date:</label>
@@ -116,6 +116,20 @@
                         <label></label>
                       </object>
                       <flag>wxALL|wxEXPAND</flag>
+                      <border>5</border>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxButton" name="TKPrev">
+                        <label>&lt;&lt;</label>
+                      </object>
+                      <flag>wxALL</flag>
+                      <border>5</border>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxButton" name="TKNext">
+                        <label>&gt;&gt;</label>
+                      </object>
+                      <flag>wxALL</flag>
                       <border>5</border>
                     </object>
                     <object class="sizeritem">

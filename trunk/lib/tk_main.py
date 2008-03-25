@@ -119,17 +119,17 @@ class ThotKeeperEventTree(wxTreeCtrl):
                 return child_id
         return None
     
-    def GetDateStack(self, year, month, day):
+    def GetDateStack(self, year, month, day, entry_id):
         stack = []
         id = self.GetRootItem()
         stack.append(id) # 0
-        id = self.FindChild(id, [year, None, None])
+        id = self.FindChild(id, [year, None, None, None])
         stack.append(id) # 1
         if id:
-            id = self.FindChild(id, [year, month, None])
+            id = self.FindChild(id, [year, month, None, None])
             stack.append(id) # 2
             if id:
-                id = self.FindChild(id, [year, month, day])
+                id = self.FindChild(id, [year, month, day, entry_id])
                 stack.append(id) # 3
             else:
                 stack.append(None) # 3
@@ -149,10 +149,10 @@ class ThotKeeperEventTree(wxTreeCtrl):
                 break
             id = parent_id
 
-    def EntryChangedListener(self, entry, year, month, day):
+    def EntryChangedListener(self, entry, year, month, day, id):
         """Callback for TKEntries.set_entry()."""
         wxBeginBusyCursor()
-        stack = self.GetDateStack(year, month, day)
+        stack = self.GetDateStack(year, month, day, id)
         if not entry:
             if stack[3]:
                 self.Prune(stack[3])
@@ -162,19 +162,19 @@ class ThotKeeperEventTree(wxTreeCtrl):
                 stack[1] = self.AppendItem(stack[0],
                                            str(year),
                                            -1, -1,
-                                           wxTreeItemData([year, None, None]))
+                                           wxTreeItemData([year, None, None, None]))
                 self.SortChildren(stack[0])
             if not stack[2]:
                 stack[2] = self.AppendItem(stack[1],
                                            month_names[month - 1],
                                            -1, -1,
-                                           wxTreeItemData([year, month, None]))
+                                           wxTreeItemData([year, month, None, None]))
                 self.SortChildren(stack[1])
             if not stack[3]:
                 stack[3] = self.AppendItem(stack[2],
                                            "%02d - %s" % (int(day), subject),
                                            -1, -1,
-                                           wxTreeItemData([year, month, day]))
+                                           wxTreeItemData([year, month, day, id]))
                 self.SortChildren(stack[2])
             else:
                 self.SetItemText(stack[3], "%02d - %s" % (int(day), subject))
@@ -221,7 +221,7 @@ class ThotKeeperEventCal(wxCalendarCtrl):
         self.Refresh(true)
         wxEndBusyCursor()
         
-    def EntryChangedListener(self, entry, year, month, day):
+    def EntryChangedListener(self, entry, year, month, day, id):
         date = self.GetDate()
         if date.GetYear() != year:
             return
@@ -295,6 +295,8 @@ class ThotKeeper(wxApp):
         self.panel_id = self.resources.GetXRCID('TKPanel')
         self.datetree_id = self.resources.GetXRCID('TKDateTree')
         self.today_id = self.resources.GetXRCID('TKToday')
+        self.next_id = self.resources.GetXRCID('TKNext')
+        self.prev_id = self.resources.GetXRCID('TKPrev')
         self.date_id = self.resources.GetXRCID('TKEntryDate')
         self.author_id = self.resources.GetXRCID('TKEntryAuthor')
         self.subject_id = self.resources.GetXRCID('TKEntrySubject')
@@ -359,7 +361,7 @@ class ThotKeeper(wxApp):
         # Populate the tree widget.
         self.tree = self.frame.FindWindowById(self.datetree_id)
         self.tree_root = self.tree.AddRoot('ThotKeeper Entries', -1, -1,
-                                           wxTreeItemData([None, None, None]))
+                                           wxTreeItemData([None, None, None, None]))
         
         # Set the default font size for the diary entry text widget.
         font = wxFont(conf.font_size, wxDEFAULT, wxNORMAL, wxNORMAL,
@@ -369,6 +371,8 @@ class ThotKeeper(wxApp):
         # Event handlers.  They are the key to the world.
         EVT_CLOSE(self.frame, self._FrameClosure)
         EVT_BUTTON(self, self.today_id, self._TodayButtonActivated)
+        EVT_BUTTON(self, self.next_id, self._NextButtonActivated)
+        EVT_BUTTON(self, self.prev_id, self._PrevButtonActivated)
         EVT_TEXT(self, self.text_id, self._EntryDataChanged)
         EVT_TEXT(self, self.author_id, self._EntryDataChanged)
         EVT_TEXT(self, self.subject_id, self._EntryDataChanged)
@@ -462,24 +466,27 @@ class ThotKeeper(wxApp):
             for year in years:
                 year_item = self.tree.AppendItem(
                     self.tree_root, str(year), -1, -1,
-                    wxTreeItemData([year, None, None]))
+                    wxTreeItemData([year, None, None, None]))
                 months = self.entries.get_months(year)
                 months.sort()
                 months.reverse()
                 for month in months:
                     month_item = self.tree.AppendItem(
                         year_item, month_names[month - 1],
-                        -1, -1, wxTreeItemData([year, month, None]))
+                        -1, -1, wxTreeItemData([year, month, None, None]))
                     days = self.entries.get_days(year, month)
                     days.sort()
                     days.reverse()
                     for day in days:
-                        subject = self.entries.get_entry(
-                            year, month, day).get_subject()
-                        label = "%02d - %s" % (int(day), subject)
-                        day_item = self.tree.AppendItem(
-                            month_item, label, -1, -1,
-                            wxTreeItemData([year, month, day]))
+                        ids = self.entries.get_ids(year, month, day)
+                        ids.sort()
+                        for id in ids:
+                            subject = self.entries.get_entry(
+                                year, month, day, id).get_subject()
+                            label = "%02d - %s" % (int(day), subject)
+                            day_item = self.tree.AppendItem(
+                                month_item, label, -1, -1,
+                                wxTreeItemData([year, month, day, id]))
                     if year == timestruct[0] and month == timestruct[1]:
                         self.tree.Expand(month_item)
                     else:
@@ -516,18 +523,31 @@ class ThotKeeper(wxApp):
             return true
         return false
     
-    def _SetEntryFormDate(self, year, month, day):
+    def _SetEntryFormDate(self, year, month, day, id=None):
         """Set the data on the entry form."""
         if self._RefuseUnsavedModifications():
             return false
+        firstid = self.entries.get_first_id(year, month, day)
+        if id==None:
+            id = firstid
         self.date = "%d-%d-%d" % (year, month, day)
+        self.entry_id = id
         date = wxDateTime()
         date.ParseFormat(self.date + " 11:59:59", '%Y-%m-%d %H:%M:%S', date)
         label = date.Format("%A, %B %d, %Y")
+        if id>firstid:
+            label += " (" + repr(self.entries.get_id_pos(year, month, day, id)+1) + ")"
+            self.frame.FindWindowById(self.prev_id).Enable(true)
+        else:
+            self.frame.FindWindowById(self.prev_id).Enable(false)
+        if id>self.entries.get_last_id(year, month, day):
+            self.frame.FindWindowById(self.next_id).Enable(false)
+        else:
+            self.frame.FindWindowById(self.next_id).Enable(true)
         self.frame.FindWindowById(self.date_id).SetLabel(label)
         text = subject = author = ''
         has_entry = 0
-        entry = self.entries.get_entry(year, month, day)
+        entry = self.entries.get_entry(year, month, day, id)
         if entry is not None:
             text = entry.get_text()
             author = entry.get_author()
@@ -590,6 +610,16 @@ class ThotKeeper(wxApp):
     def _TodayButtonActivated(self, event):
         timestruct = time.localtime()
         self._SetEntryFormDate(timestruct[0], timestruct[1], timestruct[2])
+        
+    def _NextButtonActivated(self, event):
+        year, month, day = self._GetEntryFormDate()
+        newid = self.entries.get_next_id(year, month, day, self.entry_id)
+        self._SetEntryFormDate(year, month, day, newid)
+      
+    def _PrevButtonActivated(self, event):
+        year, month, day = self._GetEntryFormDate()
+        newid = self.entries.get_prev_id(year, month, day, self.entry_id)
+        self._SetEntryFormDate(year, month, day, newid)
     
     def _EntryDataChanged(self, event):
         self._SetModified(true)
@@ -600,7 +630,7 @@ class ThotKeeper(wxApp):
         if not data[2]:
             event.Skip()
             return
-        self._SetEntryFormDate(data[0], data[1], data[2])
+        self._SetEntryFormDate(data[0], data[1], data[2], data[3])
 
     def _GetEntryFormDate(self):
         pieces = self.date.split('-')
@@ -608,21 +638,26 @@ class ThotKeeper(wxApp):
 
     def _GetEntryFormBits(self):
         year, month, day = self._GetEntryFormDate()
+        id = self.entry_id
         author = self.frame.FindWindowById(self.author_id).GetValue()
         subject = self.frame.FindWindowById(self.subject_id).GetValue()
         text = self.frame.FindWindowById(self.text_id).GetValue()
-        return year, month, day, author, subject, text
+        return year, month, day, author, subject, text, id
         
     def _SaveEntriesToPath(self, path=None):
         if self.is_modified:
-            year, month, day, author, subject, text = self._GetEntryFormBits()
-            self.entries.set_entry(year, month, day, author, subject, text)
+            year, month, day, author, subject, text, id = self._GetEntryFormBits()
+            self.entries.set_entry(year, month, day, author, subject, text, id)
         if path is None:
             path = conf.data_file
         self._SaveData(path, self.entries)
         if path != conf.data_file:
-            self._SetDataFile(path, false)
+            self._SetDataFile(path, false) 
         self._SetModified(false)
+        if id>self.entries.get_last_id(year, month, day):
+            self.frame.FindWindowById(self.next_id).Enable(false)
+        else:
+            self.frame.FindWindowById(self.next_id).Enable(true)
 
     def _TreeEditMenu(self, event):
         item = self.tree.GetSelection()
@@ -630,19 +665,20 @@ class ThotKeeper(wxApp):
         if not data[2]:
             event.Skip()
             return
-        self._SetEntryFormDate(data[0], data[1], data[2])
+        self._SetEntryFormDate(data[0], data[1], data[2], data[3])
 
     def _TreeDeleteMenu(self, event):
         item = self.tree.GetSelection()
         data = self.tree.GetItemData(item).GetData()
+        position = self.entries.get_id_pos(data[0], data[1], data[2], data[3])+1
         if not data[2]:
             wxMessageBox("This operation is not currently supported.",
                          "Confirm Deletion", wxOK | wxICON_ERROR, self.frame)
         elif wxOK == wxMessageBox(
             "Are you sure you want to delete the entry for " +
-            "%s-%s-%s?" % (data[0], data[1], data[2]), "Confirm Deletion",
+            "%s-%s-%s (%s)?" % (data[0], data[1], data[2], position), "Confirm Deletion",
             wxOK | wxCANCEL | wxICON_QUESTION, self.frame):
-            self.entries.remove_entry(data[0], data[1], data[2])
+            self.entries.remove_entry(data[0], data[1], data[2], data[3])
             self._SaveData(conf.data_file, self.entries)
 
     def _TreeExpandMenu(self, event):
@@ -726,11 +762,12 @@ class ThotKeeper(wxApp):
 
     def _FileRevertMenu(self, event):
         year, month, day = self._GetEntryFormDate()
+        id = self.entry_id
         self._SetModified(false)
-        self._SetEntryFormDate(int(year), int(month), int(day))
+        self._SetEntryFormDate(int(year), int(month), int(day), int(id))
 
     def _GetCurrentEntryPieces(self):
-        year, month, day, author, subject, text = self._GetEntryFormBits()
+        year, month, day, author, subject, text, id = self._GetEntryFormBits()
         date = wxDateTime()
         date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
                          '%Y-%m-%d %H:%M:%S', date)

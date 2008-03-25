@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 import xmllib
 import xml.sax.saxutils
 
-TK_DATA_VERSION = 0
+TK_DATA_VERSION = 1
 
 class _item:
     # Taken from ViewCVS. :-)
@@ -27,13 +27,14 @@ class _item:
 
 class TKEntry:
     def __init__(self, author='', subject='', text='',
-                 year=None, month=None, day=None):
+                 year=None, month=None, day=None, id=None):
         self.author = author
         self.subject = subject
         self.text = text
         self.year = year
         self.month = month
         self.day = day
+        self.id = id
 
     def get_author(self):
         return self.author
@@ -46,6 +47,9 @@ class TKEntry:
 
     def get_date(self):
         return self.year, self.month, self.day
+    
+    def get_id(self):
+        return self.id
     
 class TKEntries:
     def __init__(self):
@@ -71,26 +75,33 @@ class TKEntries:
                 days = self.get_days(year, month)
                 days.sort()
                 for day in days:
-                    func(self.get_entry(year, month, day))
+                    ids = self.get_ids(year, month, day)
+                    ids.sort()
+                    for id in ids:
+                        func(self.get_entry(year, month, day, id))
         
-    def set_entry(self, year, month, day, author, subject, text):
+    def set_entry(self, year, month, day, author, subject, text, id):
         if not self.entry_tree.has_key(year):
             self.entry_tree[year] = {}
         if not self.entry_tree[year].has_key(month):
             self.entry_tree[year][month] = {}
-        entry = TKEntry(author, subject, text, year, month, day)
-        self.entry_tree[year][month][day] = entry
+        if not self.entry_tree[year][month].has_key(day):
+            self.entry_tree[year][month][day] = {}
+        entry = TKEntry(author, subject, text, year, month, day, id)
+        self.entry_tree[year][month][day][id] = entry
         for func in self.listeners:
-            func(entry, year, month, day)
+            func(entry, year, month, day, id)
 
-    def remove_entry(self, year, month, day):
-        del self.entry_tree[year][month][day]
+    def remove_entry(self, year, month, day, id):
+        del self.entry_tree[year][month][day][id]
+        if not len(self.entry_tree[year][month][day].keys()):
+            del self.entry_tree[year][month][day]
         if not len(self.entry_tree[year][month].keys()):
             del self.entry_tree[year][month]
         if not len(self.entry_tree[year].keys()):
             del self.entry_tree[year]
         for func in self.listeners:
-            func(None, year, month, day)
+            func(None, year, month, day, id)
 
     def get_years(self):
         """Return the years which have days with associated TKEntry
@@ -107,13 +118,65 @@ class TKEntries:
         TKEntry objects."""
         return self.entry_tree[year][month].keys()
     
-    def get_entry(self, year, month, day):
+    def get_ids(self, year, month, day):
+        """Return the IDS in YEAR, MONTH, and DAY which have associated
+        TKEntry objects."""
+        return self.entry_tree[year][month][day].keys()
+    
+    def get_entry(self, year, month, day, id):
         """Return the TKEntry associated with YEAR, MONTH, and DAY,
         or None if no such entry exists."""
         try:
-            return self.entry_tree[year][month][day]
+            return self.entry_tree[year][month][day][id]
         except:
             return None
+    
+    def get_first_id(self, year, month, day):
+        """Return the id of the first entry for that day"""
+        try:
+            return self.entry_tree[year][month][day].keys()[0]
+        except:
+            return 1
+        
+    def get_last_id(self, year, month, day):
+        """Return the id of the last entry for that day"""
+        try:
+            return self.entry_tree[year][month][day].keys()[-1]
+        except:
+            return 1
+        
+    def get_id_pos(self, year, month, day, id):
+        """Return the position of that id in the list for that day
+         - 0 if no entries for that day
+         - len(entries) if the id not found""" 
+        try:
+            day_keys = self.entry_tree[year][month][day].keys()
+        except:
+            return 0
+        try:
+            return day_keys.index(id)
+        except:
+            return len(day_keys)
+        
+    def get_next_id(self, year, month, day, id):
+        """Get the id of the next entry for that day
+         - or supplied_id+1 if no more in the list """
+        try:
+            day_keys = self.entry_tree[year][month][day].keys()
+            idx = day_keys.index(id)
+            return day_keys[idx+1]
+        except:
+            return id+1
+        
+    def get_prev_id(self, year, month, day, id):
+        """Get the id of the previous entry for that day
+        - or the last entry if the supplied id is not found"""
+        try:
+            day_keys = self.entry_tree[year][month][day].keys()
+            idx = day_keys.index(id)
+            return day_keys[idx-1]
+        except:
+            return self.get_last_id(year, month, day)
 
 class TKDataVersionException(Exception):
     pass
@@ -127,11 +190,25 @@ class TKDataParser(xmllib.XMLParser):
     indicates version 0 of the format.  Here are the supported
     versions and their formats:
 
-    Version 0 (ThotKeeper 0.1):
+    Version 0 (ThotKeeper 0.1): The original format.
 
        <diary [version="0"]>
          <entries>
            <entry year="YYYY" month="M" day="D">
+             <author>CDATA</author>
+             <subject>CDATA</subject>
+             <text>CDATA</text>
+           </entry>
+           ...
+         </entries>
+       </diary>
+
+    Version 1 (unreleased): Adds an "id" attribute to entries for the
+    purposes of distinguishing multiple entries for a given day.
+
+       <diary version="1">
+         <entries>
+           <entry year="YYYY" month="M" day="D" id="N">
              <author>CDATA</author>
              <subject>CDATA</subject>
              <text>CDATA</text>
@@ -161,8 +238,9 @@ class TKDataParser(xmllib.XMLParser):
             entries = TKEntries()
         def _write_entry(entry):
             year, month, day = entry.get_date()
-            fp.write('  <entry year="%s" month="%s" day="%s">\n'
-                     % (year, month, day))
+            id = entry.get_id()
+            fp.write('  <entry year="%s" month="%s" day="%s" id="%s">\n'
+                     % (year, month, day, id))
             fp.write('   <author>%s</author>\n'
                      % (xml.sax.saxutils.escape(entry.get_author())))
             fp.write('   <subject>%s</subject>\n'
@@ -192,13 +270,16 @@ class TKDataParser(xmllib.XMLParser):
                 and ('day' in attr_names)):
             raise Exception("Invalid XML file.")
         self.cur_entry = attrs
+        if not ('id' in attr_names):
+            self.cur_entry['id'] = '1'
     def end_entry(self):
         self.entries.set_entry(int(self.cur_entry['year']),
                                int(self.cur_entry['month']),
                                int(self.cur_entry['day']),
                                self.cur_entry.get('author', ''),
                                self.cur_entry.get('subject', ''),
-                               self.cur_entry.get('text', ''))
+                               self.cur_entry.get('text', ''),
+                               int(self.cur_entry['id']))
         self.cur_entry = None
     def start_author(self, attrs):
         if not self.cur_entry:
