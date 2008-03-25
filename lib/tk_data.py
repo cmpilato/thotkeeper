@@ -47,7 +47,6 @@ class TKEntry:
     def get_date(self):
         return self.year, self.month, self.day
     
-    
 class TKEntries:
     def __init__(self):
         self.entry_tree = {}
@@ -58,6 +57,21 @@ class TKEntries:
         the diary entries changes.  FUNC is a callback which accepts
         the following: this instance, an event, year, month, and day."""
         self.listeners.append(func)
+
+    def enumerate_entries(self, func):
+        """Call FUNC for each diary entry, ordered by time and
+        intra-day index.  FUNC is a callback which accepts a TKEntry
+        parameter."""
+        years = self.get_years()
+        years.sort()
+        for year in years:
+            months = self.get_months(year)
+            months.sort()
+            for month in months:
+                days = self.get_days(year, month)
+                days.sort()
+                for day in days:
+                    func(self.get_entry(year, month, day))
         
     def set_entry(self, year, month, day, author, subject, text):
         if not self.entry_tree.has_key(year):
@@ -145,25 +159,18 @@ class TKDataParser(xmllib.XMLParser):
                  ' <entries>\n' % (TK_DATA_VERSION))
         if not entries:
             entries = TKEntries()
-        years = entries.get_years()
-        years.sort()
-        for year in years:
-            months = entries.get_months(year)
-            months.sort()
-            for month in months:
-                days = entries.get_days(year, month)
-                days.sort()
-                for day in days:
-                    entry = entries.get_entry(year, month, day)
-                    text = xml.sax.saxutils.escape(entry.get_text())
-                    author = xml.sax.saxutils.escape(entry.get_author())
-                    subject = xml.sax.saxutils.escape(entry.get_subject())
-                    fp.write('  <entry year="%s" month="%s" day="%s">\n' \
-                             % (year, month, day))
-                    fp.write('   <author>%s</author>\n' % (author))
-                    fp.write('   <subject>%s</subject>\n' % (subject))
-                    fp.write('   <text>%s</text>\n' % (text))
-                    fp.write('  </entry>\n')
+        def _write_entry(entry):
+            year, month, day = entry.get_date()
+            fp.write('  <entry year="%s" month="%s" day="%s">\n'
+                     % (year, month, day))
+            fp.write('   <author>%s</author>\n'
+                     % (xml.sax.saxutils.escape(entry.get_author())))
+            fp.write('   <subject>%s</subject>\n'
+                     % (xml.sax.saxutils.escape(entry.get_subject())))
+            fp.write('   <text>%s</text>\n'
+                     % (xml.sax.saxutils.escape(entry.get_text())))
+            fp.write('  </entry>\n')
+        entries.enumerate_entries(_write_entry)
         fp.write(' </entries>\n</diary>\n')
         
     ### XMLParser callback functions
