@@ -105,7 +105,28 @@ class TKDataVersionException(Exception):
     pass
 
 class TKDataParser(xmllib.XMLParser):
-    """XML Parser class for reading and writing diary data files."""
+    """XML Parser class for reading and writing diary data files.
+
+    The diary data files currently use a single XML container tag,
+    <diary>, which carries a 'version' attribute to indicate the
+    format of the data it contains.  A missing version attribute
+    indicates version 0 of the format.  Here are the supported
+    versions and their formats:
+
+    Version 0 (ThotKeeper 0.1):
+
+       <diary [version="0"]>
+         <entries>
+           <entry year="YYYY" month="M" day="D">
+             <author>CDATA</author>
+             <subject>CDATA</subject>
+             <text>CDATA</text>
+           </entry>
+           ...
+         </entries>
+       </diary>
+
+    """
 
     def parse_data(self, datafile):
         """Parse an XML file."""
