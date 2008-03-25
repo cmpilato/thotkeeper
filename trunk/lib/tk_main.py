@@ -8,9 +8,7 @@
 # the LICENSE file which can be found at the top level of the ThotKeeper
 # distribution.
 #
-# Contact information:
-#    C. Michael Pilato <cmpilato@red-bean.com>
-#    http://www.cmichaelpilato.com/
+# Website: http://www.thotkeeper.org/
 
 import sys
 import os
@@ -22,6 +20,8 @@ from wxPython.wx import *
 from wxPython.calendar import *
 from wxPython.xrc import *
 from wx.html import HtmlEasyPrinting
+
+__version__ = "0.1-dev"
 
 # Placeholder for the configuration class.
 conf = None
@@ -773,12 +773,17 @@ class ThotKeeper(wxApp):
         self.frame.Destroy()
         
     def _HelpAboutMenu(self, event):
-        wxMessageBox("ThotKeeper" +
-                     " -- a personal daily journal application.\n\n" +
-                     "Copyright (c) 2004-2006 C. Michael Pilato\n" +
-                     "Email: cmpilato@red-bean.com\n" +
-                     "Website: http://www.cmichaelpilato.com/\n" +
-                     "All rights reserved.\n",
+        wxMessageBox("ThotKeeper, version %s\n"
+                     "A personal daily journal application.\n"
+                     "\n"
+                     "Copyright (c) 2004-2008 C. Michael Pilato.  "
+                     "All rights reserved.\n"
+                     "\n"
+                     "ThotKeeper is open source software developed "
+                     "under the BSD License.  Question, comments, "
+                     "and code contributions are welcome.  Visit our "
+                     "website: http://www.thotkeeper.org/\n"
+                     % (__version__),
                      "About ThotKeeper",
                      wxOK | wxCENTER, self.frame)
 
