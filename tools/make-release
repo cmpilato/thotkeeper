@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+#
+# ThotKeeper -- a personal daily journal application.
+#
+# Copyright (c) 2004-2008 C. Michael Pilato.  All rights reserved.
+#
+# By using this file, you agree to the terms and conditions set forth in
+# the LICENSE file which can be found at the top level of the ThotKeeper
+# distribution.
+#
+# Contact information:
+#    C. Michael Pilato <cmpilato@red-bean.com>
+#    http://www.cmichaelpilato.com/
+
+import sys
+import os
+import shutil
+
+__repos_root__ = "http://thotkeeper.googlecode.com/svn"
+
+
+def error_and_exit(errmsg):
+    sys.stderr.write("\nERROR: %s\n" % (errmsg))
+    sys.exit(1)
+
+    
+def usage_and_exit(errmsg=None):
+    stream = errmsg and sys.stderr or sys.stdout
+    stream.write("""Usage: %s TARGET-DIRECTORY [TAGNAME]
+
+Create a tarball and ZIP archive of ThotKeeper's codebase, minus stuff
+we don't want to release, created from the Subversion repository tag
+TAGNAME (if provided; otherwise use trunk).
+""" % (os.path.basename(sys.argv[0])))
+    if errmsg:
+        error_and_exit(errmsg)
+    sys.exit(0)
+    
+
+def make_archive(export_source_url, export_target, eol_style, archive_cmds):
+    if os.path.exists(export_target):
+        error_and_exit("Export target path '%s' already exists."
+                       % (export_target))
+    os.mkdir(export_target)
+    cur_dir = os.getcwd()
+    try:
+        os.chdir(export_target)
+        os.system('svn export --force --native-eol %s --quiet %s .'
+                  % (eol_style, export_source_url))
+        for item in [ 'tools' ]:  # add excluded items here
+            rmpath = os.sep.join(item.split('/'))
+            shutil.rmtree(rmpath)
+        os.chdir('..')
+        for cmd in archive_cmds:
+            os.system(cmd)
+    finally:
+        os.chdir(cur_dir)
+    shutil.rmtree(export_target)
+
+    
+def main():
+    argc = len(sys.argv)
+    rel_url = "/trunk"
+    archive_name = "trunk"
+    if argc < 2:
+        usage_and_exit("Not enough arguments.")
+    if argc > 3:
+        usage_and_exit("Too many arguments.")
+    target_dir = os.path.normpath(sys.argv[1])
+    if argc > 2:
+        rel_url = "/tags/" + sys.argv[2]
+        archive_name = sys.argv[2]
+    archive_base = "thotkeeper-%s" % (archive_name)
+    export_source_url = __repos_root__ + rel_url
+    export_target = os.path.join(target_dir, archive_base)
+
+    # Make a Unix-line-ending tarball.
+    make_archive(export_source_url, export_target, "LF",
+                 ['tar cfz %s.tar.gz %s' % (archive_base, archive_base)])
+                          
+    # Make a Windows-line-ending ZIP archive.
+    make_archive(export_source_url, export_target, "CRLF",
+                 ['zip -qor9 %s.zip %s' % (archive_base, archive_base)])
+    
+        
+if __name__ == "__main__":
+    main()
