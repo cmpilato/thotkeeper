@@ -523,27 +523,27 @@ class ThotKeeper(wxApp):
             return true
         return false
     
-    def _SetEntryFormDate(self, year, month, day, id=None):
+    def _SetEntryFormDate(self, year, month, day, id=-1):
         """Set the data on the entry form."""
         if self._RefuseUnsavedModifications():
             return false
         firstid = self.entries.get_first_id(year, month, day)
-        if id==None:
+        if id==-1:
             id = firstid
         self.date = "%d-%d-%d" % (year, month, day)
         self.entry_id = id
         date = wxDateTime()
         date.ParseFormat(self.date + " 11:59:59", '%Y-%m-%d %H:%M:%S', date)
         label = date.Format("%A, %B %d, %Y")
-        if id>firstid:
+        if firstid is not None and (id is None or id>firstid):
             label += " (" + repr(self.entries.get_id_pos(year, month, day, id)+1) + ")"
             self.frame.FindWindowById(self.prev_id).Enable(true)
         else:
             self.frame.FindWindowById(self.prev_id).Enable(false)
-        if id>self.entries.get_last_id(year, month, day):
-            self.frame.FindWindowById(self.next_id).Enable(false)
-        else:
+        if id is not None:
             self.frame.FindWindowById(self.next_id).Enable(true)
+        else:
+            self.frame.FindWindowById(self.next_id).Enable(false)
         self.frame.FindWindowById(self.date_id).SetLabel(label)
         text = subject = author = ''
         has_entry = 0
@@ -613,13 +613,13 @@ class ThotKeeper(wxApp):
         
     def _NextButtonActivated(self, event):
         year, month, day = self._GetEntryFormDate()
-        newid = self.entries.get_next_id(year, month, day, self.entry_id)
-        self._SetEntryFormDate(year, month, day, newid)
+        nextid = self.entries.get_next_id(year, month, day, self.entry_id)
+        self._SetEntryFormDate(year, month, day, nextid)
       
     def _PrevButtonActivated(self, event):
         year, month, day = self._GetEntryFormDate()
-        newid = self.entries.get_prev_id(year, month, day, self.entry_id)
-        self._SetEntryFormDate(year, month, day, newid)
+        previd = self.entries.get_prev_id(year, month, day, self.entry_id)
+        self._SetEntryFormDate(year, month, day, previd)
     
     def _EntryDataChanged(self, event):
         self._SetModified(true)
@@ -647,6 +647,13 @@ class ThotKeeper(wxApp):
     def _SaveEntriesToPath(self, path=None):
         if self.is_modified:
             year, month, day, author, subject, text, id = self._GetEntryFormBits()
+            if id is None:
+                id = self.entries.get_last_id(year, month, day)
+                if id is None:
+                    id = 1
+                else:
+                    id = id + 1
+                self.entry_id = id
             self.entries.set_entry(year, month, day, author, subject, text, id)
         if path is None:
             path = conf.data_file
@@ -654,10 +661,7 @@ class ThotKeeper(wxApp):
         if path != conf.data_file:
             self._SetDataFile(path, false) 
         self._SetModified(false)
-        if id>self.entries.get_last_id(year, month, day):
-            self.frame.FindWindowById(self.next_id).Enable(false)
-        else:
-            self.frame.FindWindowById(self.next_id).Enable(true)
+        self.frame.FindWindowById(self.next_id).Enable(true)
 
     def _TreeEditMenu(self, event):
         item = self.tree.GetSelection()
@@ -764,7 +768,7 @@ class ThotKeeper(wxApp):
         year, month, day = self._GetEntryFormDate()
         id = self.entry_id
         self._SetModified(false)
-        self._SetEntryFormDate(int(year), int(month), int(day), int(id))
+        self._SetEntryFormDate(int(year), int(month), int(day), id)
 
     def _GetCurrentEntryPieces(self):
         year, month, day, author, subject, text, id = self._GetEntryFormBits()

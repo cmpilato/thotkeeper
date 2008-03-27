@@ -134,16 +134,20 @@ class TKEntries:
     def get_first_id(self, year, month, day):
         """Return the id of the first entry for that day"""
         try:
-            return self.entry_tree[year][month][day].keys()[0]
+            day_keys = self.entry_tree[year][month][day].keys()
+            day_keys.sort()
+            return day_keys[0]
         except:
-            return 1
+            return None
         
     def get_last_id(self, year, month, day):
         """Return the id of the last entry for that day"""
         try:
-            return self.entry_tree[year][month][day].keys()[-1]
+            day_keys = self.entry_tree[year][month][day].keys()
+            day_keys.sort()
+            return day_keys[-1]
         except:
-            return 1
+            return None
         
     def get_id_pos(self, year, month, day, id):
         """Return the position of that id in the list for that day
@@ -151,6 +155,7 @@ class TKEntries:
          - len(entries) if the id not found""" 
         try:
             day_keys = self.entry_tree[year][month][day].keys()
+            day_keys.sort()
         except:
             return 0
         try:
@@ -160,19 +165,21 @@ class TKEntries:
         
     def get_next_id(self, year, month, day, id):
         """Get the id of the next entry for that day
-         - or supplied_id+1 if no more in the list """
+         - or None if no more in the list """
         try:
             day_keys = self.entry_tree[year][month][day].keys()
+            day_keys.sort()
             idx = day_keys.index(id)
             return day_keys[idx+1]
         except:
-            return id+1
+            return None
         
     def get_prev_id(self, year, month, day, id):
         """Get the id of the previous entry for that day
         - or the last entry if the supplied id is not found"""
         try:
             day_keys = self.entry_tree[year][month][day].keys()
+            day_keys.sort()
             idx = day_keys.index(id)
             return day_keys[idx-1]
         except:
