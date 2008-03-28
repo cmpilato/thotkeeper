@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 import xmllib
 import xml.sax.saxutils
 
-TK_DATA_VERSION = 1
+TK_DATA_VERSION = 2
 
 class _item:
     # Taken from ViewCVS. :-)
@@ -27,7 +27,7 @@ class _item:
 
 class TKEntry:
     def __init__(self, author='', subject='', text='',
-                 year=None, month=None, day=None, id=None):
+                 year=None, month=None, day=None, id=None, tags=[]):
         self.author = author
         self.subject = subject
         self.text = text
@@ -35,6 +35,7 @@ class TKEntry:
         self.month = month
         self.day = day
         self.id = id
+        self.tags = tags
 
     def get_author(self):
         return self.author
@@ -50,6 +51,9 @@ class TKEntry:
     
     def get_id(self):
         return self.id
+    
+    def get_tags(self):
+        return self.tags
     
 class TKEntries:
     def __init__(self):
@@ -80,14 +84,15 @@ class TKEntries:
                     for id in ids:
                         func(self.get_entry(year, month, day, id))
         
-    def set_entry(self, year, month, day, author, subject, text, id):
+    def set_entry(self, year, month, day, author, subject, text, id, tags=[]):
         if not self.entry_tree.has_key(year):
             self.entry_tree[year] = {}
         if not self.entry_tree[year].has_key(month):
             self.entry_tree[year][month] = {}
         if not self.entry_tree[year][month].has_key(day):
             self.entry_tree[year][month][day] = {}
-        entry = TKEntry(author, subject, text, year, month, day, id)
+        #FIXME: Create an index to store all the tags to help find entries
+        entry = TKEntry(author, subject, text, year, month, day, id, tags)
         self.entry_tree[year][month][day][id] = entry
         for func in self.listeners:
             func(entry, year, month, day, id)
@@ -223,6 +228,24 @@ class TKDataParser(xmllib.XMLParser):
            ...
          </entries>
        </diary>
+       
+    Version 2 (unreleased): Adds an optional <tags> tag to entries. 
+    Which contains 1 or more <tag> tags.
+       
+       <diary version="2">
+         <entries>
+           <entry year="YYYY" month="M" day="D" id="N">
+             <author>CDATA</author>
+             <subject>CDATA</subject>
+             <tags>
+                <tag>CDATA</tag>
+                ...
+             </tags>
+             <text>CDATA</text>
+           </entry>
+           ...
+         </entries>
+       </diary>
 
     """
 
@@ -246,12 +269,19 @@ class TKDataParser(xmllib.XMLParser):
         def _write_entry(entry):
             year, month, day = entry.get_date()
             id = entry.get_id()
+            tags = entry.get_tags()
             fp.write('  <entry year="%s" month="%s" day="%s" id="%s">\n'
                      % (year, month, day, id))
             fp.write('   <author>%s</author>\n'
                      % (xml.sax.saxutils.escape(entry.get_author())))
             fp.write('   <subject>%s</subject>\n'
                      % (xml.sax.saxutils.escape(entry.get_subject())))
+            if len(tags):
+                fp.write('   <tags>\n')
+                for tag in tags:
+                    fp.write('    <tag>%s</tag>\n'
+                             % (xml.sax.saxutils.escape(tag)))
+                fp.write('   </tags>\n')
             fp.write('   <text>%s</text>\n'
                      % (xml.sax.saxutils.escape(entry.get_text())))
             fp.write('  </entry>\n')
@@ -286,7 +316,8 @@ class TKDataParser(xmllib.XMLParser):
                                self.cur_entry.get('author', ''),
                                self.cur_entry.get('subject', ''),
                                self.cur_entry.get('text', ''),
-                               int(self.cur_entry['id']))
+                               int(self.cur_entry['id']),
+                               self.cur_entry.get('tags', []))
         self.cur_entry = None
     def start_author(self, attrs):
         if not self.cur_entry:
@@ -301,6 +332,17 @@ class TKDataParser(xmllib.XMLParser):
         self.buffer = ''
     def end_subject(self):
         self.cur_entry['subject'] = self.buffer
+        self.buffer = None
+    def start_tags(self, attrs):
+        if not self.cur_entry:
+            raise Exception("Invalid XML file.")
+        self.cur_entry['tags'] = []
+    def start_tag(self, attrs):
+        if not self.cur_entry:
+            raise Exception("Invalid XML file.")
+        self.buffer = ''
+    def end_tag(self):
+        self.cur_entry['tags'].append(self.buffer)
         self.buffer = None
     def start_text(self, attrs):
         if not self.cur_entry:
