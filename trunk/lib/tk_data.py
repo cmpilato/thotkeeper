@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 import xmllib
 import xml.sax.saxutils
 
-TK_DATA_VERSION = 2
+TK_DATA_VERSION = 1
 
 class _item:
     # Taken from ViewCVS. :-)
@@ -217,22 +217,8 @@ class TKDataParser(xmllib.XMLParser):
 
     Version 1 (unreleased): Adds an "id" attribute to entries for the
     purposes of distinguishing multiple entries for a given day.
-
+    Adds an optional <tags> tag to entries, which contains 1 or more <tag> tags.
        <diary version="1">
-         <entries>
-           <entry year="YYYY" month="M" day="D" id="N">
-             <author>CDATA</author>
-             <subject>CDATA</subject>
-             <text>CDATA</text>
-           </entry>
-           ...
-         </entries>
-       </diary>
-       
-    Version 2 (unreleased): Adds an optional <tags> tag to entries. 
-    Which contains 1 or more <tag> tags.
-       
-       <diary version="2">
          <entries>
            <entry year="YYYY" month="M" day="D" id="N">
              <author>CDATA</author>
@@ -246,7 +232,7 @@ class TKDataParser(xmllib.XMLParser):
            ...
          </entries>
        </diary>
-
+       
     """
 
     def parse_data(self, datafile):
