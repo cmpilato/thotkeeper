@@ -170,7 +170,10 @@ class TKEventTree(wxTreeCtrl):
         self.DeleteChildren(self.root_id)
 
     def CollapseTree(self):
-        self.CollapseAllChildren(self.root_id)
+        try:
+            self.CollapseAllChildren(self.root_id)
+        except AttributeError:
+            self.Collapse(self.root_id)
         self.Expand(self.root_id)
         
     def EntryChangedListener(self, entry, year, month, day, id, expand=True):
