@@ -431,6 +431,7 @@ class ThotKeeper(wxApp):
             self.frame.Center()
 
         # Init the frame with no datafile.
+        old_conf_data_file = conf.data_file
         self._SetDataFile(None)
 
         # Now, show the frame.
@@ -438,7 +439,8 @@ class ThotKeeper(wxApp):
 
         # If we were not given a datafile, or the one we were given is
         # invalid, ask for a valid one.
-        self._SetDataFile(self.cmd_datafile or conf.data_file)
+        if self.cmd_datafile or old_conf_data_file:
+            self._SetDataFile(self.cmd_datafile or old_conf_data_file)
 
         # Tell wxWidgets that this is our main window
         self.SetTopWindow(self.frame)
