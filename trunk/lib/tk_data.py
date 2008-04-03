@@ -20,11 +20,6 @@ import xml.sax.saxutils
 
 TK_DATA_VERSION = 1
 
-class _item:
-    # Taken from ViewCVS. :-)
-    def __init__(self, **kw):
-        vars(self).update(kw)
-
 class TKEntry:
     def __init__(self, author='', subject='', text='',
                  year=None, month=None, day=None, id=None, tags=[]):
