@@ -79,15 +79,16 @@ class TKEntries:
                     for id in ids:
                         func(self.get_entry(year, month, day, id))
         
-    def set_entry(self, year, month, day, author, subject, text, id, tags=[]):
+    def store_entry(self, entry):
+        year, month, day = entry.get_date()
         if not self.entry_tree.has_key(year):
             self.entry_tree[year] = {}
         if not self.entry_tree[year].has_key(month):
             self.entry_tree[year][month] = {}
         if not self.entry_tree[year][month].has_key(day):
             self.entry_tree[year][month][day] = {}
-        #FIXME: Create an index to store all the tags to help find entries
-        entry = TKEntry(author, subject, text, year, month, day, id, tags)
+        ### FIXME: Create an index to store all the tags to help find entries
+        id = entry.get_id()
         self.entry_tree[year][month][day][id] = entry
         for func in self.listeners:
             func(entry, year, month, day, id)
@@ -291,14 +292,14 @@ class TKDataParser(xmllib.XMLParser):
         if not ('id' in attr_names):
             self.cur_entry['id'] = '1'
     def end_entry(self):
-        self.entries.set_entry(int(self.cur_entry['year']),
-                               int(self.cur_entry['month']),
-                               int(self.cur_entry['day']),
-                               self.cur_entry.get('author', ''),
-                               self.cur_entry.get('subject', ''),
-                               self.cur_entry.get('text', ''),
-                               int(self.cur_entry['id']),
-                               self.cur_entry.get('tags', []))
+        self.entries.store_entry(TKEntry(self.cur_entry.get('author', ''),
+                                         self.cur_entry.get('subject', ''),
+                                         self.cur_entry.get('text', ''),
+                                         int(self.cur_entry['year']),
+                                         int(self.cur_entry['month']),
+                                         int(self.cur_entry['day']),
+                                         int(self.cur_entry['id']),
+                                         self.cur_entry.get('tags', [])))
         self.cur_entry = None
     def start_author(self, attrs):
         if not self.cur_entry:

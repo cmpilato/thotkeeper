@@ -150,7 +150,7 @@ class ThotKeeperEventTree(wxTreeCtrl):
             id = parent_id
 
     def EntryChangedListener(self, entry, year, month, day, id):
-        """Callback for TKEntries.set_entry()."""
+        """Callback for TKEntries.store_entry()."""
         wxBeginBusyCursor()
         stack = self.GetDateStack(year, month, day, id)
         if not entry:
@@ -222,6 +222,7 @@ class ThotKeeperEventCal(wxCalendarCtrl):
         wxEndBusyCursor()
         
     def EntryChangedListener(self, entry, year, month, day, id):
+        """Callback for TKEntries.store_entry()."""
         date = self.GetDate()
         if date.GetYear() != year:
             return
@@ -646,7 +647,8 @@ class ThotKeeper(wxApp):
         
     def _SaveEntriesToPath(self, path=None):
         if self.is_modified:
-            year, month, day, author, subject, text, id = self._GetEntryFormBits()
+            year, month, day, author, subject, text, id \
+                  = self._GetEntryFormBits()
             if id is None:
                 id = self.entries.get_last_id(year, month, day)
                 if id is None:
@@ -654,7 +656,8 @@ class ThotKeeper(wxApp):
                 else:
                     id = id + 1
                 self.entry_id = id
-            self.entries.set_entry(year, month, day, author, subject, text, id)
+            self.entries.store_entry(tk_data.TKEntry(author, subject, text,
+                                                     year, month, day, id))
         if path is None:
             path = conf.data_file
         self._SaveData(path, self.entries)
