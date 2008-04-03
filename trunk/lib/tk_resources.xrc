@@ -103,7 +103,6 @@
                 <object class="sizeritem">
                   <object class="wxFlexGridSizer">
                     <cols>2</cols>
-                    <rows>3</rows>
                     <object class="sizeritem">
                       <object class="wxStaticText">
                         <label>Date:</label>
@@ -112,25 +111,34 @@
                       <border>5</border>
                     </object>
                     <object class="sizeritem">
-                      <object class="wxStaticText" name="TKEntryDate">
-                        <label></label>
+                      <object class="wxBoxSizer">
+                        <orient>wxHORIZONTAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxStaticText" name="TKEntryDate">
+                            <label></label>
+                          </object>
+                          <option>1</option>
+                          <flag>wxALL|wxEXPAND</flag>
+                          <border>5</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxButton" name="TKPrev">
+                            <label>&lt;&lt;</label>
+                            <tooltip>Previous entry for this date</tooltip>
+                          </object>
+                          <flag>wxLEFT|wxRIGHT</flag>
+                          <border>5</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxButton" name="TKNext">
+                            <label>&gt;&gt;</label>
+                            <tooltip>Next entry for this date</tooltip>
+                          </object>
+                          <flag>wxLEFT|wxRIGHT</flag>
+                          <border>5</border>
+                        </object>
                       </object>
-                      <flag>wxALL|wxEXPAND</flag>
-                      <border>5</border>
-                    </object>
-                    <object class="sizeritem">
-                      <object class="wxButton" name="TKPrev">
-                        <label>&lt;&lt;</label>
-                      </object>
-                      <flag>wxALL</flag>
-                      <border>5</border>
-                    </object>
-                    <object class="sizeritem">
-                      <object class="wxButton" name="TKNext">
-                        <label>&gt;&gt;</label>
-                      </object>
-                      <flag>wxALL</flag>
-                      <border>5</border>
+                      <flag>wxEXPAND</flag>
                     </object>
                     <object class="sizeritem">
                       <object class="wxStaticText">
@@ -157,6 +165,18 @@
                       <border>5</border>
                     </object>
                     <growablecols>1</growablecols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Tags:</label>
+                      </object>
+                      <flag>wxALL</flag>
+                      <border>5</border>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="TKEntryTags"/>
+                      <flag>wxALL|wxEXPAND</flag>
+                      <border>5</border>
+                    </object>
                   </object>
                   <flag>wxEXPAND</flag>
                   <border>10</border>
