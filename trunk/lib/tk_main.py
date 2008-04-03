@@ -674,6 +674,7 @@ class ThotKeeper(wxApp):
                     id = 1
                 else:
                     id = id + 1
+                self.entry_form_keys = [year, month, day, id]
             self.entries.store_entry(tk_data.TKEntry(author, subject, text,
                                                      year, month, day, id))
         if path is None:
