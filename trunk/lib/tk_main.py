@@ -531,10 +531,10 @@ class ThotKeeper(wxApp):
         firstid = self.entries.get_first_id(year, month, day)
         if id==-1:
             id = firstid
-        self.date = "%d-%d-%d" % (year, month, day)
-        self.entry_id = id
+        self.entry_form_keys = [year, month, day, id]
         date = wxDateTime()
-        date.ParseFormat(self.date + " 11:59:59", '%Y-%m-%d %H:%M:%S', date)
+        date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
+                         '%Y-%m-%d %H:%M:%S', date)
         label = date.Format("%A, %B %d, %Y")
         if firstid is not None and (id is None or id>firstid):
             label += " (" + repr(self.entries.get_id_pos(year, month, day, id)+1) + ")"
@@ -613,13 +613,13 @@ class ThotKeeper(wxApp):
         self._SetEntryFormDate(timestruct[0], timestruct[1], timestruct[2])
         
     def _NextButtonActivated(self, event):
-        year, month, day = self._GetEntryFormDate()
-        nextid = self.entries.get_next_id(year, month, day, self.entry_id)
+        year, month, day, id = self._GetEntryFormKeys()
+        nextid = self.entries.get_next_id(year, month, day, id)
         self._SetEntryFormDate(year, month, day, nextid)
       
     def _PrevButtonActivated(self, event):
-        year, month, day = self._GetEntryFormDate()
-        previd = self.entries.get_prev_id(year, month, day, self.entry_id)
+        year, month, day, id = self._GetEntryFormKeys()
+        previd = self.entries.get_prev_id(year, month, day, id)
         self._SetEntryFormDate(year, month, day, previd)
     
     def _EntryDataChanged(self, event):
@@ -633,13 +633,13 @@ class ThotKeeper(wxApp):
             return
         self._SetEntryFormDate(data[0], data[1], data[2], data[3])
 
-    def _GetEntryFormDate(self):
-        pieces = self.date.split('-')
-        return map(int, pieces)
+    def _GetEntryFormKeys(self):
+        ### FIXME: This interface is ... hacky.
+        return self.entry_form_keys[0], self.entry_form_keys[1], \
+               self.entry_form_keys[2], self.entry_form_keys[3]
 
     def _GetEntryFormBits(self):
-        year, month, day = self._GetEntryFormDate()
-        id = self.entry_id
+        year, month, day, id = self._GetEntryFormKeys()
         author = self.frame.FindWindowById(self.author_id).GetValue()
         subject = self.frame.FindWindowById(self.subject_id).GetValue()
         text = self.frame.FindWindowById(self.text_id).GetValue()
@@ -655,7 +655,6 @@ class ThotKeeper(wxApp):
                     id = 1
                 else:
                     id = id + 1
-                self.entry_id = id
             self.entries.store_entry(tk_data.TKEntry(author, subject, text,
                                                      year, month, day, id))
         if path is None:
@@ -768,8 +767,7 @@ class ThotKeeper(wxApp):
         dialog.Destroy()
 
     def _FileRevertMenu(self, event):
-        year, month, day = self._GetEntryFormDate()
-        id = self.entry_id
+        year, month, day, id = self._GetEntryFormKeys()
         self._SetModified(false)
         self._SetEntryFormDate(int(year), int(month), int(day), id)
 
