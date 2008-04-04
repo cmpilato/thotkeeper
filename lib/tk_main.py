@@ -340,6 +340,7 @@ class ThotKeeper(wxApp):
         self.date_id = self.resources.GetXRCID('TKEntryDate')
         self.author_id = self.resources.GetXRCID('TKEntryAuthor')
         self.subject_id = self.resources.GetXRCID('TKEntrySubject')
+        self.tags_id = self.resources.GetXRCID('TKEntryTags')
         self.text_id = self.resources.GetXRCID('TKEntryText')
         self.file_new_id = self.resources.GetXRCID('TKMenuFileNew')
         self.file_open_id = self.resources.GetXRCID('TKMenuFileOpen')
@@ -418,6 +419,7 @@ class ThotKeeper(wxApp):
         EVT_BUTTON(self, self.prev_id, self._PrevButtonActivated)
         EVT_TEXT(self, self.text_id, self._EntryDataChanged)
         EVT_TEXT(self, self.author_id, self._EntryDataChanged)
+        EVT_TEXT(self, self.tags_id, self._EntryDataChanged)
         EVT_TEXT(self, self.subject_id, self._EntryDataChanged)
         EVT_CALENDAR(self, self.calendar_id, self._CalendarChanged)
         EVT_CALENDAR_YEAR(self, self.calendar_id, self._CalendarDisplayChanged)
@@ -555,6 +557,14 @@ class ThotKeeper(wxApp):
             return true
         return false
 
+    def _TextToTags(self, text):
+        return filter(lambda x: x!='',map(string.strip, text.split(',')))
+        
+    def _TagsToText(self, tags):
+        if not tags:
+            return ''
+        return reduce(lambda x, y: x+', '+y, tags)
+
     ### FIXME: This function needs a new name
     def _SetEntryFormDate(self, year, month, day, id=-1):
         """Set the data on the entry form."""
@@ -578,16 +588,18 @@ class ThotKeeper(wxApp):
         else:
             self.frame.FindWindowById(self.next_id).Enable(false)
         self.frame.FindWindowById(self.date_id).SetLabel(label)
-        text = subject = author = ''
+        text = subject = author = tags = ''
         has_entry = 0
         entry = self.entries.get_entry(year, month, day, id)
         if entry is not None:
             text = entry.get_text()
             author = entry.get_author()
             subject = entry.get_subject()
+            tags = self._TagsToText(entry.get_tags())
         self.frame.FindWindowById(self.author_id).SetValue(author)
         self.frame.FindWindowById(self.subject_id).SetValue(subject)
         self.frame.FindWindowById(self.text_id).SetValue(text)
+        self.frame.FindWindowById(self.tags_id).SetValue(tags)
         self._TogglePrintMenus(entry and true or false)
         self._SetModified(false)
         
@@ -675,13 +687,14 @@ class ThotKeeper(wxApp):
         author = self.frame.FindWindowById(self.author_id).GetValue()
         subject = self.frame.FindWindowById(self.subject_id).GetValue()
         text = self.frame.FindWindowById(self.text_id).GetValue()
-        return year, month, day, author, subject, text, id
+        tags = self._TextToTags(self.frame.FindWindowById(self.tags_id).GetValue())
+        return year, month, day, author, subject, text, id, tags
         
     def _SaveEntriesToPath(self, path=None):
         wxYield()
         wxBeginBusyCursor()
         if self.is_modified:
-            year, month, day, author, subject, text, id \
+            year, month, day, author, subject, text, id, tags \
                   = self._GetEntryFormBits()
             if id is None:
                 id = self.entries.get_last_id(year, month, day)
@@ -691,7 +704,7 @@ class ThotKeeper(wxApp):
                     id = id + 1
                 self.entry_form_keys = [year, month, day, id]
             self.entries.store_entry(tk_data.TKEntry(author, subject, text,
-                                                     year, month, day, id))
+                                                     year, month, day, id, tags))
         if path is None:
             path = conf.data_file
         self._SaveData(path, self.entries)
@@ -802,7 +815,7 @@ class ThotKeeper(wxApp):
         self._SetEntryFormDate(int(year), int(month), int(day), id)
 
     def _GetCurrentEntryPieces(self):
-        year, month, day, author, subject, text, id = self._GetEntryFormBits()
+        year, month, day, author, subject, text, id, _ = self._GetEntryFormBits()
         date = wxDateTime()
         date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
                          '%Y-%m-%d %H:%M:%S', date)
