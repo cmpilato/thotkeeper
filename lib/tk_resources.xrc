@@ -70,29 +70,53 @@
             <cols>2</cols>
             <rows>1</rows>
             <object class="sizeritem">
-              <object class="wxFlexGridSizer">
-                <cols>1</cols>
-                <rows>3</rows>
-                <object class="sizeritem">
-                  <object class="unknown" name="TKCalendar"/>
-                  <flag>wxALL</flag>
-                  <border>5</border>
-                  <minsize>220,150</minsize>
-                </object>
-                <object class="sizeritem">
-                  <object class="wxButton" name="TKToday">
-                    <label>Today</label>
+              <object class="wxNotebook">
+                <object class="notebookpage">
+                  <label>Date</label>
+                  <object class="wxPanel" name="TKDatePanel">
+                    <object class="wxFlexGridSizer">
+                      <cols>1</cols>
+                      <rows>3</rows>
+                      <object class="sizeritem">
+                        <object class="unknown" name="TKCalendar"/>
+                        <flag>wxALL</flag>
+                        <border>5</border>
+                        <minsize>220,150</minsize>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="wxButton" name="TKToday">
+                          <label>Today</label>
+                        </object>
+                        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+                        <border>5</border>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="unknown" name="TKDateTree"/>
+                        <flag>wxALL|wxEXPAND</flag>
+                        <border>5</border>
+                      </object>
+                      <growablecols>0</growablecols>
+                      <growablerows>2</growablerows>
+                    </object>
                   </object>
-                  <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
-                  <border>5</border>
+                  <selected>1</selected>
                 </object>
-                <object class="sizeritem">
-                  <object class="unknown" name="TKDateTree"/>
-                  <flag>wxALL|wxEXPAND</flag>
-                  <border>5</border>
+                <object class="notebookpage">
+                  <label>Tags</label>
+                  <object class="wxPanel" name="TKTagPanel">
+                    <object class="wxFlexGridSizer">
+                      <cols>1</cols>
+                      <rows>1</rows>
+                      <growablerows>0</growablerows>
+                      <growablecols>0</growablecols>
+                      <object class="sizeritem">
+                        <object class="unknown" name="TKTagTree"/>
+                        <flag>wxALL|wxEXPAND</flag>
+                        <border>5</border>
+                      </object>
+                    </object>
+                  </object>
                 </object>
-                <growablecols>0</growablecols>
-                <growablerows>2</growablerows>
               </object>
               <flag>wxEXPAND</flag>
             </object>
