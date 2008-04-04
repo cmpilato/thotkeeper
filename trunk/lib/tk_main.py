@@ -216,6 +216,15 @@ class TKEventTree(wxTreeCtrl):
 
 ########################################################################
 ###
+###  EVENT TREE TAG SUBCLASS
+###
+
+class TKEventTagTree(TKEventTree):
+    def __init__(self, parent, style):
+        TKEventTree.__init__(self, parent, style)
+
+########################################################################
+###
 ###  EVENT CALENDAR SUBCLASS
 ###
 
@@ -324,6 +333,7 @@ class ThotKeeper(wxApp):
         self.calendar_id = self.resources.GetXRCID('TKCalendar')
         self.panel_id = self.resources.GetXRCID('TKPanel')
         self.datetree_id = self.resources.GetXRCID('TKDateTree')
+        self.tagtree_id = self.resources.GetXRCID('TKTagTree')
         self.today_id = self.resources.GetXRCID('TKToday')
         self.next_id = self.resources.GetXRCID('TKNext')
         self.prev_id = self.resources.GetXRCID('TKPrev')
@@ -387,6 +397,11 @@ class ThotKeeper(wxApp):
                            style=wxTR_HAS_BUTTONS)
         self.resources.AttachUnknownControl('TKDateTree',
                                             tree, self.panel)
+        
+        tagtree = TKEventTagTree(parent=self.panel,
+                            style = wxTR_HAS_BUTTONS)
+        self.resources.AttachUnknownControl('TKTagTree',
+                                            tagtree, self.panel)
 
         # Populate the tree widget.
         self.tree = self.frame.FindWindowById(self.datetree_id)
