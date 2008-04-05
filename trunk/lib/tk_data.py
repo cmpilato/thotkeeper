@@ -53,13 +53,18 @@ class TKEntry:
 class TKEntries:
     def __init__(self):
         self.entry_tree = {}
+        self.tag_tree = {}
         self.listeners = []
+        self.tag_listeners = []
 
     def register_listener(self, func):
         """Append FUNC to the list of functions called whenever one of
         the diary entries changes.  FUNC is a callback which accepts
         the following: this instance, an event, year, month, and day."""
         self.listeners.append(func)
+        
+    def register_tag_listener(self, func):
+        self.tag_listeners.append(func)
 
     def enumerate_entries(self, func):
         """Call FUNC for each diary entry, ordered by time and
@@ -79,6 +84,33 @@ class TKEntries:
                     for id in ids:
                         func(self.get_entry(year, month, day, id))
         
+    def enumerate_tag_entries(self, func):
+        tags = sorted(self.get_tags())
+        for tag in tags:
+            entries = sorted(self.get_entries_by_tag(tag))
+            for entry in entries:
+                func(entry, tag)
+    
+    def update_tags(self, oldtags, newtags, entry):
+        addtags = filter(lambda x: x not in oldtags, newtags)
+        removetags = filter(lambda x: x not in newtags, oldtags)
+        for tag in newtags:
+            for func in self.tag_listeners:
+                func(tag, entry, True)
+        for tag in addtags:
+            if not self.tag_tree.has_key(tag):
+                self.tag_tree[tag] = set()
+            self.tag_tree[tag].add((entry.year, entry.month, entry.day, entry.id))
+        for tag in removetags: # For all the tags to be removed
+            if self.tag_tree.has_key(tag): #If the tag exists
+                entry_key = (entry.year, entry.month, entry.day, entry.id)
+                if entry_key in self.tag_tree[tag]: # If the given entry is attached to the tag
+                    self.tag_tree[tag].remove(entry_key) # ...remove it
+                    for func in self.tag_listeners:
+                        func(tag, entry, False)
+                    if not self.tag_tree[tag]: # If the tag has no more entries
+                        del self.tag_tree[tag] # ... delete it
+        
     def store_entry(self, entry):
         year, month, day = entry.get_date()
         if not self.entry_tree.has_key(year):
@@ -87,13 +119,20 @@ class TKEntries:
             self.entry_tree[year][month] = {}
         if not self.entry_tree[year][month].has_key(day):
             self.entry_tree[year][month][day] = {}
-        ### FIXME: Create an index to store all the tags to help find entries
         id = entry.get_id()
+        oldtags = []
+        if self.entry_tree[year][month][day].has_key(id):
+            oldtags = sorted(self.entry_tree[year][month][day][id].tags)
         self.entry_tree[year][month][day][id] = entry
+        newtags = sorted(entry.tags)
+        self.update_tags(oldtags, newtags, entry)
         for func in self.listeners:
             func(entry, year, month, day, id)
-
+                    
     def remove_entry(self, year, month, day, id):
+        entry = self.entry_tree[year][month][day][id]
+        oldtags = entry.tags
+        self.update_tags(oldtags, [], entry)
         del self.entry_tree[year][month][day][id]
         if not len(self.entry_tree[year][month][day].keys()):
             del self.entry_tree[year][month][day]
@@ -123,6 +162,13 @@ class TKEntries:
         """Return the IDS in YEAR, MONTH, and DAY which have associated
         TKEntry objects."""
         return self.entry_tree[year][month][day].keys()
+    
+    def get_tags(self):
+        return self.tag_tree.keys()
+    
+    def get_entries_by_tag(self, tag):
+        entry_keys = self.tag_tree[tag]
+        return map(lambda x: self.entry_tree[x[0]][x[1]][x[2]][x[3]], entry_keys)
     
     def get_entry(self, year, month, day, id):
         """Return the TKEntry associated with YEAR, MONTH, and DAY,
