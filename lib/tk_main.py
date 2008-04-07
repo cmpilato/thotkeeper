@@ -645,13 +645,13 @@ class ThotKeeper(wxApp):
         firstid = self.entries.get_first_id(year, month, day)
         if id == -1:
             id = firstid
-        self.entry_form_keys = [year, month, day, id]
+        self.entry_form_key = TKEntryKey(year, month, day, id)
         date = wxDateTime()
         date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
                          '%Y-%m-%d %H:%M:%S', date)
         label = date.Format("%A, %B %d, %Y")
-        if firstid is not None and (id is None or id>firstid):
-            label += " (" + repr(self.entries.get_id_pos(year, month, day, id)+1) + ")"
+        if firstid is not None and (id is None or id > firstid):
+            label += " (%d)" % self.entries.get_id_pos(year, month, day, id)
             self.frame.FindWindowById(self.prev_id).Enable(true)
         else:
             self.frame.FindWindowById(self.prev_id).Enable(false)
@@ -760,8 +760,8 @@ class ThotKeeper(wxApp):
 
     def _GetEntryFormKeys(self):
         ### FIXME: This interface is ... hacky.
-        return self.entry_form_keys[0], self.entry_form_keys[1], \
-               self.entry_form_keys[2], self.entry_form_keys[3]
+        return self.entry_form_key.year, self.entry_form_key.month, \
+               self.entry_form_key.day, self.entry_form_key.id
 
     def _GetEntryFormBits(self):
         year, month, day, id = self._GetEntryFormKeys()
@@ -783,7 +783,7 @@ class ThotKeeper(wxApp):
                     id = 1
                 else:
                     id = id + 1
-                self.entry_form_keys = [year, month, day, id]
+                self.entry_form_key = TKEntryKey(year, month, day, id)
             self.entries.store_entry(tk_data.TKEntry(author, subject, text,
                                                      year, month, day, id, tags))
         if path is None:
@@ -815,7 +815,7 @@ class ThotKeeper(wxApp):
         item = self.tree.GetSelection()
         data = self.tree.GetItemData(item).GetData()
         position = self.entries.get_id_pos(data.year, data.month,
-                                           data.day, data.id) + 1
+                                           data.day, data.id)
         if not data.day:
             wxMessageBox("This operation is not currently supported.",
                          "Confirm Deletion", wxOK | wxICON_ERROR, self.frame)
@@ -831,8 +831,7 @@ class ThotKeeper(wxApp):
     def _TagTreeDeleteMenu(self, event):
         item = self.tag_tree.GetSelection()
         data = self.tag_tree.GetItemData(item).GetData()
-        position = self.entries.get_id_pos(data[1], data[2],
-                                           data[3], data[4]) + 1
+        position = self.entries.get_id_pos(data[1], data[2], data[3], data[4])
         if not data[4]:
             wxMessageBox("This operation is not currently supported.",
                          "Confirm Deletion", wxOK | wxICON_ERROR, self.frame)

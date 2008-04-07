@@ -197,22 +197,24 @@ class TKEntries:
             return None
         
     def get_id_pos(self, year, month, day, id):
-        """Return the position of that id in the list for that day
-         - 0 if no entries for that day
-         - len(entries) if the id not found""" 
+        """Return 1-based position of ID in the ordered list of
+        entries for YEAR, MONTH, DAY.  If ID is not found, return the
+        position in that list it would hold if appended to the list (1
+        if the list is empty; number_of_entries + 1 otherwise)."""
         try:
             day_keys = self.entry_tree[year][month][day].keys()
             day_keys.sort()
         except:
-            return 0
+            day_keys = []
         try:
-            return day_keys.index(id)
+            return day_keys.index(id) + 1
         except:
-            return len(day_keys)
+            return len(day_keys) + 1
         
     def get_next_id(self, year, month, day, id):
-        """Get the id of the next entry for that day
-         - or None if no more in the list """
+        """Return the id of the entry (in the set of entries for YEAR,
+        MONTH, DAY) which follows the entry for ID, or None if no
+        entries follow the one for ID."""
         try:
             day_keys = self.entry_tree[year][month][day].keys()
             day_keys.sort()
@@ -222,8 +224,9 @@ class TKEntries:
             return None
         
     def get_prev_id(self, year, month, day, id):
-        """Get the id of the previous entry for that day
-        - or the last entry if the supplied id is not found"""
+        """Return the id of the entry (in the set of entries for YEAR,
+        MONTH, DAY) which precedes the entry for ID, or the last entry
+        for that day if no entry for ID can be found."""
         try:
             day_keys = self.entry_tree[year][month][day].keys()
             day_keys.sort()
