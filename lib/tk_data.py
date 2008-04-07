@@ -92,6 +92,11 @@ class TKEntries:
                 func(entry, tag)
     
     def update_tags(self, oldtags, newtags, entry):
+        """Update the tag set association for ENTRY.  OLDTAGS are the
+        tags is used to carry; NEWTAGS are the tags it now carries.
+        Notify the tag listeners of relevant changes.  If this change
+        removes the last association of an entry with a given tag,
+        prune the tag."""
         addtags = filter(lambda x: x not in oldtags, newtags)
         removetags = filter(lambda x: x not in newtags, oldtags)
         for tag in newtags:
@@ -100,16 +105,18 @@ class TKEntries:
         for tag in addtags:
             if not self.tag_tree.has_key(tag):
                 self.tag_tree[tag] = set()
-            self.tag_tree[tag].add((entry.year, entry.month, entry.day, entry.id))
-        for tag in removetags: # For all the tags to be removed
-            if self.tag_tree.has_key(tag): #If the tag exists
-                entry_key = (entry.year, entry.month, entry.day, entry.id)
-                if entry_key in self.tag_tree[tag]: # If the given entry is attached to the tag
-                    self.tag_tree[tag].remove(entry_key) # ...remove it
-                    for func in self.tag_listeners:
-                        func(tag, entry, False)
-                    if not self.tag_tree[tag]: # If the tag has no more entries
-                        del self.tag_tree[tag] # ... delete it
+            self.tag_tree[tag].add((entry.year, entry.month,
+                                    entry.day, entry.id))
+        for tag in removetags:
+            if not self.tag_tree.has_key(tag):
+                continue
+            entry_key = (entry.year, entry.month, entry.day, entry.id)
+            if entry_key in self.tag_tree[tag]:
+                self.tag_tree[tag].remove(entry_key)
+                for func in self.tag_listeners:
+                    func(tag, entry, False)
+                if not self.tag_tree[tag]: 
+                    del self.tag_tree[tag]
         
     def store_entry(self, entry):
         year, month, day = entry.get_date()
