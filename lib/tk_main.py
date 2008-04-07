@@ -222,7 +222,8 @@ class TKEventTree(wxTreeCtrl):
 class TKEventTagTree(TKEventTree):
     def __init__(self, parent, style):
         TKEventTree.__init__(self, parent, style)
-        self.SetItemData(self.root_id, wxTreeItemData((None, None, None, None, None)))
+        self.SetItemData(self.root_id, wxTreeItemData((None, None, None,
+                                                       None, None)))
         self.SetItemText(self.root_id, 'ThotKeeper Tags')
 
     def GetTagStack(self, tag, year, month, day, id):
@@ -260,11 +261,15 @@ class TKEventTagTree(TKEventTree):
             if not stack[2]:
                 data = wxTreeItemData((tag, year, month, day, id))
                 stack[2] = self.AppendItem(stack[1],
-                                           "%02d/%02d/%4d - %s" % (int(day), int(month), int(year), subject),
+                                           "%02d/%02d/%4d - %s" \
+                                           % (int(day), int(month),
+                                              int(year), subject),
                                            -1, -1, data)
                 self.SortChildren(stack[1])
             else:
-                self.SetItemText(stack[2], "%02d/%02d/%4d - %s" % (int(day), int(month), int(year), subject))
+                self.SetItemText(stack[2],
+                                 "%02d/%02d/%4d - %s" \
+                                 % (int(day), int(month), int(year), subject))
         wxEndBusyCursor()
 
     def OnCompareItems(self, item1, item2):
@@ -601,7 +606,9 @@ class ThotKeeper(wxApp):
                 self.entries.register_listener(self.tree.EntryChangedListener)
                 self.entries.register_listener(self.cal.EntryChangedListener)
                 self.entries.register_tag_listener(self.tag_tree.EntryChangedListener)
-                self._SetEntryFormDate(timestruct[0], timestruct[1], timestruct[2])
+                self._SetEntryFormDate(timestruct[0],
+                                       timestruct[1],
+                                       timestruct[2])
                 self.cal.HighlightEvents(self.entries)
                 self.panel.Show(true)
                 self.frame.Layout()
@@ -785,7 +792,8 @@ class ThotKeeper(wxApp):
                     id = id + 1
                 self.entry_form_key = TKEntryKey(year, month, day, id)
             self.entries.store_entry(tk_data.TKEntry(author, subject, text,
-                                                     year, month, day, id, tags))
+                                                     year, month, day,
+                                                     id, tags))
         if path is None:
             path = conf.data_file
         self._SaveData(path, self.entries)
@@ -949,7 +957,8 @@ class ThotKeeper(wxApp):
         self._SetEntryFormDate(int(year), int(month), int(day), id)
 
     def _GetCurrentEntryPieces(self):
-        year, month, day, author, subject, text, id, _ = self._GetEntryFormBits()
+        year, month, day, author, subject, text, id, tags \
+              = self._GetEntryFormBits()
         date = wxDateTime()
         date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
                          '%Y-%m-%d %H:%M:%S', date)

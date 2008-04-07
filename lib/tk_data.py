@@ -91,7 +91,7 @@ class TKEntries:
             for entry in entries:
                 func(entry, tag)
     
-    def update_tags(self, oldtags, newtags, entry):
+    def _update_tags(self, oldtags, newtags, entry):
         """Update the tag set association for ENTRY.  OLDTAGS are the
         tags is used to carry; NEWTAGS are the tags it now carries.
         Notify the tag listeners of relevant changes.  If this change
@@ -132,14 +132,14 @@ class TKEntries:
             oldtags = sorted(self.entry_tree[year][month][day][id].tags)
         self.entry_tree[year][month][day][id] = entry
         newtags = sorted(entry.tags)
-        self.update_tags(oldtags, newtags, entry)
+        self._update_tags(oldtags, newtags, entry)
         for func in self.listeners:
             func(entry, year, month, day, id)
                     
     def remove_entry(self, year, month, day, id):
         entry = self.entry_tree[year][month][day][id]
         oldtags = entry.tags
-        self.update_tags(oldtags, [], entry)
+        self._update_tags(oldtags, [], entry)
         del self.entry_tree[year][month][day][id]
         if not len(self.entry_tree[year][month][day].keys()):
             del self.entry_tree[year][month][day]
@@ -175,7 +175,8 @@ class TKEntries:
     
     def get_entries_by_tag(self, tag):
         entry_keys = self.tag_tree[tag]
-        return map(lambda x: self.entry_tree[x[0]][x[1]][x[2]][x[3]], entry_keys)
+        return map(lambda x: self.entry_tree[x[0]][x[1]][x[2]][x[3]],
+                   entry_keys)
     
     def get_entry(self, year, month, day, id):
         """Return the TKEntry associated with YEAR, MONTH, and DAY,
@@ -268,8 +269,10 @@ class TKDataParser(xmllib.XMLParser):
        </diary>
 
     Version 1 (unreleased): Adds an "id" attribute to entries for the
-    purposes of distinguishing multiple entries for a given day.
-    Adds an optional <tags> tag to entries, which contains 1 or more <tag> tags.
+    purposes of distinguishing multiple entries for a given day.  Adds
+    an optional <tags> tag to entries, which contains 1 or more <tag>
+    tags.
+    
        <diary version="1">
          <entries>
            <entry year="YYYY" month="M" day="D" id="N">
