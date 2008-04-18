@@ -555,6 +555,7 @@ class ThotKeeper(wxApp):
         try:
             self.parser = tk_data.TKDataParser()
             self.tree.PruneAll()
+            self.tag_tree.PruneAll()
             self._SetModified(false)
             self.panel.Show(false)
             conf.data_file = datafile
