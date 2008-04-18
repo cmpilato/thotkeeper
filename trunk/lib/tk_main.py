@@ -836,6 +836,11 @@ class ThotKeeper(wxApp):
             self.entries.remove_entry(data.year, data.month,
                                       data.day, data.id)
             self._SaveData(conf.data_file, self.entries)
+            dispyear, dispmonth, dispday, dispid = self._GetEntryFormKeys()
+            if ((dispyear == data.year) & (dispmonth == data.month) & \
+                (dispday == data.day) & (dispid == data.id)):
+                self._SetModified(false)
+                self._SetEntryFormDate(dispyear, dispmonth, dispday)
 
     def _TagTreeDeleteMenu(self, event):
         item = self.tag_tree.GetSelection()
@@ -852,6 +857,11 @@ class ThotKeeper(wxApp):
             self.entries.remove_entry(data[1], data[2],
                                       data[3], data[4])
             self._SaveData(conf.data_file, self.entries)
+            dispyear, dispmonth, dispday, dispid = self._GetEntryFormKeys()
+            if ((dispyear == data[1]) & (dispmonth == data[2]) & \
+                (dispday == data[3]) & (dispid == data[4])):
+                self._SetModified(false)
+                self._SetEntryFormDate(dispyear, dispmonth, dispday)
     
     def _TreeExpandMenu(self, event):
         def _ExpandCallback(id):
