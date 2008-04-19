@@ -79,15 +79,16 @@ def FlushConf():
 ###
 
 class TKEntryKey:
-    def __init__(self, year, month, day, id):
+    def __init__(self, year, month, day, id, tag=None):
         self.year = year
         self.month = month
         self.day = day
         self.id = id
+        self.tag = tag
 
     def __cmp__(self, other):
-        return cmp([self.year, self.month, self.day, self.id],
-                   [other.year, other.month, other.day, other.id])
+        return cmp([self.tag, self.year, self.month, self.day, self.id],
+                   [other.tag, other.year, other.month, other.day, other.id])
 
 class TKEventTree(wxTreeCtrl):
     def __init__(self, parent, style):
@@ -222,8 +223,6 @@ class TKEventTree(wxTreeCtrl):
 class TKEventTagTree(TKEventTree):
     def __init__(self, parent, style):
         TKEventTree.__init__(self, parent, style)
-        self.SetItemData(self.root_id, wxTreeItemData((None, None, None,
-                                                       None, None)))
         self.SetItemText(self.root_id, 'ThotKeeper Tags')
 
     def GetTagStack(self, tag, year, month, day, id):
@@ -231,11 +230,11 @@ class TKEventTagTree(TKEventTree):
         root_id = self.GetRootItem()
         stack.append(root_id) # 0
         item_id = self.FindChild(root_id,
-                                 (tag, None, None, None, None))
+                                 TKEntryKey(None, None, None, None, tag))
         stack.append(item_id) # 1
         if item_id:
             item_id = self.FindChild(item_id,
-                                     (tag, year, month, day, id))
+                                     TKEntryKey(year, month, day, id, tag))
             stack.append(item_id) # 2
         else:
             stack.append(None) # 2
@@ -253,13 +252,13 @@ class TKEventTagTree(TKEventTree):
         else:
             subject = entry.get_subject()
             if not stack[1]:
-                data = wxTreeItemData((tag, None, None, None, None))
+                data = wxTreeItemData(TKEntryKey(None, None, None, None, tag))
                 stack[1] = self.AppendItem(stack[0],
                                            tag,
                                            -1, -1, data)
                 self.SortChildren(stack[0])
             if not stack[2]:
-                data = wxTreeItemData((tag, year, month, day, id))
+                data = wxTreeItemData(TKEntryKey(year, month, day, id, tag))
                 stack[2] = self.AppendItem(stack[1],
                                            "%02d/%02d/%4d - %s" \
                                            % (int(day), int(month),
@@ -277,10 +276,10 @@ class TKEventTagTree(TKEventTree):
         data2 = self.GetItemData(item2).GetData()
         if data1 is None or data2 is None:
             return 0
-        if cmp(data1[0], data2[0]) == 0:
+        if cmp(data1.tag, data2.tag) == 0:
             return TKEventTree.OnCompareItems(self, item1, item2)
         else:
-            return cmp(data1[0], data2[0])
+            return cmp(data1.tag, data2.tag)
 
 ########################################################################
 ###
@@ -504,12 +503,12 @@ class ThotKeeper(wxApp):
         EVT_MENU(self.tree, self.tree_expand_id, self._TreeExpandMenu)
         EVT_MENU(self.tree, self.tree_collapse_id, self._TreeCollapseMenu)
         
-        EVT_TREE_ITEM_ACTIVATED(self, self.tagtree_id, self._TagTreeActivated)
-        EVT_RIGHT_DOWN(self.tag_tree, self._TagTreePopup)
-        EVT_MENU(self.tag_tree, self.tree_edit_id, self._TagTreeEditMenu)
-        EVT_MENU(self.tag_tree, self.tree_delete_id, self._TagTreeDeleteMenu)
-        EVT_MENU(self.tag_tree, self.tree_expand_id, self._TagTreeExpandMenu)
-        EVT_MENU(self.tag_tree, self.tree_collapse_id, self._TagTreeCollapseMenu)
+        EVT_TREE_ITEM_ACTIVATED(self, self.tagtree_id, self._TreeActivated)
+        EVT_RIGHT_DOWN(self.tag_tree, self._TreePopup)
+        EVT_MENU(self.tag_tree, self.tree_edit_id, self._TreeEditMenu)
+        EVT_MENU(self.tag_tree, self.tree_delete_id, self._TreeDeleteMenu)
+        EVT_MENU(self.tag_tree, self.tree_expand_id, self._TreeExpandMenu)
+        EVT_MENU(self.tag_tree, self.tree_collapse_id, self._TreeCollapseMenu)
 
         # Size and position our frame.
         self.frame.SetSize(conf.size)
@@ -591,8 +590,6 @@ class ThotKeeper(wxApp):
                 self.entries.enumerate_entries(_AddEntryToTree)
                 
                 def _AddEntryToTagTree(entry, tag):
-                    year, month, day = entry.get_date()
-                    id = entry.get_id()
                     self.tag_tree.EntryChangedListener(tag, entry, True)
                 self.entries.enumerate_tag_entries(_AddEntryToTagTree)
                 
@@ -751,20 +748,12 @@ class ThotKeeper(wxApp):
 
     def _TreeActivated(self, event):
         item = event.GetItem()
-        data = self.tree.GetItemData(item).GetData()
+        tree = event.GetEventObject()
+        data = tree.GetItemData(item).GetData()
         if not data.day:
             event.Skip()
             return
         self._SetEntryFormDate(data.year, data.month, data.day, data.id)
-
-    def _TagTreeActivated(self, event):
-        item = event.GetItem()
-        data = self.tag_tree.GetItemData(item).GetData()
-        if not data[4]:
-            event.Skip()
-            return
-        self._SetEntryFormDate(data[1], data[2], data[3], data[4])
-
 
     def _GetEntryFormKeys(self):
         ### FIXME: This interface is ... hacky.
@@ -806,23 +795,17 @@ class ThotKeeper(wxApp):
 
     def _TreeEditMenu(self, event):
         item = self.tree.GetSelection()
-        data = self.tree.GetItemData(item).GetData()
+        tree = event.GetEventObject().parenttree
+        data = tree.GetItemData(item).GetData()
         if not data.day:
             event.Skip()
             return
         self._SetEntryFormDate(data.year, data.month, data.day, data.id)
-    
-    def _TagTreeEditMenu(self, event):
-        item = self.tag_tree.GetSelection()
-        data = self.tag_tree.GetItemData(item).GetData()
-        if not data[4]:
-            event.Skip()
-            return
-        self._SetEntryFormDate(data[1], data[2], data[3], data[4])
 
     def _TreeDeleteMenu(self, event):
         item = self.tree.GetSelection()
-        data = self.tree.GetItemData(item).GetData()
+        tree = event.GetEventObject().parenttree
+        data = tree.GetItemData(item).GetData()
         position = self.entries.get_id_pos(data.year, data.month,
                                            data.day, data.id)
         if not data.day:
@@ -842,49 +825,21 @@ class ThotKeeper(wxApp):
                 self._SetModified(false)
                 self._SetEntryFormDate(dispyear, dispmonth, dispday)
 
-    def _TagTreeDeleteMenu(self, event):
-        item = self.tag_tree.GetSelection()
-        data = self.tag_tree.GetItemData(item).GetData()
-        position = self.entries.get_id_pos(data[1], data[2], data[3], data[4])
-        if not data[4]:
-            wxMessageBox("This operation is not currently supported.",
-                         "Confirm Deletion", wxOK | wxICON_ERROR, self.frame)
-        elif wxOK == wxMessageBox(
-            "Are you sure you want to delete the entry for " +
-            "%s-%s-%s (%s)?" % (data[1], data[2], data[3], position),
-            "Confirm Deletion",
-            wxOK | wxCANCEL | wxICON_QUESTION, self.frame):
-            self.entries.remove_entry(data[1], data[2],
-                                      data[3], data[4])
-            self._SaveData(conf.data_file, self.entries)
-            dispyear, dispmonth, dispday, dispid = self._GetEntryFormKeys()
-            if ((dispyear == data[1]) & (dispmonth == data[2]) & \
-                (dispday == data[3]) & (dispid == data[4])):
-                self._SetModified(false)
-                self._SetEntryFormDate(dispyear, dispmonth, dispday)
-    
     def _TreeExpandMenu(self, event):
+        tree = event.GetEventObject().parenttree
         def _ExpandCallback(id):
-            self.tree.Expand(id)
-        self.tree.Walker(_ExpandCallback)
-    
-    def _TagTreeExpandMenu(self, event):
-        def _ExpandCallback(id):
-            self.tag_tree.Expand(id)
-        self.tag_tree.Walker(_ExpandCallback)
+            tree.Expand(id)
+        tree.Walker(_ExpandCallback)
     
     def _TreeCollapseMenu(self, event):
+        tree = event.GetEventObject().parenttree
         def _CollapseCallback(id):
-            self.tree.Collapse(id)
-        self.tree.Walker(_CollapseCallback)
-
-    def _TagTreeCollapseMenu(self, event):
-        def _CollapseCallback(id):
-            self.tag_tree.Collapse(id)
-        self.tag_tree.Walker(_CollapseCallback)
+            tree.Collapse(id)
+        tree.Walker(_CollapseCallback)
     
     def _TreePopup(self, event):
-        item, flags = self.tree.HitTest(event.GetPosition())
+        tree = event.GetEventObject()
+        item, flags = tree.HitTest(event.GetPosition())
         popup = self.resources.LoadMenu('TKTreePopup')
         if item and flags & (wxTREE_HITTEST_ONITEMBUTTON
                              | wxTREE_HITTEST_ONITEMICON
@@ -892,35 +847,17 @@ class ThotKeeper(wxApp):
                              | wxTREE_HITTEST_ONITEMLABEL
                              | wxTREE_HITTEST_ONITEMRIGHT
                              | wxTREE_HITTEST_ONITEMSTATEICON):
-            if not self.tree.IsSelected(item):
-                self.tree.SelectItem(item)
-            data = self.tree.GetItemData(item).GetData()
+            if not tree.IsSelected(item):
+                tree.SelectItem(item)
+            data = tree.GetItemData(item).GetData()
             if not data.day:
                 popup.Enable(self.tree_edit_id, false)
         else:
             popup.Enable(self.tree_edit_id, false)
             popup.Enable(self.tree_delete_id, false)
-        self.tree.PopupMenu(popup)
-
-    def _TagTreePopup(self, event):
-        item, flags = self.tag_tree.HitTest(event.GetPosition())
-        popup = self.resources.LoadMenu('TKTreePopup')
-        if item and flags & (wxTREE_HITTEST_ONITEMBUTTON
-                             | wxTREE_HITTEST_ONITEMICON
-                             | wxTREE_HITTEST_ONITEMINDENT
-                             | wxTREE_HITTEST_ONITEMLABEL
-                             | wxTREE_HITTEST_ONITEMRIGHT
-                             | wxTREE_HITTEST_ONITEMSTATEICON):
-            if not self.tag_tree.IsSelected(item):
-                self.tag_tree.SelectItem(item)
-            data = self.tag_tree.GetItemData(item).GetData()
-            if not data[4]:
-                popup.Enable(self.tree_edit_id, false)
-        else:
-            popup.Enable(self.tree_edit_id, false)
-            popup.Enable(self.tree_delete_id, false)
-        self.tag_tree.PopupMenu(popup)
-    
+        popup.parenttree = tree
+        tree.PopupMenu(popup)
+ 
     def _FileNewMenu(self, event):
         global conf
         directory = '.'
