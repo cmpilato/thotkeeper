@@ -29,6 +29,8 @@ conf = None
 month_names = ['January', 'February', 'March', 'April', 
                'May', 'June', 'July', 'August', 
                'September', 'October', 'November', 'December']
+month_abbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 CONF_GROUP = 'options'
 CONF_FONT_NAME = CONF_GROUP + '/font-face'
@@ -277,15 +279,18 @@ class TKEventTagTree(TKTreeCtrl):
             if not stack[2]:
                 data = wxTreeItemData(TKEntryKey(year, month, day, id, tag))
                 stack[2] = self.AppendItem(stack[1],
-                                           "%02d/%02d/%4d - %s" \
-                                           % (int(day), int(month),
+                                           "%02d %s %4d - %s" \
+                                           % (int(day),
+                                              month_abbrs[int(month) - 1],
                                               int(year), subject),
                                            -1, -1, data)
                 self.SortChildren(stack[1])
             else:
                 self.SetItemText(stack[2],
-                                 "%02d/%02d/%4d - %s" \
-                                 % (int(day), int(month), int(year), subject))
+                                 "%02d %s %4d - %s" \
+                                 % (int(day),
+                                    month_abbrs[int(month) - 1],
+                                    int(year), subject))
         wxEndBusyCursor()
 
     def OnCompareItems(self, item1, item2):
