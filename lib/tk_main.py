@@ -243,6 +243,9 @@ class TKEventTree(TKTreeCtrl):
             stack.append(None) # 2
             stack.append(None) # 3
         return stack
+
+    def _ItemLabel(self, day, subject):
+        return "%02d%s" % (int(day), subject and " - " + subject or '')
     
     def EntryChangedListener(self, entry, year, month, day, id, expand=True):
         """Callback for TKEntries.store_entry()."""
@@ -268,11 +271,11 @@ class TKEventTree(TKTreeCtrl):
             if not stack[3]:
                 data = wxTreeItemData(TKEntryKey(year, month, day, id))
                 stack[3] = self.AppendItem(stack[2],
-                                           "%02d - %s" % (int(day), subject),
+                                           self._ItemLabel(day, subject),
                                            -1, -1, data)
                 self.SortChildren(stack[2])
             else:
-                self.SetItemText(stack[3], "%02d - %s" % (int(day), subject))
+                self.SetItemText(stack[3], self._ItemLabel(day, subject))
             if expand:
                 self.Expand(stack[0])
                 self.Expand(stack[1])
@@ -321,6 +324,11 @@ class TKEventTagTree(TKTreeCtrl):
             stack.append(item_id) # -1
         return stack
 
+    def _ItemLabel(self, day, month, year, subject):
+        return "%02d %s %4d%s" \
+               % (int(day), month_abbrs[int(month) - 1], int(year),
+                  subject and " - " + subject or '')
+        
     def EntryChangedListener(self, tag, entry, add=True):
         """Callback for TKEntries.store_entry()."""
         year, month, day = entry.get_date()
@@ -349,18 +357,13 @@ class TKEventTagTree(TKTreeCtrl):
             if len(stack) == i + 2:
                 data = wxTreeItemData(TKEntryKey(year, month, day, id, newtag))
                 stack.append(self.AppendItem(stack[i + 1],
-                                             "%02d %s %4d - %s" \
-                                             % (int(day),
-                                                month_abbrs[int(month) - 1],
-                                                int(year), subject),
+                                             self._ItemLabel(day, month, year,
+                                                             subject),
                                              -1, -1, data))
                 self.SortChildren(stack[i + 1])
             else:
                 self.SetItemText(stack[i + 2],
-                                 "%02d %s %4d - %s" \
-                                 % (int(day),
-                                    month_abbrs[int(month) - 1],
-                                    int(year), subject))
+                                 self._ItemLabel(day, month, year, subject))
         wxEndBusyCursor()
 
 
