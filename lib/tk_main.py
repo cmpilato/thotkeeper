@@ -88,9 +88,58 @@ class TKEntryKey:
         self.id = id
         self.tag = tag
 
+    def _compare_tags(self, other):
+        ### Because tags look like paths, we use basically the same
+        ### algorithm as Subversion's svn_path_compare_paths().
+        
+        self_tag = self.tag or ''
+        other_tag = other.tag or ''
+
+        # Easy case:  the tags are the same
+        if self_tag == other_tag:
+            return 0
+        
+        self_tag_len = len(self_tag)
+        other_tag_len = len(other_tag)
+        min_len = min(self_tag_len, other_tag_len)
+        i = 0
+
+        # Skip past common prefix
+        while (i < min_len) and (self_tag[i] == other_tag[i]):
+            i = i + 1
+
+        # Children are greater than their parents, but less than
+        # greater siblings of their parents
+        char1 = '\0'
+        char2 = '\0'
+        if (i < self_tag_len):
+            char1 = self_tag[i]
+        if (i < other_tag_len):
+            char2 = other_tag[i]
+
+        if (char1 == '/') and (i == other_tag_len):
+            return 1
+        if (char2 == '/') and (i == self_tag_len):
+            return -1
+        if (i < self_tag_len) and (char1 == '/'):
+            return -1
+        if (i < other_tag_len) and (char2 == '/'):
+            return 1
+
+        # Common prefix was skipped above, next character is compared
+        # to determine order
+        return cmp(char1, char2)
+        
     def __cmp__(self, other):
-        return cmp([self.tag, self.year, self.month, self.day, self.id],
-                   [other.tag, other.year, other.month, other.day, other.id])
+        tag_cmp = self._compare_tags(other)
+        if self.year is not None and other.year is None:
+            return -1
+        if self.year is None and other.year is not None:
+            return 1
+        if tag_cmp == 0:
+            return cmp([self.year, self.month, self.day, self.id],
+                       [other.year, other.month, other.day, other.id])
+        return -tag_cmp
 
 
 ########################################################################
@@ -245,18 +294,31 @@ class TKEventTagTree(TKTreeCtrl):
         self.root_id = self.AddRoot('ThotKeeper Tags', -1, -1, root_data)
 
     def GetTagStack(self, tag, year, month, day, id):
+        """Return a list of tree item id's, the path of such from the
+        root of the tree to the requested item.  If any segment of the
+        expected path is missing, the list will be truncated to only
+        those segments which exist."""
+
+        tag_path = map(unicode, tag.split('/'))
         stack = []
-        root_id = self.GetRootItem()
+        prev_id = root_id = self.GetRootItem()
         stack.append(root_id) # 0
-        item_id = self.FindChild(root_id,
-                                 TKEntryKey(None, None, None, None, tag))
-        stack.append(item_id) # 1
+        tag = None
+        for i in range(len(tag_path)):
+            if i == 0:
+                tag = tag_path[i]
+            else:
+                tag = tag + '/' + tag_path[i]
+            item_id = self.FindChild(prev_id,
+                                     TKEntryKey(None, None, None, None, tag))
+            if item_id is None:
+                return stack
+            stack.append(item_id) # 1, 2, ...
+            prev_id = item_id
+        item_id = self.FindChild(prev_id,
+                                 TKEntryKey(year, month, day, id, tag))
         if item_id:
-            item_id = self.FindChild(item_id,
-                                     TKEntryKey(year, month, day, id, tag))
-            stack.append(item_id) # 2
-        else:
-            stack.append(None) # 2
+            stack.append(item_id) # -1
         return stack
 
     def EntryChangedListener(self, tag, entry, add=True):
@@ -265,43 +327,42 @@ class TKEventTagTree(TKTreeCtrl):
         id = entry.get_id()
         wxBeginBusyCursor()
         stack = self.GetTagStack(tag, year, month, day, id)
+        tag_path = map(unicode, tag.split('/'))
+        expected_stack_len = len(tag_path) + 2  # root + tag pieces + entry
         if add == False:
-            if stack[2]:
-                self.Prune(stack[2])
+            if len(stack) == expected_stack_len:
+                self.Prune(stack[-1])
         else:
+            newtag = None
+            for i in range(len(tag_path)):
+                if i == 0:
+                    newtag = tag_path[i]
+                else:
+                    newtag = newtag + '/' + tag_path[i]
+                if len(stack) == i + 1:
+                    data = wxTreeItemData(TKEntryKey(None, None, None, None,
+                                                     newtag))
+                    stack.append(self.AppendItem(stack[i], tag_path[i],
+                                                 -1, -1, data))
+                    self.SortChildren(stack[i])
             subject = entry.get_subject()
-            if not stack[1]:
-                data = wxTreeItemData(TKEntryKey(None, None, None, None, tag))
-                stack[1] = self.AppendItem(stack[0],
-                                           tag,
-                                           -1, -1, data)
-                self.SortChildren(stack[0])
-            if not stack[2]:
-                data = wxTreeItemData(TKEntryKey(year, month, day, id, tag))
-                stack[2] = self.AppendItem(stack[1],
-                                           "%02d %s %4d - %s" \
-                                           % (int(day),
-                                              month_abbrs[int(month) - 1],
-                                              int(year), subject),
-                                           -1, -1, data)
-                self.SortChildren(stack[1])
+            if len(stack) == i + 2:
+                data = wxTreeItemData(TKEntryKey(year, month, day, id, newtag))
+                stack.append(self.AppendItem(stack[i + 1],
+                                             "%02d %s %4d - %s" \
+                                             % (int(day),
+                                                month_abbrs[int(month) - 1],
+                                                int(year), subject),
+                                             -1, -1, data))
+                self.SortChildren(stack[i + 1])
             else:
-                self.SetItemText(stack[2],
+                self.SetItemText(stack[i + 2],
                                  "%02d %s %4d - %s" \
                                  % (int(day),
                                     month_abbrs[int(month) - 1],
                                     int(year), subject))
         wxEndBusyCursor()
 
-    def OnCompareItems(self, item1, item2):
-        data1 = self.GetItemData(item1).GetData()
-        data2 = self.GetItemData(item2).GetData()
-        if data1 is None or data2 is None:
-            return 0
-        if cmp(data1.tag, data2.tag) == 0:
-            return TKTreeCtrl.OnCompareItems(self, item1, item2)
-        else:
-            return cmp(data1.tag, data2.tag)
 
 ########################################################################
 ###
