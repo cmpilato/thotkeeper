@@ -721,7 +721,7 @@ class ThotKeeper(wxApp):
         return false
 
     def _TextToTags(self, text):
-        return filter(lambda x: x!='',map(string.strip, text.split(',')))
+        return filter(lambda x: x!='',map(string.strip, text.lower().split(',')))
         
     def _TagsToText(self, tags):
         if not tags:
