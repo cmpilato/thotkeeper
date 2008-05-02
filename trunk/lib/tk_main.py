@@ -75,7 +75,7 @@ def FlushConf():
 
 ########################################################################
 ###    
-###  EVENT TREE SUBCLASS
+###  ENTRY KEY CLASS
 ###
 
 class TKEntryKey:
@@ -90,11 +90,15 @@ class TKEntryKey:
         return cmp([self.tag, self.year, self.month, self.day, self.id],
                    [other.tag, other.year, other.month, other.day, other.id])
 
-class TKEventTree(wxTreeCtrl):
+
+########################################################################
+###    
+###  GENERIC TREE SUBCLASS
+###
+
+class TKTreeCtrl(wxTreeCtrl):
     def __init__(self, parent, style):
         wxTreeCtrl.__init__(self, parent=parent, style=style)
-        root_data = wxTreeItemData(TKEntryKey(None, None, None, None))
-        self.root_id = self.AddRoot('ThotKeeper Entries', -1, -1, root_data)
 
     def GetRootId(self):
         return self.root_id
@@ -134,6 +138,39 @@ class TKEventTree(wxTreeCtrl):
                 return child_id
         return None
     
+    def Prune(self, item_id):
+        while 1:
+            parent_id = self.GetItemParent(item_id)
+            # Don't delete the root node.
+            if not parent_id.IsOk():
+                break        
+            self.Delete(item_id)
+            if self.GetChildrenCount(parent_id):
+                break
+            item_id = parent_id
+
+    def PruneAll(self):
+        self.DeleteChildren(self.root_id)
+
+    def CollapseTree(self):
+        try:
+            self.CollapseAllChildren(self.root_id)
+        except AttributeError:
+            self.Collapse(self.root_id)
+        self.Expand(self.root_id)
+
+
+########################################################################
+###    
+###  GENERIC TREE SUB-SUBCLASS
+###
+        
+class TKEventTree(TKTreeCtrl):
+    def __init__(self, parent, style):
+        TKTreeCtrl.__init__(self, parent, style)
+        root_data = wxTreeItemData(TKEntryKey(None, None, None, None))
+        self.root_id = self.AddRoot('ThotKeeper Entries', -1, -1, root_data)
+
     def GetDateStack(self, year, month, day, id):
         stack = []
         root_id = self.GetRootItem()
@@ -156,27 +193,6 @@ class TKEventTree(wxTreeCtrl):
             stack.append(None) # 3
         return stack
     
-    def Prune(self, item_id):
-        while 1:
-            parent_id = self.GetItemParent(item_id)
-            # Don't delete the root node.
-            if not parent_id.IsOk():
-                break        
-            self.Delete(item_id)
-            if self.GetChildrenCount(parent_id):
-                break
-            item_id = parent_id
-
-    def PruneAll(self):
-        self.DeleteChildren(self.root_id)
-
-    def CollapseTree(self):
-        try:
-            self.CollapseAllChildren(self.root_id)
-        except AttributeError:
-            self.Collapse(self.root_id)
-        self.Expand(self.root_id)
-        
     def EntryChangedListener(self, entry, year, month, day, id, expand=True):
         """Callback for TKEntries.store_entry()."""
         wxBeginBusyCursor()
@@ -217,13 +233,14 @@ class TKEventTree(wxTreeCtrl):
 
 ########################################################################
 ###
-###  EVENT TREE TAG SUBCLASS
+###  EVENT TREE TAG SUB-SUBCLASS
 ###
 
-class TKEventTagTree(TKEventTree):
+class TKEventTagTree(TKTreeCtrl):
     def __init__(self, parent, style):
-        TKEventTree.__init__(self, parent, style)
-        self.SetItemText(self.root_id, 'ThotKeeper Tags')
+        TKTreeCtrl.__init__(self, parent, style)
+        root_data = wxTreeItemData(TKEntryKey(None, None, None, None))
+        self.root_id = self.AddRoot('ThotKeeper Tags', -1, -1, root_data)
 
     def GetTagStack(self, tag, year, month, day, id):
         stack = []
@@ -277,7 +294,7 @@ class TKEventTagTree(TKEventTree):
         if data1 is None or data2 is None:
             return 0
         if cmp(data1.tag, data2.tag) == 0:
-            return TKEventTree.OnCompareItems(self, item1, item2)
+            return TKTreeCtrl.OnCompareItems(self, item1, item2)
         else:
             return cmp(data1.tag, data2.tag)
 
