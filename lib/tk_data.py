@@ -313,10 +313,12 @@ class TKDataParser(xmllib.XMLParser):
             tags = entry.get_tags()
             fp.write('  <entry year="%s" month="%s" day="%s" id="%s">\n'
                      % (year, month, day, id))
-            fp.write('   <author>%s</author>\n'
-                     % (xml.sax.saxutils.escape(entry.get_author())))
-            fp.write('   <subject>%s</subject>\n'
-                     % (xml.sax.saxutils.escape(entry.get_subject())))
+            author = xml.sax.saxutils.escape(entry.get_author())
+            if author:
+                fp.write('   <author>%s</author>\n' % (author))
+            subject = xml.sax.saxutils.escape(entry.get_subject())
+            if subject:
+                fp.write('   <subject>%s</subject>\n' % (subject))
             if len(tags):
                 fp.write('   <tags>\n')
                 for tag in tags:
