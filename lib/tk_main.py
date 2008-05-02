@@ -941,6 +941,10 @@ class ThotKeeper(wxApp):
         popup.parenttree = tree
         tree.PopupMenu(popup)
  
+    def _GetFileDialog(self, title, directory, flags):
+        return wxFileDialog(self.frame, title, directory, '',
+                            'ThotKeeper journal files (*.tkj)|*.tkj', flags)
+        
     def _FileNewMenu(self, event):
         global conf
         directory = '.'
@@ -948,13 +952,15 @@ class ThotKeeper(wxApp):
             directory = os.environ['HOME']
         if conf.data_file is not None:
             directory = os.path.dirname(conf.data_file)
-        dialog = wxFileDialog(self.frame, "Create new data file", directory,
-                              '', '*.xml', wxSAVE | wxOVERWRITE_PROMPT)
+        dialog = self._GetFileDialog("Create new data file", directory,
+                                     wxSAVE | wxOVERWRITE_PROMPT)
         if dialog.ShowModal() == wxID_OK:
             path = dialog.GetPath()
+            if len(path) < 5 or not path.endswith('.tkj'):
+                path = path + '.tkj'
             self._SetDataFile(path, true)
         dialog.Destroy()
-        
+
     def _FileOpenMenu(self, event):
         global conf
         directory = '.'
@@ -962,8 +968,8 @@ class ThotKeeper(wxApp):
             directory = os.environ['HOME']
         if conf.data_file is not None:
             directory = os.path.dirname(conf.data_file)
-        dialog = wxFileDialog(self.frame, "Open existing data file",
-                              directory, '', '*.xml', wxOPEN)
+        dialog = self._GetFileDialog("Open existing data file", directory,
+                                     wxOPEN)
         if dialog.ShowModal() == wxID_OK:
             path = dialog.GetPath()
             self._SetDataFile(path, false)
@@ -975,10 +981,12 @@ class ThotKeeper(wxApp):
     def _FileSaveAsMenu(self, event):
         global conf
         directory = os.path.dirname(conf.data_file)
-        dialog = wxFileDialog(self.frame, "Save as a new data file", directory,
-                              '', '*.xml', wxSAVE | wxOVERWRITE_PROMPT)
+        dialog = self._GetFileDialog("Save as a new data file", directory,
+                                     wxSAVE | wxOVERWRITE_PROMPT)
         if dialog.ShowModal() == wxID_OK:
             path = dialog.GetPath()
+            if len(path) < 5 or not path.endswith('.tkj'):
+                path = path + '.tkj'
             self._SaveEntriesToPath(path)
         dialog.Destroy()
 
