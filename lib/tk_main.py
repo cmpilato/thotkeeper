@@ -483,6 +483,7 @@ class ThotKeeper(wxApp):
         self.prev_id = self.resources.GetXRCID('TKPrev')
         self.date_id = self.resources.GetXRCID('TKEntryDate')
         self.author_id = self.resources.GetXRCID('TKEntryAuthor')
+        self.author_label_id = self.resources.GetXRCID('TKEntryAuthorLabel')
         self.subject_id = self.resources.GetXRCID('TKEntrySubject')
         self.tags_id = self.resources.GetXRCID('TKEntryTags')
         self.text_id = self.resources.GetXRCID('TKEntryText')
@@ -499,6 +500,10 @@ class ThotKeeper(wxApp):
         self.file_options_id = self.resources.GetXRCID('TKMenuFileOptions')
         self.choose_font_id = self.resources.GetXRCID('TKChooseFontButton')
         self.font_id = self.resources.GetXRCID('TKFontName')
+        self.diary_options_id = self.resources.GetXRCID('TKMenuDiaryOptions')
+        self.author_global_id = self.resources.GetXRCID('TKAuthorGlobal')
+        self.author_name_id = self.resources.GetXRCID('TKAuthorName')
+        self.author_per_entry_id = self.resources.GetXRCID('TKAuthorPerEntry')
         self.tree_edit_id = self.resources.GetXRCID('TKTreeMenuEdit')
         self.tree_delete_id = self.resources.GetXRCID('TKTreeMenuDelete')
         self.tree_expand_id = self.resources.GetXRCID('TKTreeMenuExpand')
@@ -524,6 +529,10 @@ class ThotKeeper(wxApp):
         # fetch our options dialog.
         self.options_dialog = self.resources.LoadDialog(self.frame,
                                                         'TKOptions')
+
+        # fetch the per-diary options dialog
+        self.diary_options_dialog = self.resources.LoadDialog(self.frame,
+                                                        'TKDiaryOptions')
 
         # Fetch (and assign) our menu bar.
         self.menubar = self.resources.LoadMenuBar('TKMenuBar')
@@ -580,6 +589,7 @@ class ThotKeeper(wxApp):
         EVT_MENU(self, self.file_quit_id, self._FileQuitMenu)
         EVT_MENU(self, self.help_about_id, self._HelpAboutMenu)
         EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
+        EVT_MENU(self, self.diary_options_id, self._DiaryOptionsMenu)
 
         # Event handlers for the Tree widget.
         EVT_TREE_ITEM_ACTIVATED(self, self.datetree_id, self._TreeActivated)
@@ -696,6 +706,7 @@ class ThotKeeper(wxApp):
                 self.cal.HighlightEvents(self.entries)
                 self.panel.Show(true)
                 self.frame.Layout()
+                self._UpdateAuthorBox()
             self.datafile = datafile
             self._SetTitle()
         finally:
@@ -710,6 +721,12 @@ class ThotKeeper(wxApp):
                    self.is_modified and " [modified]" or "")
         self.frame.SetTitle(title)
         
+    def _UpdateAuthorBox(self):
+        show_author = not self.entries.get_author_global()
+        self.frame.FindWindowById(self.author_id).Show(show_author)
+        self.frame.FindWindowById(self.author_label_id).Show(show_author)
+        self.frame.Layout()
+
     def _RefuseUnsavedModifications(self):
         """If there exist unsaved entry modifications, inform the user
         and return true.  Otherwise, return false."""
@@ -1038,6 +1055,39 @@ class ThotKeeper(wxApp):
         
     def _FileQuitMenu(self, event):
         self.frame.Destroy()
+        
+    def _DiaryOptionsMenu(self, event):
+        # Grab the controls
+        author_name_box = self.frame.FindWindowById(self.author_name_id)
+        author_global_radio = self.frame.FindWindowById(self.author_global_id)
+        author_per_entry_radio = self.frame.FindWindowById(self.author_per_entry_id)
+        # Enable/disable the author name box
+        def _ChooseAuthorGlobal(event2):
+            author_name_box.Enable(True)
+        def _ChooseAuthorPerEntry(event2):
+            author_name_box.Enable(False)
+        EVT_RADIOBUTTON(self, self.author_global_id, _ChooseAuthorGlobal)
+        EVT_RADIOBUTTON(self, self.author_per_entry_id, _ChooseAuthorPerEntry)
+        # Set the controls to the current settings
+        author_name = self.entries.get_author_name()
+        if (author_name == None):
+            author_name_box.SetValue("")
+        else:
+            author_name_box.SetValue(author_name)
+        if (self.entries.get_author_global()):
+            author_name_box.Enable(True)
+            author_global_radio.SetValue(True)
+        else:
+            author_name_box.Enable(False)
+            author_per_entry_radio.SetValue(True)
+        if (self.diary_options_dialog.ShowModal() == wxID_OK):
+            # Save the settings if OK pressed
+            if (author_name_box.GetValue() == ""):
+                self.entries.set_author_name(None)
+            else:
+                self.entries.set_author_name(author_name_box.GetValue())
+            self.entries.set_author_global(author_global_radio.GetValue())
+            self._UpdateAuthorBox() # Show/Hide the author box as needed
         
     def _HelpAboutMenu(self, event):
         wxMessageBox("ThotKeeper, version %s\n"
