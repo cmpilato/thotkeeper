@@ -56,6 +56,8 @@ class TKEntries:
         self.tag_tree = {}
         self.listeners = []
         self.tag_listeners = []
+        self.author_name = None
+        self.author_global = True
 
     def register_listener(self, func):
         """Append FUNC to the list of functions called whenever one of
@@ -243,6 +245,18 @@ class TKEntries:
         except:
             return self.get_last_id(year, month, day)
 
+    def get_author_name(self):
+        return self.author_name
+    
+    def get_author_global(self):
+        return self.author_global
+    
+    def set_author_name(self, name):
+        self.author_name = name
+        
+    def set_author_global(self, enable):
+        self.author_global = enable
+
 class TKDataVersionException(Exception):
     pass
 
@@ -274,6 +288,7 @@ class TKDataParser(xmllib.XMLParser):
     tags.
     
        <diary version="1">
+         <author global="True/False">CDATA</author>
          <entries>
            <entry year="YYYY" month="M" day="D" id="N">
              <author>CDATA</author>
@@ -303,10 +318,16 @@ class TKDataParser(xmllib.XMLParser):
         """Unparse data into an XML file."""
         fp = open(datafile, 'w')
         fp.write('<?xml version="1.0"?>\n'
-                 '<diary version="%d">\n'
-                 ' <entries>\n' % (TK_DATA_VERSION))
+                 '<diary version="%d">\n' % (TK_DATA_VERSION))
         if not entries:
             entries = TKEntries()
+        if (entries.get_author_name() != None):
+            author_global = "False"
+            if (entries.get_author_global()):
+                author_global = "True"
+            fp.write(' <author global="%s">%s</author>\n' 
+                                % (author_global, entries.get_author_name()))
+        fp.write(' <entries>\n')
         def _write_entry(entry):
             year, month, day = entry.get_date()
             id = entry.get_id()
@@ -364,10 +385,18 @@ class TKDataParser(xmllib.XMLParser):
         self.cur_entry = None
     def start_author(self, attrs):
         if not self.cur_entry:
-            raise Exception("Invalid XML file.")
+            if (not 'global' in attrs.keys()):
+                raise Exception("Invalid XML file.")
+            if (attrs['global'] == 'False'):
+                self.entries.set_author_global(False)
+            else:
+                self.entries.set_author_global(True)
         self.buffer = ''
     def end_author(self):
-        self.cur_entry['author'] = self.buffer
+        if self.cur_entry:
+            self.cur_entry['author'] = self.buffer
+        else:
+            self.entries.set_author_name(self.buffer)
         self.buffer = None
     def start_subject(self, attrs):
         if not self.cur_entry:

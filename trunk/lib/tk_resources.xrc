@@ -1,5 +1,77 @@
 <?xml version="1.0" ?>
 <resource>
+  <object class="wxDialog" name="TKDiaryOptions">
+    <title>Diary Options</title>
+    <centered>1</centered>
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>2</rows>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <label>Author Settings</label>
+          <orient>wxVERTICAL</orient>
+          <object class="sizeritem">
+            <object class="wxFlexGridSizer">
+              <cols>1</cols>
+              <rows>2</rows>
+              <object class="sizeritem">
+                <object class="wxFlexGridSizer">
+                  <cols>2</cols>
+                  <rows>1</rows>
+                  <object class="sizeritem">
+                    <object class="wxRadioButton" name="TKAuthorGlobal">
+                      <label>Use a single author:</label>
+                      <value>1</value>
+                    </object>
+                    <flag>wxALL|wxEXPAND</flag>
+                    <border>5</border>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxTextCtrl" name="TKAuthorName"/>
+                    <flag>wxLEFT|wxRIGHT|wxADJUST_MINSIZE</flag>
+                    <minsize>150,30</minsize>
+                  </object>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxRadioButton" name="TKAuthorPerEntry">
+                  <label>Allow per-entry authors for this diary</label>
+                </object>
+                <flag>wxALL|wxEXPAND</flag>
+                <border>5</border>
+              </object>
+              <growablecols>0</growablecols>
+            </object>
+            <flag>wxALL</flag>
+            <border>5</border>
+          </object>
+        </object>
+        <flag>wxALL</flag>
+        <border>5</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_OK">
+              <label>OK</label>
+              <default>1</default>
+            </object>
+            <flag>wxALL</flag>
+            <border>5</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_CANCEL">
+              <label>Cancel</label>
+            </object>
+            <flag>wxALL</flag>
+            <border>5</border>
+          </object>
+        </object>
+        <flag>wxALIGN_CENTRE</flag>
+      </object>
+    </object>
+  </object>
   <object class="wxMenuBar" name="TKMenuBar">
     <object class="wxMenu">
       <label>&amp;File</label>
@@ -47,6 +119,13 @@
         <label>&amp;Quit</label>
         <accel>CTRL+Q</accel>
         <help>Quit ThotKeeper.</help>
+      </object>
+    </object>
+    <object class="wxMenu">
+      <label>&amp;Diary</label>
+      <object class="wxMenuItem" name="TKMenuDiaryOptions">
+        <label>Options...</label>
+        <help>Per diary options.</help>
       </object>
     </object>
     <object class="wxMenu">
@@ -165,7 +244,7 @@
                       <flag>wxEXPAND</flag>
                     </object>
                     <object class="sizeritem">
-                      <object class="wxStaticText">
+                      <object class="wxStaticText" name="TKEntryAuthorLabel">
                         <label>Author:</label>
                       </object>
                       <flag>wxALL</flag>
