@@ -744,7 +744,13 @@ class ThotKeeper(wxApp):
         return false
 
     def _TextToTags(self, text):
-        return filter(lambda x: x!='',map(string.strip, text.lower().split(',')))
+        # Convert tags to lowercase and split by commas
+        tags = text.lower().split(',')
+        # Split each tag by '/', remove surrounding whitespace, remove empty sections
+        # then join back together again
+        tags = map(lambda x: '/'.join(filter(None, map(string.strip, x.split('/')))), tags)
+        # Remove any empty tags and return
+        return filter(None, tags)
         
     def _TagsToText(self, tags):
         if not tags:
