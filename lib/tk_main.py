@@ -619,6 +619,9 @@ class ThotKeeper(wxApp):
 
         # Now, show the frame.
         self.frame.Show(true)
+        
+        #Disable the diary menu until a diary loaded
+        self._DiaryMenuEnable(False)
 
         # If we were not given a datafile, or the one we were given is
         # invalid, ask for a valid one.
@@ -705,6 +708,7 @@ class ThotKeeper(wxApp):
                                        timestruct[2])
                 self.cal.HighlightEvents(self.entries)
                 self.panel.Show(true)
+                self._DiaryMenuEnable(True)
                 self.frame.Layout()
                 self._UpdateAuthorBox()
             self.datafile = datafile
@@ -1055,6 +1059,9 @@ class ThotKeeper(wxApp):
         
     def _FileQuitMenu(self, event):
         self.frame.Destroy()
+        
+    def _DiaryMenuEnable(self, enable):
+        self.menubar.FindItemById(self.diary_options_id).Enable(enable)
         
     def _DiaryOptionsMenu(self, event):
         # Grab the controls
