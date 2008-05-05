@@ -702,7 +702,8 @@ class ThotKeeper(wxApp):
                     self.tree.Expand(item)
                 self.entries.register_listener(self.tree.EntryChangedListener)
                 self.entries.register_listener(self.cal.EntryChangedListener)
-                self.entries.register_tag_listener(self.tag_tree.EntryChangedListener)
+                self.entries.register_tag_listener(
+                                            self.tag_tree.EntryChangedListener)
                 self._SetEntryFormDate(timestruct[0],
                                        timestruct[1],
                                        timestruct[2])
@@ -748,7 +749,10 @@ class ThotKeeper(wxApp):
         tags = text.lower().split(',')
         # Split each tag by '/', remove surrounding whitespace, remove empty sections
         # then join back together again
-        tags = map(lambda x: '/'.join(filter(None, map(string.strip, x.split('/')))), tags)
+        tags = map(lambda x: '/'.join(
+                filter(None, 
+                    map(string.strip, 
+                        x.split('/')))), tags)
         # Remove any empty tags and return
         return filter(None, tags)
         
@@ -880,7 +884,8 @@ class ThotKeeper(wxApp):
         author = self.frame.FindWindowById(self.author_id).GetValue()
         subject = self.frame.FindWindowById(self.subject_id).GetValue()
         text = self.frame.FindWindowById(self.text_id).GetValue()
-        tags = self._TextToTags(self.frame.FindWindowById(self.tags_id).GetValue())
+        tags = self._TextToTags(
+                self.frame.FindWindowById(self.tags_id).GetValue())
         return year, month, day, author, subject, text, id, tags
         
     def _SaveEntriesToPath(self, path=None):
@@ -1075,7 +1080,8 @@ class ThotKeeper(wxApp):
         # Grab the controls
         author_name_box = self.frame.FindWindowById(self.author_name_id)
         author_global_radio = self.frame.FindWindowById(self.author_global_id)
-        author_per_entry_radio = self.frame.FindWindowById(self.author_per_entry_id)
+        author_per_entry_radio = \
+                self.frame.FindWindowById(self.author_per_entry_id)
         # Enable/disable the author name box
         def _ChooseAuthorGlobal(event2):
             author_name_box.Enable(True)
