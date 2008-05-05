@@ -276,7 +276,9 @@
                       <border>5</border>
                     </object>
                     <object class="sizeritem">
-                      <object class="wxTextCtrl" name="TKEntryTags"/>
+                      <object class="wxTextCtrl" name="TKEntryTags">
+                        <tooltip>Separate tags with commas.\nNest tags with '/'.</tooltip>
+                      </object>
                       <flag>wxALL|wxEXPAND</flag>
                       <border>5</border>
                     </object>
