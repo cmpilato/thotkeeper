@@ -713,6 +713,8 @@ class ThotKeeper(wxApp):
                 self._UpdateAuthorBox()
             self.datafile = datafile
             self._SetTitle()
+            if create:
+                self._DiaryOptionsMenu(None)
         finally:
             wxEndBusyCursor()
 
