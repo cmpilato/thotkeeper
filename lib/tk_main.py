@@ -734,7 +734,13 @@ class ThotKeeper(wxApp):
             wxEndBusyCursor()
 
     def _SaveData(self, path, entries):
-        self.parser.unparse_data(path, entries)
+        try:
+            self.parser.unparse_data(path, entries)
+        except Exception, e:
+            wxMessageBox("Error writing datafile:\n%s" % (str(e)),
+                         "Write Error", wxOK | wxICON_ERROR, self.frame)
+            raise
+            
         
     def _SetTitle(self):
         title = "ThotKeeper%s%s" \

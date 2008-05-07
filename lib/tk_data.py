@@ -13,9 +13,10 @@
 import warnings
 warnings.filterwarnings('ignore', '.*', DeprecationWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
-
-### TODO: Convert to xml.sax
-import xmllib
+import os
+import shutil
+import tempfile
+import xmllib ### TODO: Convert to xml.sax
 import xml.sax.saxutils
 
 TK_DATA_VERSION = 1
@@ -315,42 +316,53 @@ class TKDataParser(xmllib.XMLParser):
         return self.entries
     
     def unparse_data(self, datafile, entries):
-        """Unparse data into an XML file."""
-        fp = open(datafile, 'w')
-        fp.write('<?xml version="1.0"?>\n'
-                 '<diary version="%d">\n' % (TK_DATA_VERSION))
-        if not entries:
-            entries = TKEntries()
-        if (entries.get_author_name() != None):
-            author_global = "False"
-            if (entries.get_author_global()):
-                author_global = "True"
-            fp.write(' <author global="%s">%s</author>\n' 
-                                % (author_global, entries.get_author_name()))
-        fp.write(' <entries>\n')
-        def _write_entry(entry):
-            year, month, day = entry.get_date()
-            id = entry.get_id()
-            tags = entry.get_tags()
-            fp.write('  <entry year="%s" month="%s" day="%s" id="%s">\n'
-                     % (year, month, day, id))
-            author = xml.sax.saxutils.escape(entry.get_author())
-            if author:
-                fp.write('   <author>%s</author>\n' % (author))
-            subject = xml.sax.saxutils.escape(entry.get_subject())
-            if subject:
-                fp.write('   <subject>%s</subject>\n' % (subject))
-            if len(tags):
-                fp.write('   <tags>\n')
-                for tag in tags:
-                    fp.write('    <tag>%s</tag>\n'
-                             % (xml.sax.saxutils.escape(tag)))
-                fp.write('   </tags>\n')
-            fp.write('   <text>%s</text>\n'
-                     % (xml.sax.saxutils.escape(entry.get_text())))
-            fp.write('  </entry>\n')
-        entries.enumerate_entries(_write_entry)
-        fp.write(' </entries>\n</diary>\n')
+        """Unparse data into an XML file, using an intermediate
+        tempfile to try to reduce the chances of clobbering a
+        previously-good datafile with a half-baked one."""
+        fdesc, fname = tempfile.mkstemp()
+        fp = os.fdopen(fdesc, 'w')
+        try:
+            fp.write('<?xml version="1.0"?>\n'
+                     '<diary version="%d">\n' % (TK_DATA_VERSION))
+            if not entries:
+                entries = TKEntries()
+            if (entries.get_author_name() != None):
+                author_global = "False"
+                if (entries.get_author_global()):
+                    author_global = "True"
+                fp.write(' <author global="%s">%s</author>\n' 
+                                    % (author_global,
+                                       entries.get_author_name()))
+            fp.write(' <entries>\n')
+            def _write_entry(entry):
+                year, month, day = entry.get_date()
+                id = entry.get_id()
+                tags = entry.get_tags()
+                fp.write('  <entry year="%s" month="%s" day="%s" id="%s">\n'
+                         % (year, month, day, id))
+                author = xml.sax.saxutils.escape(entry.get_author())
+                if author:
+                    fp.write('   <author>%s</author>\n' % (author))
+                subject = xml.sax.saxutils.escape(entry.get_subject())
+                if subject:
+                    fp.write('   <subject>%s</subject>\n' % (subject))
+                if len(tags):
+                    fp.write('   <tags>\n')
+                    for tag in tags:
+                        fp.write('    <tag>%s</tag>\n'
+                                 % (xml.sax.saxutils.escape(tag)))
+                    fp.write('   </tags>\n')
+                fp.write('   <text>%s</text>\n'
+                         % (xml.sax.saxutils.escape(entry.get_text())))
+                fp.write('  </entry>\n')
+            entries.enumerate_entries(_write_entry)
+            fp.write(' </entries>\n</diary>\n')
+            fp.close()
+            # We use shutil.move() instead of os.rename() because the former
+            # can deal with moves across volumes while the latter cannot.
+            shutil.move(fname, datafile)
+        finally:
+            os.unlink(fname)
         
     ### XMLParser callback functions
         
