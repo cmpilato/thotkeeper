@@ -362,7 +362,8 @@ class TKDataParser(xmllib.XMLParser):
             # can deal with moves across volumes while the latter cannot.
             shutil.move(fname, datafile)
         finally:
-            os.unlink(fname)
+            if os.path.exists(fname):
+                os.unlink(fname)
         
     ### XMLParser callback functions
         
