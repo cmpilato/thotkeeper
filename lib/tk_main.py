@@ -1093,7 +1093,7 @@ class ThotKeeper(wxApp):
                 self._SetFont(font)
             dialog.Destroy()
         EVT_BUTTON(self, self.choose_font_id, _ChooseFontButton)
-        if (self.options_dialog.ShowModal() == wxID_CANCEL):
+        if self.options_dialog.ShowModal() != wxID_OK:
             self._SetFont(oldfont)
         
     def _FileQuitMenu(self, event):
