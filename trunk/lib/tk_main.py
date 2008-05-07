@@ -250,39 +250,41 @@ class TKEventTree(TKTreeCtrl):
     def EntryChangedListener(self, entry, year, month, day, id, expand=True):
         """Callback for TKEntries.store_entry()."""
         wxBeginBusyCursor()
-        stack = self.GetDateStack(year, month, day, id)
-        if not entry:
-            if stack[3]:
-                self.Prune(stack[3])
-        else:
-            subject = entry.get_subject()
-            if not stack[1]:
-                data = wxTreeItemData(TKEntryKey(year, None, None, None))
-                stack[1] = self.AppendItem(stack[0],
-                                           str(year),
-                                           -1, -1, data)
-                self.SortChildren(stack[0])
-            if not stack[2]:
-                data = wxTreeItemData(TKEntryKey(year, month, None, None))
-                stack[2] = self.AppendItem(stack[1],
-                                           month_names[month - 1],
-                                           -1, -1, data)
-                self.SortChildren(stack[1])
-            if not stack[3]:
-                data = wxTreeItemData(TKEntryKey(year, month, day, id))
-                stack[3] = self.AppendItem(stack[2],
-                                           self._ItemLabel(day, subject),
-                                           -1, -1, data)
-                self.SortChildren(stack[2])
+        try:
+            stack = self.GetDateStack(year, month, day, id)
+            if not entry:
+                if stack[3]:
+                    self.Prune(stack[3])
             else:
-                self.SetItemText(stack[3], self._ItemLabel(day, subject))
-            if expand:
-                self.Expand(stack[0])
-                self.Expand(stack[1])
-                self.Expand(stack[2])
-                self.Expand(stack[3])
-            self.SelectItem(stack[3])
-        wxEndBusyCursor()
+                subject = entry.get_subject()
+                if not stack[1]:
+                    data = wxTreeItemData(TKEntryKey(year, None, None, None))
+                    stack[1] = self.AppendItem(stack[0],
+                                               str(year),
+                                               -1, -1, data)
+                    self.SortChildren(stack[0])
+                if not stack[2]:
+                    data = wxTreeItemData(TKEntryKey(year, month, None, None))
+                    stack[2] = self.AppendItem(stack[1],
+                                               month_names[month - 1],
+                                               -1, -1, data)
+                    self.SortChildren(stack[1])
+                if not stack[3]:
+                    data = wxTreeItemData(TKEntryKey(year, month, day, id))
+                    stack[3] = self.AppendItem(stack[2],
+                                               self._ItemLabel(day, subject),
+                                               -1, -1, data)
+                    self.SortChildren(stack[2])
+                else:
+                    self.SetItemText(stack[3], self._ItemLabel(day, subject))
+                if expand:
+                    self.Expand(stack[0])
+                    self.Expand(stack[1])
+                    self.Expand(stack[2])
+                    self.Expand(stack[3])
+                self.SelectItem(stack[3])
+        finally:
+            wxEndBusyCursor()
 
 
 ########################################################################
@@ -334,37 +336,43 @@ class TKEventTagTree(TKTreeCtrl):
         year, month, day = entry.get_date()
         id = entry.get_id()
         wxBeginBusyCursor()
-        stack = self.GetTagStack(tag, year, month, day, id)
-        tag_path = map(unicode, tag.split('/'))
-        expected_stack_len = len(tag_path) + 2  # root + tag pieces + entry
-        if add == False:
-            if len(stack) == expected_stack_len:
-                self.Prune(stack[-1])
-        else:
-            newtag = None
-            for i in range(len(tag_path)):
-                if i == 0:
-                    newtag = tag_path[i]
-                else:
-                    newtag = newtag + '/' + tag_path[i]
-                if len(stack) == i + 1:
-                    data = wxTreeItemData(TKEntryKey(None, None, None, None,
-                                                     newtag))
-                    stack.append(self.AppendItem(stack[i], tag_path[i],
-                                                 -1, -1, data))
-                    self.SortChildren(stack[i])
-            subject = entry.get_subject()
-            if len(stack) == i + 2:
-                data = wxTreeItemData(TKEntryKey(year, month, day, id, newtag))
-                stack.append(self.AppendItem(stack[i + 1],
-                                             self._ItemLabel(day, month, year,
-                                                             subject),
-                                             -1, -1, data))
-                self.SortChildren(stack[i + 1])
+        try:
+            stack = self.GetTagStack(tag, year, month, day, id)
+            tag_path = map(unicode, tag.split('/'))
+            expected_stack_len = len(tag_path) + 2  # root + tag pieces + entry
+            if add == False:
+                if len(stack) == expected_stack_len:
+                    self.Prune(stack[-1])
             else:
-                self.SetItemText(stack[i + 2],
-                                 self._ItemLabel(day, month, year, subject))
-        wxEndBusyCursor()
+                newtag = None
+                for i in range(len(tag_path)):
+                    if i == 0:
+                        newtag = tag_path[i]
+                    else:
+                        newtag = newtag + '/' + tag_path[i]
+                    if len(stack) == i + 1:
+                        data = wxTreeItemData(TKEntryKey(None, None,
+                                                         None, None,
+                                                         newtag))
+                        stack.append(self.AppendItem(stack[i], tag_path[i],
+                                                     -1, -1, data))
+                        self.SortChildren(stack[i])
+                subject = entry.get_subject()
+                if len(stack) == i + 2:
+                    data = wxTreeItemData(TKEntryKey(year, month, day,
+                                                     id, newtag))
+                    stack.append(self.AppendItem(stack[i + 1],
+                                                 self._ItemLabel(day, month,
+                                                                 year,
+                                                                 subject),
+                                                 -1, -1, data))
+                    self.SortChildren(stack[i + 1])
+                else:
+                    self.SetItemText(stack[i + 2],
+                                     self._ItemLabel(day, month, year,
+                                                     subject))
+        finally:
+            wxEndBusyCursor()
 
 
 ########################################################################
@@ -394,13 +402,15 @@ class TKEventCal(wxCalendarCtrl):
                 has_events = 1
                 days = entries.get_days(year, month)
         wxBeginBusyCursor()
-        for day in range(1, 32):
-            if day in days and has_events:
-                self.SetDayAttr(day, True)
-            else:
-                self.SetDayAttr(day, False)
-        self.Refresh(true)
-        wxEndBusyCursor()
+        try:
+            for day in range(1, 32):
+                if day in days and has_events:
+                    self.SetDayAttr(day, True)
+                else:
+                    self.SetDayAttr(day, False)
+            self.Refresh(true)
+        finally:
+            wxEndBusyCursor()
         
     def EntryChangedListener(self, entry, year, month, day, id):
         """Callback for TKEntries.store_entry()."""
@@ -410,11 +420,13 @@ class TKEventCal(wxCalendarCtrl):
         if (date.GetMonth() + 1) != month:
             return
         wxBeginBusyCursor()
-        if entry:
-            self.SetDayAttr(day, True)
-        else:
-            self.SetDayAttr(day, False)
-        wxEndBusyCursor()
+        try:
+            if entry:
+                self.SetDayAttr(day, True)
+            else:
+                self.SetDayAttr(day, False)
+        finally:
+            wxEndBusyCursor()
 
 
 ########################################################################
@@ -638,12 +650,14 @@ class ThotKeeper(wxApp):
         """Set the font used by the entry text field."""
         global conf
         wxBeginBusyCursor()
-        self.frame.FindWindowById(self.text_id).SetFont(font)
-        conf.font_face = font.GetFaceName()
-        conf.font_size = font.GetPointSize()
-        self.options_dialog.FindWindowById(self.font_id).SetLabel(
-            "%s, %dpt" % (conf.font_face, conf.font_size))
-        wxEndBusyCursor()
+        try:
+            self.frame.FindWindowById(self.text_id).SetFont(font)
+            conf.font_face = font.GetFaceName()
+            conf.font_size = font.GetPointSize()
+            self.options_dialog.FindWindowById(self.font_id).SetLabel(
+                "%s, %dpt" % (conf.font_face, conf.font_size))
+        finally:
+            wxEndBusyCursor()
     
     def _SetDataFile(self, datafile, create=false):
         """Set the active datafile, possible creating one on disk."""
@@ -840,13 +854,15 @@ class ThotKeeper(wxApp):
                 has_events = 1
                 days = self.entries.get_days(year, month)
         wxBeginBusyCursor()
-        for day in range(1, 32):
-            if day in days and has_events:
-                self.cal.SetDayAttr(day, True)
-            else:
-                self.cal.SetDayAttr(day, False)
-        self.cal.Refresh(true)
-        wxEndBusyCursor()
+        try:
+            for day in range(1, 32):
+                if day in days and has_events:
+                    self.cal.SetDayAttr(day, True)
+                else:
+                    self.cal.SetDayAttr(day, False)
+            self.cal.Refresh(true)
+        finally:
+            wxEndBusyCursor()
         
     def _TodayButtonActivated(self, event):
         timestruct = time.localtime()
@@ -891,27 +907,29 @@ class ThotKeeper(wxApp):
     def _SaveEntriesToPath(self, path=None):
         wxYield()
         wxBeginBusyCursor()
-        if self.is_modified:
-            year, month, day, author, subject, text, id, tags \
-                  = self._GetEntryFormBits()
-            if id is None:
-                id = self.entries.get_last_id(year, month, day)
+        try:
+            if self.is_modified:
+                year, month, day, author, subject, text, id, tags \
+                      = self._GetEntryFormBits()
                 if id is None:
-                    id = 1
-                else:
-                    id = id + 1
-                self.entry_form_key = TKEntryKey(year, month, day, id)
-            self.entries.store_entry(tk_data.TKEntry(author, subject, text,
-                                                     year, month, day,
-                                                     id, tags))
-        if path is None:
-            path = conf.data_file
-        self._SaveData(path, self.entries)
-        if path != conf.data_file:
-            self._SetDataFile(path, false) 
-        self._SetModified(false)
-        self.frame.FindWindowById(self.next_id).Enable(true)
-        wxEndBusyCursor()
+                    id = self.entries.get_last_id(year, month, day)
+                    if id is None:
+                        id = 1
+                    else:
+                        id = id + 1
+                    self.entry_form_key = TKEntryKey(year, month, day, id)
+                self.entries.store_entry(tk_data.TKEntry(author, subject, text,
+                                                         year, month, day,
+                                                         id, tags))
+            if path is None:
+                path = conf.data_file
+            self._SaveData(path, self.entries)
+            if path != conf.data_file:
+                self._SetDataFile(path, false) 
+            self._SetModified(false)
+            self.frame.FindWindowById(self.next_id).Enable(true)
+        finally:
+            wxEndBusyCursor()
 
     def _TreeEditMenu(self, event):
         item = self.tree.GetSelection()
