@@ -386,7 +386,7 @@ class TKEventTagTree(TKTreeCtrl):
 class TKEventCal(wx.calendar.CalendarCtrl):
     def SetDayAttr(self, day, has_event):
         if has_event:
-            attr = wx.CalendarDateAttr()
+            attr = wx.calendar.CalendarDateAttr()
             attr.SetTextColour(wx.RED)
             self.SetAttr(day, attr)
         else:
