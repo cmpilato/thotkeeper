@@ -533,6 +533,7 @@ class ThotKeeper(wx.App):
         
         # Note that our input file is not modified.
         self.is_modified = False
+        self.ignore_text_event = False
         
         # Fetch our main frame.
         self.frame = self.resources.LoadFrame(None, 'TKFrame')
@@ -653,6 +654,7 @@ class ThotKeeper(wx.App):
         """Set the font used by the entry text field."""
         global conf
         wx.BeginBusyCursor()
+        self.ignore_text_event = True
         try:
             self.frame.FindWindowById(self.text_id).SetFont(font)
             conf.font_face = font.GetFaceName()
@@ -660,6 +662,7 @@ class ThotKeeper(wx.App):
             self.options_dialog.FindWindowById(self.font_id).SetLabel(
                 "%s, %dpt" % (conf.font_face, conf.font_size))
         finally:
+            self.ignore_text_event = False
             wx.EndBusyCursor()
     
     def _SetDataFile(self, datafile, create=False):
@@ -888,7 +891,8 @@ class ThotKeeper(wx.App):
         self._SetEntryFormDate(year, month, day, previd)
     
     def _EntryDataChanged(self, event):
-        self._SetModified(True)
+        if not self.ignore_text_event:
+            self._SetModified(True)
 
     def _TreeActivated(self, event):
         item = event.GetItem()
