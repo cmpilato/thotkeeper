@@ -7,10 +7,10 @@ To run ThotKeeper, you need a few bits of software.  Unfortunately,
 this list may be incomplete, and we have no idea what versions of
 anything are required.  Sorry 'bout that.  Anyway, here's the list:
 
-   * Python [http://www.python.org]
+   * Python 2.3 or newer [http://www.python.org]
      The Python programming language and interpreter.
       
-   * wxPython [http://www.wxpython.org]
+   * wxPython 2.8 or newer [http://www.wxpython.org]
      Python interfaces to the wxWidgets cross-platform GUI library.
 
 
