@@ -534,6 +534,7 @@ class ThotKeeper(wx.App):
         # Note that our input file is not modified.
         self.is_modified = False
         self.ignore_text_event = False
+        self.options_modified = False
         
         # Fetch our main frame.
         self.frame = self.resources.LoadFrame(None, 'TKFrame')
@@ -675,6 +676,7 @@ class ThotKeeper(wx.App):
             self.tree.PruneAll()
             self.tag_tree.PruneAll()
             self._SetModified(False)
+            self._SetOptionsModified(False)
             self.panel.Show(False)
             conf.data_file = datafile
             if datafile:
@@ -760,13 +762,19 @@ class ThotKeeper(wx.App):
         self.frame.FindWindowById(self.author_label_id).Show(show_author)
         self.frame.Layout()
 
-    def _RefuseUnsavedModifications(self):
+    def _RefuseUnsavedModifications(self, refuse_modified_options=False):
         """If there exist unsaved entry modifications, inform the user
         and return True.  Otherwise, return False."""
         if self.is_modified:
             wx.MessageBox("Entry has been modified.  You must " +
                          "either save or revert it.", "Modified Entry",
                          wx.OK | wx.ICON_INFORMATION, self.frame)
+            return True
+        elif refuse_modified_options and self.options_modified:
+            if wx.OK == wx.MessageBox("Diary options have been modified. Click OK " +
+                         "to continue and lose the changes", "Modified Options",
+                         wx.OK| wx.CANCEL | wx.ICON_QUESTION, self.frame):
+                return False
             return True
         return False
 
@@ -831,17 +839,21 @@ class ThotKeeper(wx.App):
         
     def _SetModified(self, enable=True):
         self.is_modified = enable
-        self.menubar.FindItemById(self.file_save_id).Enable(enable)
+        self.menubar.FindItemById(self.file_save_id).Enable(enable or self.options_modified)
         self.menubar.FindItemById(self.file_revert_id).Enable(enable)
         if self.is_modified:
             self._TogglePrintMenus(True)
         self._SetTitle()
 
+    def _SetOptionsModified(self, enable=True):
+        self.options_modified = enable
+        self.menubar.FindItemById(self.file_save_id).Enable(enable or self.is_modified)        
+
     def _FrameClosure(self, event):
         self.frame.SetStatusText("Quitting...")
         conf.size = self.frame.GetSize()
         conf.position = self.frame.GetPosition()
-        if event.CanVeto() and self._RefuseUnsavedModifications():
+        if event.CanVeto() and self._RefuseUnsavedModifications(True):
             event.Veto()
         else:
             self.frame.Destroy()
@@ -940,6 +952,7 @@ class ThotKeeper(wx.App):
             if path != conf.data_file:
                 self._SetDataFile(path, False) 
             self._SetModified(False)
+            self._SetOptionsModified(False)
             self.frame.FindWindowById(self.next_id).Enable(True)
         finally:
             wx.EndBusyCursor()
@@ -1014,7 +1027,7 @@ class ThotKeeper(wx.App):
                             'ThotKeeper journal files (*.tkj)|*.tkj', flags)
         
     def _FileNewMenu(self, event):
-        if self._RefuseUnsavedModifications():
+        if self._RefuseUnsavedModifications(True):
             return False
         global conf
         directory = '.'
@@ -1032,7 +1045,7 @@ class ThotKeeper(wx.App):
         dialog.Destroy()
 
     def _FileOpenMenu(self, event):
-        if self._RefuseUnsavedModifications():
+        if self._RefuseUnsavedModifications(True):
             return False
         global conf
         directory = '.'
@@ -1146,6 +1159,7 @@ class ThotKeeper(wx.App):
                 self.entries.set_author_name(author_name_box.GetValue())
             self.entries.set_author_global(author_global_radio.GetValue())
             self._UpdateAuthorBox() # Show/Hide the author box as needed
+            self._SetOptionsModified(True)
         
     def _HelpAboutMenu(self, event):
         wx.MessageBox("ThotKeeper, version %s\n"
