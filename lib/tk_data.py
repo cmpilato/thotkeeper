@@ -340,9 +340,9 @@ class TKDataParser(xmllib.XMLParser):
             if not entries:
                 entries = TKEntries()
             if (entries.get_author_name() != None):
-                author_global = "False"
+                author_global = "false"
                 if (entries.get_author_global()):
-                    author_global = "True"
+                    author_global = "true"
                 fp.write(' <author global="%s">%s</author>\n' 
                                     % (author_global,
                                        entries.get_author_name()))
@@ -413,7 +413,7 @@ class TKDataParser(xmllib.XMLParser):
         if not self.cur_entry:
             if (not 'global' in attrs.keys()):
                 raise Exception("Invalid XML file.")
-            if (attrs['global'] == 'False'):
+            if (attrs['global'].lower() == 'false'):
                 self.entries.set_author_global(False)
             else:
                 self.entries.set_author_global(True)
