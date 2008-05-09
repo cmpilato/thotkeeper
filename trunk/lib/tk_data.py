@@ -21,6 +21,19 @@ import xml.sax.saxutils
 
 TK_DATA_VERSION = 1
 
+# sorted() is new to Python 2.4, but an implementation of it that works for
+# our list-sorting needs is easy enough to patch in for older versions.
+try:
+    mysorted = sorted
+    del(mysorted)
+except NameError:
+    def sorted(list):
+        if list is None:
+            return None
+        newlist = list[:]
+        newlist.sort()
+        return newlist
+
 class TKEntry:
     def __init__(self, author='', subject='', text='',
                  year=None, month=None, day=None, id=None, tags=[]):
