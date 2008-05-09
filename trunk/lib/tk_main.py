@@ -1014,6 +1014,8 @@ class ThotKeeper(wx.App):
                             'ThotKeeper journal files (*.tkj)|*.tkj', flags)
         
     def _FileNewMenu(self, event):
+        if self._RefuseUnsavedModifications():
+            return False
         global conf
         directory = '.'
         if os.environ.has_key('HOME'):
@@ -1030,6 +1032,8 @@ class ThotKeeper(wx.App):
         dialog.Destroy()
 
     def _FileOpenMenu(self, event):
+        if self._RefuseUnsavedModifications():
+            return False
         global conf
         directory = '.'
         if os.environ.has_key('HOME'):
