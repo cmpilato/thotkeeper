@@ -24,7 +24,7 @@ import wx.xrc
 #from wxPython.xrc import *
 from wx.html import HtmlEasyPrinting
 
-__version__ = "0.2-dev"
+__version__ = "0.2"
 
 # Placeholder for the configuration class.
 conf = None
