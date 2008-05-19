@@ -345,7 +345,7 @@ class TKDataParser(xmllib.XMLParser):
                     author_global = "true"
                 fp.write(' <author global="%s">%s</author>\n' 
                                     % (author_global,
-                                       entries.get_author_name()))
+                                       entries.get_author_name().encode('utf8')))
             fp.write(' <entries>\n')
             def _write_entry(entry):
                 year, month, day = entry.get_date()
@@ -355,18 +355,18 @@ class TKDataParser(xmllib.XMLParser):
                          % (year, month, day, id))
                 author = xml.sax.saxutils.escape(entry.get_author())
                 if author:
-                    fp.write('   <author>%s</author>\n' % (author))
+                    fp.write('   <author>%s</author>\n' % (author.encode('utf8')))
                 subject = xml.sax.saxutils.escape(entry.get_subject())
                 if subject:
-                    fp.write('   <subject>%s</subject>\n' % (subject))
+                    fp.write('   <subject>%s</subject>\n' % (subject.encode('utf8')))
                 if len(tags):
                     fp.write('   <tags>\n')
                     for tag in tags:
                         fp.write('    <tag>%s</tag>\n'
-                                 % (xml.sax.saxutils.escape(tag)))
+                                 % (xml.sax.saxutils.escape(tag.encode('utf8'))))
                     fp.write('   </tags>\n')
                 fp.write('   <text>%s</text>\n'
-                         % (xml.sax.saxutils.escape(entry.get_text())))
+                         % (xml.sax.saxutils.escape(entry.get_text().encode('utf8'))))
                 fp.write('  </entry>\n')
             entries.enumerate_entries(_write_entry)
             fp.write(' </entries>\n</diary>\n')
@@ -420,16 +420,16 @@ class TKDataParser(xmllib.XMLParser):
         self.buffer = ''
     def end_author(self):
         if self.cur_entry:
-            self.cur_entry['author'] = self.buffer
+            self.cur_entry['author'] = self.buffer.decode('utf8')
         else:
-            self.entries.set_author_name(self.buffer)
+            self.entries.set_author_name(self.buffer.decode('utf8'))
         self.buffer = None
     def start_subject(self, attrs):
         if not self.cur_entry:
             raise Exception("Invalid XML file.")
         self.buffer = ''
     def end_subject(self):
-        self.cur_entry['subject'] = self.buffer
+        self.cur_entry['subject'] = self.buffer.decode('utf8')
         self.buffer = None
     def start_tags(self, attrs):
         if not self.cur_entry:
@@ -440,14 +440,14 @@ class TKDataParser(xmllib.XMLParser):
             raise Exception("Invalid XML file.")
         self.buffer = ''
     def end_tag(self):
-        self.cur_entry['tags'].append(self.buffer)
+        self.cur_entry['tags'].append(self.buffer.decode('utf8'))
         self.buffer = None
     def start_text(self, attrs):
         if not self.cur_entry:
             raise Exception("Invalid XML file.")
         self.buffer = ''
     def end_text(self):
-        self.cur_entry['text'] = self.buffer
+        self.cur_entry['text'] = self.buffer.decode('utf8')
         self.buffer = None
     def handle_data(self, data):
         if self.buffer is not None:
