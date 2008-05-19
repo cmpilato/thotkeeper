@@ -1,0 +1,18 @@
+#!/usr/bin/python
+#
+# ThotKeeper -- a personal daily journal application.
+#
+# Copyright (c) 2004-2006 C. Michael Pilato.  All rights reserved.
+#
+# By using this file, you agree to the terms and conditions set forth in
+# the LICENSE file which can be found at the top level of the ThotKeeper
+# distribution.
+#
+# Website: http://www.thotkeeper.org/
+
+import sys
+import os
+import os.path
+sys.path[:0] = [os.path.join(os.path.dirname(sys.argv[0]), 'lib')]
+import tk_main
+tk_main.main()
