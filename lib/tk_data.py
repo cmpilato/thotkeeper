@@ -30,6 +30,26 @@ except NameError:
         newlist.sort()
         return newlist
 
+# sets (and the set() function) are new to Python 2.4, but an
+# implementation of it that works for our list-sorting needs is easy
+# enough to patch in for older versions.
+try:
+    myset = set()
+    del(myset)
+except NameError:
+    class MySet:
+        def __init__(self):
+            self.items = {}
+        def add(self, thing):
+            self.items[thing] = None
+        def remove(self, thing):
+            del self.items[thing]
+        def __iter__(self):
+            return self.items.keys().__iter__()
+    def set():
+        return MySet()
+
+
 class TKEntry:
     def __init__(self, author='', subject='', text='',
                  year=None, month=None, day=None, id=None, tags=[]):
