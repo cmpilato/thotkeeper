@@ -343,18 +343,17 @@ class TKDataParser(xml.sax.handler.ContentHandler):
 
     def _validate_tag(self, name, parent_tag):
         valid_parents = self._valid_parents[name]
-        if (valid_parents and parent_tag is None) \
-           or (not valid_parents and parent_tag is not None) \
-           or (parent_tag not in valid_parents):
-            raise Exception, "Unexpected tag (%s) in parent (%s)" \
-                  % (name, parent_tag and parent_tag or "")
+        if parent_tag is None and not valid_parents:
+            return
+        if parent_tag and valid_parents and parent_tag in valid_parents:
+            return
+        raise Exception("Unexpected tag (%s) in parent (%s)" \
+                        % (name, parent_tag and parent_tag or ""))
         
     def startElement(self, name, attrs):
         # Validate ...
-        parent_tag = None
-        if self.tag_stack:
-            parent_tag = self.tag_stack[-1]
-        #self._validate_tag(name, parent_tag)
+        parent_tag = self.tag_stack and self.tag_stack[-1] or None
+        self._validate_tag(name, parent_tag)
         self.tag_stack.append(name)
         
         # ... and operate.
@@ -397,10 +396,8 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         return
 
     def endElement(self, name):
-        # Validate ...
-        last_tag = self.tag_stack.pop(-1)
-        if last_tag != name:
-            raise Exception, "Tag mismatch"
+        # Pop from the tag stack ...
+        del self.tag_stack[-1]
 
         # ... and operate.
         if name == self.TKJ_TAG_ENTRY:
