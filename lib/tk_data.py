@@ -412,16 +412,16 @@ class TKDataParser(xml.sax.handler.ContentHandler):
             self.cur_entry = None
         elif name == self.TKJ_TAG_AUTHOR:
             if self.cur_entry:
-                self.cur_entry['author'] = self.buffer.decode('utf8')
+                self.cur_entry['author'] = self.buffer
             else:
-                self.entries.set_author_name(self.buffer.decode('utf8'))
+                self.entries.set_author_name(self.buffer)
             self.buffer = None
         elif name == self.TKJ_TAG_SUBJECT \
              or name == self.TKJ_TAG_TEXT:
-            self.cur_entry[name] = self.buffer.decode('utf8')
+            self.cur_entry[name] = self.buffer
             self.buffer = None
         elif name == self.TKJ_TAG_TAG:
-            self.cur_entry['tags'].append(self.buffer.decode('utf8'))
+            self.cur_entry['tags'].append(self.buffer)
 
 def parse_data(datafile):
     """Parse an XML file, returning a TKEntries object."""
