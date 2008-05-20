@@ -525,7 +525,6 @@ class ThotKeeper(wx.App):
         self.tree_collapse_id = self.resources.GetXRCID('TKTreeMenuCollapse')
 
         # Construct our datafile parser and placeholder for data.
-        self.parser = None
         self.entries = None
 
         # Setup a printer object.
@@ -672,7 +671,6 @@ class ThotKeeper(wx.App):
         wx.Yield()
         wx.BeginBusyCursor()
         try:
-            self.parser = tk_data.TKDataParser()
             self.tree.PruneAll()
             self.tag_tree.PruneAll()
             self._SetModified(False)
@@ -693,7 +691,7 @@ class ThotKeeper(wx.App):
                     self._SaveData(datafile, None)
                 self.frame.SetStatusText('Loading %s...' % datafile)
                 try:
-                    self.entries = self.parser.parse_data(datafile)
+                    self.entries = tk_data.parse_data(datafile)
                 except tk_data.TKDataVersionException, e:
                     wx.MessageBox("Datafile format used by '%s' is not "
                                  "supported ." % (datafile),
@@ -743,7 +741,7 @@ class ThotKeeper(wx.App):
 
     def _SaveData(self, path, entries):
         try:
-            self.parser.unparse_data(path, entries)
+            tk_data.unparse_data(path, entries)
         except Exception, e:
             wx.MessageBox("Error writing datafile:\n%s" % (str(e)),
                          "Write Error", wx.OK | wx.ICON_ERROR, self.frame)
