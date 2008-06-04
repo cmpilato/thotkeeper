@@ -77,6 +77,39 @@ def FlushConf():
                  (conf.size.GetWidth(), conf.size.GetHeight()))
     wc.Flush()
 
+def CheckForUpdates():
+    import httplib
+    import socket
+    import re
+
+    def _version_parse(version):
+        match = re.search(r'^([0-9]+)\.([0-9]+)(\.([0-9]+))?', version)
+        if match:
+            major = int(match.group(1))
+            minor = int(match.group(2))
+            try:
+                patch = int(match.group(4))
+            except:
+                patch = 0
+            return [major, minor, patch]
+        raise Exception, "Invalid version string '%s'" % (version)
+        
+    update_host = "thotkeeper.googlecode.com"
+    update_path = "/svn/latest-version.txt"
+    http = httplib.HTTPConnection(update_host)
+    http.request("GET", update_path)
+    response = http.getresponse()
+    if response.status == 200:
+        contents = response.read().split('\n')
+        new_version = _version_parse(contents[0])
+        http.close()
+        this_version = _version_parse(__version__)
+        if new_version > this_version:
+            return '.'.join(map(lambda x: str(x), new_version)), contents[1]
+        return None, None
+    http.close()
+    raise Exception, "Unknown error checking for updates (status = %d)" % (errcode)
+
 
 ########################################################################
 ###    
@@ -510,6 +543,7 @@ class ThotKeeper(wx.App):
         self.file_preview_id = self.resources.GetXRCID('TKMenuFilePreview')
         self.file_print_id = self.resources.GetXRCID('TKMenuFilePrint')
         self.file_quit_id = self.resources.GetXRCID('TKMenuFileQuit')
+        self.help_update_id = self.resources.GetXRCID('TKMenuHelpUpdate')
         self.help_about_id = self.resources.GetXRCID('TKMenuHelpAbout')
         self.open_tool_id = self.resources.GetXRCID('TKToolOpen')
         self.file_options_id = self.resources.GetXRCID('TKMenuFileOptions')
@@ -603,6 +637,7 @@ class ThotKeeper(wx.App):
         wx.EVT_MENU(self, self.file_preview_id, self._FilePreviewMenu)
         wx.EVT_MENU(self, self.file_print_id, self._FilePrintMenu)
         wx.EVT_MENU(self, self.file_quit_id, self._FileQuitMenu)
+        wx.EVT_MENU(self, self.help_update_id, self._HelpUpdateMenu)
         wx.EVT_MENU(self, self.help_about_id, self._HelpAboutMenu)
         wx.EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
         wx.EVT_MENU(self, self.diary_options_id, self._DiaryOptionsMenu)
@@ -1174,6 +1209,23 @@ class ThotKeeper(wx.App):
                      "About ThotKeeper",
                      wx.OK | wx.CENTER, self.frame)
 
+    def _HelpUpdateMenu(self, event):
+        new_version = None
+        try:
+            new_version, info_url = CheckForUpdates()
+        except:
+            wx.MessageBox("Error occurred while checking for updates",
+                          "Update Check", wx.OK | wx.ICON_ERROR, self.frame)
+            return
+        if new_version is not None:
+            wx.MessageBox("A new version (%s) of ThotKeeper is available.\n" \
+                          "For more information, visit %s." \
+                          % (new_version, info_url),
+                          "Update Check", wx.OK, self.frame)
+        else:
+            wx.MessageBox("This version of ThotKeeper is the latest available",
+                          "Update Check", wx.OK, self.frame)
+        
     def OnExit(self):
         FlushConf()
 
@@ -1182,7 +1234,18 @@ def main():
     file = None
     argc = len(sys.argv)
     if argc > 1:
-        file = sys.argv[1]
+        arg = sys.argv[1]
+        if arg == '--update-check':
+            new_version, info_url = CheckForUpdates()
+            if new_version is not None:
+                print("A new version (%s) of ThotKeeper is available\n" \
+                      "For more information, visit %s." \
+                      % (new_version, info_url))
+            else:
+                print("This version of ThotKeeper is the latest available")
+            return
+        else:            
+            file = sys.argv[1]
     tk = ThotKeeper(file)
     tk.MainLoop()
     tk.OnExit()
