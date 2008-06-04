@@ -130,6 +130,10 @@
     </object>
     <object class="wxMenu">
       <label>&amp;Help</label>
+      <object class="wxMenuItem" name="TKMenuHelpUpdate">
+        <label>&amp;Check for Updates</label>
+        <help>Check for new versions of ThotKeeper</help>
+      </object>
       <object class="wxMenuItem" name="TKMenuHelpAbout">
         <label>&amp;About...</label>
         <help>About ThotKeeper</help>
