@@ -42,7 +42,7 @@ CONF_SIZE = CONF_GROUP + '/window-size'
 
 ########################################################################
 ###
-###  CONFIGURATION ROUTINES
+###  CONFIGURATION/UPDATE ROUTINES
 ###
 
 def AbsorbConf():
@@ -105,7 +105,8 @@ def CheckForUpdates():
             return '.'.join(map(lambda x: str(x), new_version)), contents[1]
         return None, None
     http.close()
-    raise Exception, "Unknown error checking for updates (status = %d)" % (errcode)
+    raise Exception, "Unknown error checking for updates (status = %d)" \
+          % (errcode)
 
 
 ########################################################################
@@ -1210,8 +1211,9 @@ class ThotKeeper(wx.App):
         new_version = None
         try:
             new_version, info_url = CheckForUpdates()
-        except:
-            wx.MessageBox("Error occurred while checking for updates",
+        except Exception, e:
+            wx.MessageBox("Error occurred while checking for updates:  %s" \
+                          % (str(e)),
                           "Update Check", wx.OK | wx.ICON_ERROR, self.frame)
             return
         if new_version is not None:
@@ -1220,7 +1222,8 @@ class ThotKeeper(wx.App):
                           % (new_version, info_url),
                           "Update Check", wx.OK, self.frame)
         else:
-            wx.MessageBox("This version of ThotKeeper is the latest available",
+            wx.MessageBox("This version of ThotKeeper is the latest "
+                          "available.",
                           "Update Check", wx.OK, self.frame)
         
     def OnExit(self):
@@ -1234,11 +1237,11 @@ def main():
         if sys.argv[1] == '--update-check':
             new_version, info_url = CheckForUpdates()
             if new_version is not None:
-                print("A new version (%s) of ThotKeeper is available\n" \
+                print("A new version (%s) of ThotKeeper is available.\n" \
                       "For more information, visit %s." \
                       % (new_version, info_url))
             else:
-                print("This version of ThotKeeper is the latest available")
+                print("This version of ThotKeeper is the latest available.")
             return
         else:            
             file = sys.argv[1]
