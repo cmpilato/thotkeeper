@@ -80,6 +80,9 @@ def main():
     make_archive(export_source_url, export_target, "CRLF",
                  ['zip -qor9 %s.zip %s' % (archive_base, archive_base)])
     
+    # Print reminder about updating latest-version.txt
+    print "REMINDER:  If necessary, update latest-version.txt with new"
+    print "           release information."
         
 if __name__ == "__main__":
     main()
