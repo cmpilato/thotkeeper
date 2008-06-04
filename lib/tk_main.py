@@ -19,9 +19,6 @@ import tk_data
 import wx
 import wx.calendar
 import wx.xrc
-#from wxPython.wx import *
-#from wxPython.calendar import *
-#from wxPython.xrc import *
 from wx.html import HtmlEasyPrinting
 
 __version__ = "0.3-dev"
@@ -90,7 +87,7 @@ def CheckForUpdates():
             try:
                 patch = int(match.group(4))
             except:
-                patch = 0
+                patch = -1
             return [major, minor, patch]
         raise Exception, "Invalid version string '%s'" % (version)
         
@@ -1234,8 +1231,7 @@ def main():
     file = None
     argc = len(sys.argv)
     if argc > 1:
-        arg = sys.argv[1]
-        if arg == '--update-check':
+        if sys.argv[1] == '--update-check':
             new_version, info_url = CheckForUpdates()
             if new_version is not None:
                 print("A new version (%s) of ThotKeeper is available\n" \
