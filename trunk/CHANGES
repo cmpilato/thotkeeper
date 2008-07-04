@@ -1,6 +1,10 @@
-Version 0.3 (released ????-??-??)
+Version 0.4 (released ????-??-??)
 
- * feature: add update checking support
+ *
+
+Version 0.3 (released 2008-07-04)
+
+ * feature: add "check for updates" support
  * fix: support international character (issue #24)
  * fix: tag support not working on Python 2.3 (issue #25)
 
