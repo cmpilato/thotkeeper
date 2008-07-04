@@ -45,7 +45,7 @@ def make_archive(export_source_url, export_target, eol_style, archive_cmds):
         os.chdir(export_target)
         os.system('svn export --force --native-eol %s --quiet %s .'
                   % (eol_style, export_source_url))
-        for item in [ 'tools' ]:  # add excluded items here
+        for item in [ 'tools', 'notes' ]:  # add excluded items here
             rmpath = os.sep.join(item.split('/'))
             shutil.rmtree(rmpath)
         os.chdir('..')
