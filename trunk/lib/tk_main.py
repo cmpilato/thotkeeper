@@ -1152,11 +1152,7 @@ class ThotKeeper(wx.App):
             self._SetFont(oldfont)
         
     def _FileQuitMenu(self, event):
-        self.frame.SetStatusText("Quitting...")
-        conf.size = self.frame.GetSize()
-        conf.position = self.frame.GetPosition()
-        if not self._RefuseUnsavedModifications(True):
-            self.frame.Destroy()
+        self.frame.Close()
                  
     def _DiaryMenuEnable(self, enable):
         self.menubar.FindItemById(self.diary_options_id).Enable(enable)
