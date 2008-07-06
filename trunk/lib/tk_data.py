@@ -360,6 +360,10 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         self.buffer = None
         self.entries = entries
         self.tag_stack = []
+        self.entries.set_author_global(False)
+        # If we are loading a file, we want there to be no global author *unless*
+        # one is actually found in the file (but the default should still be
+        # True for new files
 
     def _validate_tag(self, name, parent_tag):
         valid_parents = self._valid_parents[name]
