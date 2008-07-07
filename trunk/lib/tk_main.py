@@ -989,8 +989,8 @@ class ThotKeeper(wx.App):
             wx.EndBusyCursor()
 
     def _TreeEditMenu(self, event):
-        item = self.tree.GetSelection()
         tree = event.GetEventObject().parenttree
+        item = tree.GetSelection()
         data = tree.GetItemData(item).GetData()
         if not data.day:
             event.Skip()
