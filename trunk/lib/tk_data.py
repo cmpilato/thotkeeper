@@ -209,6 +209,14 @@ class TKEntries:
         entry_keys = self.tag_tree[tag]
         return map(lambda x: self.entry_tree[x[0]][x[1]][x[2]][x[3]],
                    entry_keys)
+                   
+    def get_entries_by_partial_tag(self, tagstart):
+        """Return all the entries that start with tagstart"""
+        tagstartsep = tagstart + '/'
+        taglist = filter(lambda x: ((x==tagstart) or (x.startswith(tagstartsep))), 
+                                    self.tag_tree.keys())
+        entrylist = map(self.get_entries_by_tag, taglist)
+        return reduce(lambda x,y: x+y, entrylist)
     
     def get_entry(self, year, month, day, id):
         """Return the TKEntry associated with YEAR, MONTH, and DAY,

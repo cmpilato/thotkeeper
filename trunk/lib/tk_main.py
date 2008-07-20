@@ -555,6 +555,7 @@ class ThotKeeper(wx.App):
         self.tree_delete_id = self.resources.GetXRCID('TKTreeMenuDelete')
         self.tree_expand_id = self.resources.GetXRCID('TKTreeMenuExpand')
         self.tree_collapse_id = self.resources.GetXRCID('TKTreeMenuCollapse')
+        self.rename_tag_id = self.resources.GetXRCID('TKTagName')
 
         # Construct our datafile parser and placeholder for data.
         self.entries = None
@@ -581,6 +582,10 @@ class ThotKeeper(wx.App):
         # fetch the per-diary options dialog
         self.diary_options_dialog = self.resources.LoadDialog(self.frame,
                                                         'TKDiaryOptions')
+                                                        
+        # fetch the rename tag dialog
+        self.rename_tag_dialog = self.resources.LoadDialog(self.frame,
+                                                        'TKTagRename')
 
         # Fetch (and assign) our menu bar.
         self.menubar = self.resources.LoadMenuBar('TKMenuBar')
@@ -993,10 +998,28 @@ class ThotKeeper(wx.App):
         item = tree.GetSelection()
         data = tree.GetItemData(item).GetData()
         if not data.day:
+            if data.tag:
+                self._RenameTag(data.tag)
             event.Skip()
             return
         self._SetEntryFormDate(data.year, data.month, data.day, data.id)
 
+    def _RenameTag(self, tag):
+        rename_tag_box = self.rename_tag_dialog.FindWindowById(self.rename_tag_id)
+        rename_tag_box.SetValue(tag)
+        if self.rename_tag_dialog.ShowModal() == wx.ID_OK \
+                and rename_tag_box.GetValue() != tag:
+            def _UpdateSingleTag(current):
+                if current==tag:
+                    return rename_tag_box.GetValue()
+                if current.startswith(tag+'/'):
+                    return current.replace(tag, rename_tag_box.GetValue(),1)
+                return current
+            print "Rename",tag,"to",rename_tag_box.GetValue()
+            for en in self.entries.get_entries_by_partial_tag(tag):
+                en.tags = map(_UpdateSingleTag, en.get_tags())
+                self.entries.store_entry(en)
+            
     def _TreeDeleteMenu(self, event):
         item = self.tree.GetSelection()
         tree = event.GetEventObject().parenttree
@@ -1045,7 +1068,7 @@ class ThotKeeper(wx.App):
             if not tree.IsSelected(item):
                 tree.SelectItem(item)
             data = tree.GetItemData(item).GetData()
-            if not data.day:
+            if not data.day and not data.tag:
                 popup.Enable(self.tree_edit_id, False)
         else:
             popup.Enable(self.tree_edit_id, False)
