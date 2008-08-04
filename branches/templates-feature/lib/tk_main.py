@@ -253,70 +253,79 @@ class TKTreeCtrl(wx.TreeCtrl):
 class TKEventTree(TKTreeCtrl):
     def __init__(self, parent, style):
         TKTreeCtrl.__init__(self, parent, style)
-        root_data = wx.TreeItemData(TKEntryKey(None, None, None, None))
-        self.root_id = self.AddRoot('ThotKeeper Entries', -1, -1, root_data)
+        self.root_id = self.AddRoot('', -1, -1, self._MakeNullData())
+        self.entries_id = self.AppendItem(self.root_id, 'ThotKeeper Entries',
+                                          -1, -1, self._MakeNullData())
+        self.templates_id = self.AppendItem(self.root_id, 'Templates',
+                                            -1, -1, self._MakeNullData())
 
+    def PruneAll(self):
+        self.DeleteChildren(self.entries_id)
+        self.DeleteChildren(self.templates_id)
+
+    def _MakeNullData(self):
+        return wx.TreeItemData(TKEntryKey(None, None, None, None))
+        
     def GetDateStack(self, year, month, day, id):
-        stack = []
-        root_id = self.GetRootItem()
-        stack.append(root_id) # 0
-        item_id = self.FindChild(root_id,
+        stack = [self.root_id, self.entries_id] # 0, 1
+        item_id = self.FindChild(self.entries_id,
                                  TKEntryKey(year, None, None, None))
-        stack.append(item_id) # 1
+        stack.append(item_id) # 2
         if item_id:
             item_id = self.FindChild(item_id,
                                      TKEntryKey(year, month, None, None))
-            stack.append(item_id) # 2
+            stack.append(item_id) # 3
             if item_id:
                 item_id = self.FindChild(item_id,
                                          TKEntryKey(year, month, day, id))
-                stack.append(item_id) # 3
+                stack.append(item_id) # 4
             else:
-                stack.append(None) # 3
+                stack.append(None) # 4
         else:
-            stack.append(None) # 2
             stack.append(None) # 3
+            stack.append(None) # 4
         return stack
 
     def _ItemLabel(self, day, subject):
         return "%02d%s" % (int(day), subject and " - " + subject or '')
-    
+
     def EntryChangedListener(self, entry, year, month, day, id, expand=True):
         """Callback for TKEntries.store_entry()."""
         wx.BeginBusyCursor()
         try:
             stack = self.GetDateStack(year, month, day, id)
             if not entry:
-                if stack[3]:
-                    self.Prune(stack[3])
+                if stack[4]:
+                    self.Prune(stack[4])
             else:
                 subject = entry.get_subject()
-                if not stack[1]:
-                    data = wx.TreeItemData(TKEntryKey(year, None, None, None))
-                    stack[1] = self.AppendItem(stack[0],
-                                               str(year),
-                                               -1, -1, data)
-                    self.SortChildren(stack[0])
                 if not stack[2]:
-                    data = wx.TreeItemData(TKEntryKey(year, month, None, None))
+                    data = wx.TreeItemData(TKEntryKey(year, None, None, None))
                     stack[2] = self.AppendItem(stack[1],
-                                               month_names[month - 1],
+                                               str(year),
                                                -1, -1, data)
                     self.SortChildren(stack[1])
                 if not stack[3]:
-                    data = wx.TreeItemData(TKEntryKey(year, month, day, id))
+                    data = wx.TreeItemData(TKEntryKey(year, month, None, None))
                     stack[3] = self.AppendItem(stack[2],
-                                               self._ItemLabel(day, subject),
+                                               month_names[month - 1],
                                                -1, -1, data)
                     self.SortChildren(stack[2])
+                if not stack[4]:
+                    data = wx.TreeItemData(TKEntryKey(year, month, day, id))
+                    stack[4] = self.AppendItem(stack[3],
+                                               self._ItemLabel(day, subject),
+                                               -1, -1, data)
+                    self.SortChildren(stack[3])
                 else:
-                    self.SetItemText(stack[3], self._ItemLabel(day, subject))
+                    self.SetItemText(stack[4], self._ItemLabel(day, subject))
                 if expand:
                     self.Expand(stack[0])
                     self.Expand(stack[1])
                     self.Expand(stack[2])
                     self.Expand(stack[3])
-                self.SelectItem(stack[3])
+                    self.Expand(stack[4])
+                self.SelectItem(stack[4])
         finally:
             wx.EndBusyCursor()
 
@@ -364,7 +373,7 @@ class TKEventTagTree(TKTreeCtrl):
         return "%02d %s %4d%s" \
                % (int(day), month_abbrs[int(month) - 1], int(year),
                   subject and " - " + subject or '')
-        
+
     def EntryChangedListener(self, tag, entry, add=True):
         """Callback for TKEntries.store_entry()."""
         year, month, day = entry.get_date()
@@ -598,17 +607,13 @@ class ThotKeeper(wx.App):
         # Replace "unknown" XRC placeholders with custom widgets.
         self.cal = TKEventCal(parent=self.panel,
                               style=wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
-        self.resources.AttachUnknownControl('TKCalendar',
-                                            self.cal, self.panel)
+        self.resources.AttachUnknownControl('TKCalendar', self.cal, self.panel)
         tree = TKEventTree(parent=self.panel,
-                           style=wx.TR_HAS_BUTTONS)
-        self.resources.AttachUnknownControl('TKDateTree',
-                                            tree, self.panel)
-        
+                           style=wx.TR_HAS_BUTTONS|wx.TR_HIDE_ROOT)
+        self.resources.AttachUnknownControl('TKDateTree', tree, self.panel)
         tagtree = TKEventTagTree(parent=self.panel,
-                            style = wx.TR_HAS_BUTTONS)
-        self.resources.AttachUnknownControl('TKTagTree',
-                                            tagtree, self.panel)
+                                 style=wx.TR_HAS_BUTTONS)
+        self.resources.AttachUnknownControl('TKTagTree', tagtree, self.panel)
 
         # Populate the tree widget.
         self.tree = self.frame.FindWindowById(self.datetree_id)
