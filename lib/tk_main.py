@@ -49,7 +49,7 @@ def AbsorbConf():
     global conf
     conf = wx.Config(style = wx.CONFIG_USE_LOCAL_FILE)
     conf.font_face = conf.Read(CONF_FONT_NAME, 'Comic Sans MS')
-    conf.font_size = conf.ReadInt(CONF_FONT_SIZE, 16)
+    conf.font_size = conf.ReadInt(CONF_FONT_SIZE, 12)
     conf.data_file = conf.position = None
     if conf.Exists(CONF_DATA_FILE):
         conf.data_file = conf.Read(CONF_DATA_FILE)
