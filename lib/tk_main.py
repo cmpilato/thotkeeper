@@ -1015,10 +1015,11 @@ class ThotKeeper(wx.App):
                 if current.startswith(tag+'/'):
                     return current.replace(tag, rename_tag_box.GetValue(),1)
                 return current
-            print "Rename",tag,"to",rename_tag_box.GetValue()
             for en in self.entries.get_entries_by_partial_tag(tag):
-                en.tags = map(_UpdateSingleTag, en.get_tags())
-                self.entries.store_entry(en)
+                updatedtags = map(_UpdateSingleTag, en.get_tags())
+                self.entries.store_entry(tk_data.TKEntry(en.author, en.subject, en.text,
+                                                         en.year, en.month, en.day,
+                                                         en.id, updatedtags))            
             
     def _TreeDeleteMenu(self, event):
         item = self.tree.GetSelection()
