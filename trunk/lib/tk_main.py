@@ -564,9 +564,9 @@ class ThotKeeper(wx.App):
         self.printer = TKEntryPrinter()
         
         # Note that our input file is not modified.
-        self.is_modified = False
+        self.entry_modified = False
         self.ignore_text_event = False
-        self.options_modified = False
+        self.diary_modified = False
         
         # Fetch our main frame.
         self.frame = self.resources.LoadFrame(None, 'TKFrame')
@@ -711,8 +711,8 @@ class ThotKeeper(wx.App):
         try:
             self.tree.PruneAll()
             self.tag_tree.PruneAll()
-            self._SetModified(False)
-            self._SetOptionsModified(False)
+            self._SetEntryModified(False)
+            self._SetDiaryModified(False)
             self.panel.Show(False)
             conf.data_file = datafile
             if datafile:
@@ -789,7 +789,7 @@ class ThotKeeper(wx.App):
     def _SetTitle(self):
         title = "ThotKeeper%s%s" \
                 % (self.datafile and " - " + self.datafile or "",
-                   self.is_modified and " [modified]" or "")
+                   self.entry_modified and " [modified]" or "")
         self.frame.SetTitle(title)
         
     def _UpdateAuthorBox(self):
@@ -801,14 +801,14 @@ class ThotKeeper(wx.App):
     def _RefuseUnsavedModifications(self, refuse_modified_options=False):
         """If there exist unsaved entry modifications, inform the user
         and return True.  Otherwise, return False."""
-        if self.is_modified:
+        if self.entry_modified:
             wx.MessageBox("Entry has been modified.  You must " +
                          "either save or revert it.", "Modified Entry",
                          wx.OK | wx.ICON_INFORMATION, self.frame)
             return True
-        elif refuse_modified_options and self.options_modified:
-            if wx.OK == wx.MessageBox("Diary options have been modified. Click OK " +
-                         "to continue and lose the changes", "Modified Options",
+        elif refuse_modified_options and self.diary_modified:
+            if wx.OK == wx.MessageBox("Diary has been modified. Click OK " +
+                         "to continue and lose the changes", "Modified Diary",
                          wx.OK| wx.CANCEL | wx.ICON_QUESTION, self.frame):
                 return False
             return True
@@ -867,23 +867,23 @@ class ThotKeeper(wx.App):
         self.frame.FindWindowById(self.text_id).SetValue(text)
         self.frame.FindWindowById(self.tags_id).SetValue(tags)
         self._TogglePrintMenus(entry and True or False)
-        self._SetModified(False)
+        self._SetEntryModified(False)
         
     def _TogglePrintMenus(self, enable=True):
         self.menubar.FindItemById(self.file_print_id).Enable(enable)
         self.menubar.FindItemById(self.file_preview_id).Enable(enable)
         
-    def _SetModified(self, enable=True):
-        self.is_modified = enable
-        self.menubar.FindItemById(self.file_save_id).Enable(enable or self.options_modified)
+    def _SetEntryModified(self, enable=True):
+        self.entry_modified = enable
+        self.menubar.FindItemById(self.file_save_id).Enable(enable or self.diary_modified)
         self.menubar.FindItemById(self.file_revert_id).Enable(enable)
-        if self.is_modified:
+        if self.entry_modified:
             self._TogglePrintMenus(True)
         self._SetTitle()
 
-    def _SetOptionsModified(self, enable=True):
-        self.options_modified = enable
-        self.menubar.FindItemById(self.file_save_id).Enable(enable or self.is_modified)        
+    def _SetDiaryModified(self, enable=True):
+        self.diary_modified = enable
+        self.menubar.FindItemById(self.file_save_id).Enable(enable or self.entry_modified)        
 
     def _FrameClosure(self, event):
         self.frame.SetStatusText("Quitting...")
@@ -940,7 +940,7 @@ class ThotKeeper(wx.App):
     
     def _EntryDataChanged(self, event):
         if not self.ignore_text_event:
-            self._SetModified(True)
+            self._SetEntryModified(True)
 
     def _TreeActivated(self, event):
         item = event.GetItem()
@@ -969,7 +969,7 @@ class ThotKeeper(wx.App):
         wx.Yield()
         wx.BeginBusyCursor()
         try:
-            if self.is_modified:
+            if self.entry_modified:
                 year, month, day, author, subject, text, id, tags \
                       = self._GetEntryFormBits()
                 if id is None:
@@ -987,8 +987,8 @@ class ThotKeeper(wx.App):
             self._SaveData(path, self.entries)
             if path != conf.data_file:
                 self._SetDataFile(path, False) 
-            self._SetModified(False)
-            self._SetOptionsModified(False)
+            self._SetEntryModified(False)
+            self._SetDiaryModified(False)
             self.frame.FindWindowById(self.next_id).Enable(True)
         finally:
             wx.EndBusyCursor()
@@ -1009,6 +1009,7 @@ class ThotKeeper(wx.App):
         rename_tag_box.SetValue(tag)
         if self.rename_tag_dialog.ShowModal() == wx.ID_OK \
                 and rename_tag_box.GetValue() != tag:
+            self._SetDiaryModified(True)
             def _UpdateSingleTag(current):
                 if current==tag:
                     return rename_tag_box.GetValue()
@@ -1041,7 +1042,7 @@ class ThotKeeper(wx.App):
             dispyear, dispmonth, dispday, dispid = self._GetEntryFormKeys()
             if ((dispyear == data.year) & (dispmonth == data.month) & \
                 (dispday == data.day) & (dispid == data.id)):
-                self._SetModified(False)
+                self._SetEntryModified(False)
                 self._SetEntryFormDate(dispyear, dispmonth, dispday)
 
     def _TreeExpandMenu(self, event):
@@ -1132,7 +1133,7 @@ class ThotKeeper(wx.App):
 
     def _FileRevertMenu(self, event):
         year, month, day, id = self._GetEntryFormKeys()
-        self._SetModified(False)
+        self._SetEntryModified(False)
         self._SetEntryFormDate(int(year), int(month), int(day), id)
 
     def _GetCurrentEntryPieces(self):
@@ -1214,7 +1215,7 @@ class ThotKeeper(wx.App):
                 self.entries.set_author_name(author_name_box.GetValue())
             self.entries.set_author_global(author_global_radio.GetValue())
             self._UpdateAuthorBox() # Show/Hide the author box as needed
-            self._SetOptionsModified(True)
+            self._SetDiaryModified(True)
         
     def _HelpAboutMenu(self, event):
         wx.MessageBox("ThotKeeper, version %s\n"
