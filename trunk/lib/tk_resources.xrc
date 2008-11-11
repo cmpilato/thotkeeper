@@ -15,6 +15,13 @@
               <cols>1</cols>
               <rows>2</rows>
               <object class="sizeritem">
+                <object class="wxRadioButton" name="TKAuthorPerEntry">
+                  <label>Allow per-entry authors for this diary</label>
+                </object>
+                <flag>wxALL|wxEXPAND</flag>
+                <border>5</border>
+              </object>
+              <object class="sizeritem">
                 <object class="wxFlexGridSizer">
                   <cols>2</cols>
                   <rows>1</rows>
@@ -32,13 +39,6 @@
                     <minsize>150,30</minsize>
                   </object>
                 </object>
-              </object>
-              <object class="sizeritem">
-                <object class="wxRadioButton" name="TKAuthorPerEntry">
-                  <label>Allow per-entry authors for this diary</label>
-                </object>
-                <flag>wxALL|wxEXPAND</flag>
-                <border>5</border>
               </object>
               <growablecols>0</growablecols>
             </object>
@@ -109,9 +109,13 @@
         <accel>CTRL+P</accel>
         <help>Print the current entry.</help>
       </object>
+      <object class="wxMenuItem" name="TKMenuFileDiaryOptions">
+        <label>Diary Options...</label>
+        <help>Per diary options.</help>
+      </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="TKMenuFileOptions">
-        <label>Options...</label>
+        <label>Preferences...</label>
         <help>Configure ThotKeeper.</help>
       </object>
       <object class="separator"/>
@@ -119,13 +123,6 @@
         <label>&amp;Quit</label>
         <accel>CTRL+Q</accel>
         <help>Quit ThotKeeper.</help>
-      </object>
-    </object>
-    <object class="wxMenu">
-      <label>&amp;Diary</label>
-      <object class="wxMenuItem" name="TKMenuDiaryOptions">
-        <label>Options...</label>
-        <help>Per diary options.</help>
       </object>
     </object>
     <object class="wxMenu">
