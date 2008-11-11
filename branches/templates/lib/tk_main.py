@@ -411,6 +411,39 @@ class TKEventTagTree(TKTreeCtrl):
 
 ########################################################################
 ###
+###  TEMPLATE TREE SUB-SUBCLASS
+###
+
+class TKTemplateTree(TKTreeCtrl):
+    def __init__(self, parent, style):
+        TKTreeCtrl.__init__(self, parent, style)
+        root_data = wx.TreeItemData(TKEntryKey(None, None, None, None))
+        self.root_id = self.AddRoot('ThotKeeper Templates', -1, -1, root_data)
+
+    def TemplateChangedListener(self, entry, id):
+        """Callback for TKEntries.store_template()."""
+        wx.BeginBusyCursor()
+        try:
+            entry_key = TKEntryKey(None, None, None, id)
+            root_id = self.GetRootItem()
+            item_id = self.FindChild(root_id, entry_key)
+            if item_id is None:
+                if entry is None:
+                    pass
+                else:
+                    data = wx.TreeItemData(entry_key)
+                    self.AppendItem(root_id, entry.subject, -1, -1, data)
+            else:
+                if entry is None:
+                    self.Prune(item_id)
+                else:
+                    self.SetItemText(item_id, entry.subject, -1, -1, data)
+        finally:
+            wx.EndBusyCursor()
+
+
+########################################################################
+###
 ###  EVENT CALENDAR SUBCLASS
 ###
 
@@ -524,6 +557,7 @@ class ThotKeeper(wx.App):
         self.panel_id = self.resources.GetXRCID('TKPanel')
         self.datetree_id = self.resources.GetXRCID('TKDateTree')
         self.tagtree_id = self.resources.GetXRCID('TKTagTree')
+        self.templatetree_id = self.resources.GetXRCID('TKTemplateTree')
         self.today_id = self.resources.GetXRCID('TKToday')
         self.next_id = self.resources.GetXRCID('TKNext')
         self.prev_id = self.resources.GetXRCID('TKPrev')
@@ -610,11 +644,18 @@ class ThotKeeper(wx.App):
         self.resources.AttachUnknownControl('TKTagTree',
                                             tagtree, self.panel)
 
+        templatetree = TKTemplateTree(parent=self.panel,
+                                      style = wx.TR_HAS_BUTTONS)
+        self.resources.AttachUnknownControl('TKTemplateTree',
+                                            templatetree, self.panel)
+
         # Populate the tree widget.
         self.tree = self.frame.FindWindowById(self.datetree_id)
         self.tree_root = self.tree.GetRootId()
         self.tag_tree = self.frame.FindWindowById(self.tagtree_id)
         self.tag_tree_root = self.tag_tree.GetRootId()
+        self.template_tree = self.frame.FindWindowById(self.templatetree_id)
+        self.template_tree_root = self.template_tree.GetRootId()
         
         # Set the default font size for the diary entry text widget.
         self._SetFont(wx.Font(conf.font_size, wx.DEFAULT, wx.NORMAL, wx.NORMAL,
@@ -745,12 +786,6 @@ class ThotKeeper(wx.App):
                     self.tree.EntryChangedListener(entry, year, month,
                                                    day, id, False)
                 self.entries.enumerate_entries(_AddEntryToTree)
-                
-                def _AddEntryToTagTree(entry, tag):
-                    self.tag_tree.EntryChangedListener(tag, entry, True)
-                self.entries.enumerate_tag_entries(_AddEntryToTagTree)
-                
-                self.tag_tree.CollapseTree()
                 self.tree.CollapseTree()
                 stack = filter(None, self.tree.GetDateStack(timestruct[0],
                                                             timestruct[1],
@@ -758,10 +793,20 @@ class ThotKeeper(wx.App):
                                                             None))
                 for item in stack:
                     self.tree.Expand(item)
+                
+                def _AddEntryToTagTree(entry, tag):
+                    self.tag_tree.EntryChangedListener(tag, entry, True)
+                self.entries.enumerate_tag_entries(_AddEntryToTagTree)
+                self.tag_tree.CollapseTree()
+
+                for template in self.entries.get_templates():
+                    self.template_tree.TemplateChangedListener(template,
+                                                               template.get_id())
+                
                 self.entries.register_entry_listener(self.tree.EntryChangedListener)
                 self.entries.register_entry_listener(self.cal.EntryChangedListener)
-                self.entries.register_tag_listener(
-                                            self.tag_tree.EntryChangedListener)
+                self.entries.register_tag_listener(self.tag_tree.EntryChangedListener)
+                self.entries.register_template_listener(self.template_tree.TemplateChangedListener)
                 self._SetEntryFormDate(timestruct[0],
                                        timestruct[1],
                                        timestruct[2])

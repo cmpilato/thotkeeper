@@ -200,6 +200,22 @@
                     </object>
                   </object>
                 </object>
+                <object class="notebookpage">
+                  <label>Templates</label>
+                  <object class="wxPanel" name="TKTemplatePanel">
+                    <object class="wxFlexGridSizer">
+                      <cols>1</cols>
+                      <rows>1</rows>
+                      <growablerows>0</growablerows>
+                      <growablecols>0</growablecols>
+                      <object class="sizeritem">
+                        <object class="unknown" name="TKTemplateTree"/>
+                        <flag>wxALL|wxEXPAND</flag>
+                        <border>5</border>
+                      </object>
+                    </object>
+                  </object>
+                </object>
               </object>
               <flag>wxEXPAND</flag>
             </object>
