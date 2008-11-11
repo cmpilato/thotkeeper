@@ -247,7 +247,7 @@ class TKTreeCtrl(wx.TreeCtrl):
 
 ########################################################################
 ###    
-###  GENERIC TREE SUB-SUBCLASS
+###  EVENT TREE SUB-SUBCLASS
 ###
         
 class TKEventTree(TKTreeCtrl):
@@ -323,7 +323,7 @@ class TKEventTree(TKTreeCtrl):
 
 ########################################################################
 ###
-###  EVENT TREE TAG SUB-SUBCLASS
+###  TAG TREE SUB-SUBCLASS
 ###
 
 class TKEventTagTree(TKTreeCtrl):
