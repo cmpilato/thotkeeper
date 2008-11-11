@@ -758,8 +758,8 @@ class ThotKeeper(wx.App):
                                                             None))
                 for item in stack:
                     self.tree.Expand(item)
-                self.entries.register_listener(self.tree.EntryChangedListener)
-                self.entries.register_listener(self.cal.EntryChangedListener)
+                self.entries.register_entry_listener(self.tree.EntryChangedListener)
+                self.entries.register_entry_listener(self.cal.EntryChangedListener)
                 self.entries.register_tag_listener(
                                             self.tag_tree.EntryChangedListener)
                 self._SetEntryFormDate(timestruct[0],
