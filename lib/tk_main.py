@@ -540,14 +540,14 @@ class ThotKeeper(wx.App):
         self.file_revert_id = self.resources.GetXRCID('TKMenuFileRevert')
         self.file_preview_id = self.resources.GetXRCID('TKMenuFilePreview')
         self.file_print_id = self.resources.GetXRCID('TKMenuFilePrint')
+        self.file_options_id = self.resources.GetXRCID('TKMenuFileOptions')
+        self.file_diary_options_id = self.resources.GetXRCID('TKMenuFileDiaryOptions')
         self.file_quit_id = self.resources.GetXRCID('TKMenuFileQuit')
         self.help_update_id = self.resources.GetXRCID('TKMenuHelpUpdate')
         self.help_about_id = self.resources.GetXRCID('TKMenuHelpAbout')
         self.open_tool_id = self.resources.GetXRCID('TKToolOpen')
-        self.file_options_id = self.resources.GetXRCID('TKMenuFileOptions')
         self.choose_font_id = self.resources.GetXRCID('TKChooseFontButton')
         self.font_id = self.resources.GetXRCID('TKFontName')
-        self.diary_options_id = self.resources.GetXRCID('TKMenuDiaryOptions')
         self.author_global_id = self.resources.GetXRCID('TKAuthorGlobal')
         self.author_name_id = self.resources.GetXRCID('TKAuthorName')
         self.author_per_entry_id = self.resources.GetXRCID('TKAuthorPerEntry')
@@ -581,7 +581,7 @@ class ThotKeeper(wx.App):
 
         # fetch the per-diary options dialog
         self.diary_options_dialog = self.resources.LoadDialog(self.frame,
-                                                        'TKDiaryOptions')
+                                                              'TKDiaryOptions')
                                                         
         # fetch the rename tag dialog
         self.rename_tag_dialog = self.resources.LoadDialog(self.frame,
@@ -639,11 +639,11 @@ class ThotKeeper(wx.App):
         wx.EVT_MENU(self, self.file_revert_id, self._FileRevertMenu)
         wx.EVT_MENU(self, self.file_preview_id, self._FilePreviewMenu)
         wx.EVT_MENU(self, self.file_print_id, self._FilePrintMenu)
+        wx.EVT_MENU(self, self.file_diary_options_id, self._FileDiaryOptionsMenu)
+        wx.EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
         wx.EVT_MENU(self, self.file_quit_id, self._FileQuitMenu)
         wx.EVT_MENU(self, self.help_update_id, self._HelpUpdateMenu)
         wx.EVT_MENU(self, self.help_about_id, self._HelpAboutMenu)
-        wx.EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
-        wx.EVT_MENU(self, self.diary_options_id, self._DiaryOptionsMenu)
 
         # Event handlers for the Tree widget.
         wx.EVT_TREE_ITEM_ACTIVATED(self, self.datetree_id, self._TreeActivated)
@@ -773,7 +773,7 @@ class ThotKeeper(wx.App):
             self.datafile = datafile
             self._SetTitle()
             if create:
-                self._DiaryOptionsMenu(None)
+                self._FileDiaryOptionsMenu(None)
         finally:
             wx.EndBusyCursor()
 
@@ -1180,9 +1180,9 @@ class ThotKeeper(wx.App):
         self.frame.Close()
                  
     def _DiaryMenuEnable(self, enable):
-        self.menubar.FindItemById(self.diary_options_id).Enable(enable)
+        self.menubar.FindItemById(self.file_diary_options_id).Enable(enable)
         
-    def _DiaryOptionsMenu(self, event):
+    def _FileDiaryOptionsMenu(self, event):
         # Grab the controls
         author_name_box = self.frame.FindWindowById(self.author_name_id)
         author_global_radio = self.frame.FindWindowById(self.author_global_id)
