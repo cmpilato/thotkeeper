@@ -1055,12 +1055,13 @@ class ThotKeeper(wx.App):
         item = self.tree.GetSelection()
         tree = event.GetEventObject().parenttree
         data = tree.GetItemData(item).GetData()
-        position = self.entries.get_id_pos(data.year, data.month,
-                                           data.day, data.id)
         if not data.day:
             wx.MessageBox("This operation is not currently supported.",
-                         "Confirm Deletion", wx.OK | wx.ICON_ERROR, self.frame)
-        elif wx.OK == wx.MessageBox(
+                         "Deletion Failed", wx.OK | wx.ICON_ERROR, self.frame)
+            return
+        position = self.entries.get_id_pos(data.year, data.month,
+                                           data.day, data.id)
+        if wx.OK == wx.MessageBox(
             "Are you sure you want to delete the entry for " +
             "%s-%s-%s (%s)?" % (data.year, data.month, data.day, position),
             "Confirm Deletion",
