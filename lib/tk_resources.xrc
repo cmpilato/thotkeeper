@@ -387,6 +387,9 @@
     <object class="wxMenuItem" name="TKTreeMenuEdit">
       <label>Edit</label>
     </object>
+    <object class="wxMenuItem" name="TKTreeMenuDuplicate">
+      <label>Duplicate</label>
+    </object>
     <object class="wxMenuItem" name="TKTreeMenuDelete">
       <label>Delete</label>
     </object>

@@ -552,6 +552,7 @@ class ThotKeeper(wx.App):
         self.author_name_id = self.resources.GetXRCID('TKAuthorName')
         self.author_per_entry_id = self.resources.GetXRCID('TKAuthorPerEntry')
         self.tree_edit_id = self.resources.GetXRCID('TKTreeMenuEdit')
+        self.tree_dup_id = self.resources.GetXRCID('TKTreeMenuDuplicate')
         self.tree_delete_id = self.resources.GetXRCID('TKTreeMenuDelete')
         self.tree_expand_id = self.resources.GetXRCID('TKTreeMenuExpand')
         self.tree_collapse_id = self.resources.GetXRCID('TKTreeMenuCollapse')
@@ -649,6 +650,7 @@ class ThotKeeper(wx.App):
         wx.EVT_TREE_ITEM_ACTIVATED(self, self.datetree_id, self._TreeActivated)
         wx.EVT_RIGHT_DOWN(self.tree, self._TreePopup)
         wx.EVT_MENU(self.tree, self.tree_edit_id, self._TreeEditMenu)
+        wx.EVT_MENU(self.tree, self.tree_dup_id, self._TreeDuplicateMenu)
         wx.EVT_MENU(self.tree, self.tree_delete_id, self._TreeDeleteMenu)
         wx.EVT_MENU(self.tree, self.tree_expand_id, self._TreeExpandMenu)
         wx.EVT_MENU(self.tree, self.tree_collapse_id, self._TreeCollapseMenu)
@@ -656,6 +658,7 @@ class ThotKeeper(wx.App):
         wx.EVT_TREE_ITEM_ACTIVATED(self, self.tagtree_id, self._TreeActivated)
         wx.EVT_RIGHT_DOWN(self.tag_tree, self._TreePopup)
         wx.EVT_MENU(self.tag_tree, self.tree_edit_id, self._TreeEditMenu)
+        wx.EVT_MENU(self.tag_tree, self.tree_dup_id, self._TreeDuplicateMenu)
         wx.EVT_MENU(self.tag_tree, self.tree_delete_id, self._TreeDeleteMenu)
         wx.EVT_MENU(self.tag_tree, self.tree_expand_id, self._TreeExpandMenu)
         wx.EVT_MENU(self.tag_tree, self.tree_collapse_id, self._TreeCollapseMenu)
@@ -1022,6 +1025,32 @@ class ThotKeeper(wx.App):
                                                          en.year, en.month, en.day,
                                                          en.id, updatedtags))            
             
+    def _TreeDuplicateMenu(self, event):
+        item = self.tree.GetSelection()
+        tree = event.GetEventObject().parenttree
+        data = tree.GetItemData(item).GetData()
+        if not data.day:
+            wx.MessageBox("This operation is not currently supported.",
+                         "Duplication Failed",
+                          wx.OK | wx.ICON_ERROR, self.frame)
+            return
+        new_id = self.entries.get_last_id(data.year, data.month, data.day)
+        if new_id is None:
+            new_id = 1
+        else:
+            new_id = new_id + 1
+        entry = self.entries.get_entry(data.year, data.month,
+                                       data.day, data.id)
+        self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
+                                                 entry.get_subject(),
+                                                 entry.get_text(),
+                                                 data.year,
+                                                 data.month,
+                                                 data.day,
+                                                 new_id,
+                                                 entry.get_tags()))
+        self._SaveData(conf.data_file, self.entries)
+
     def _TreeDeleteMenu(self, event):
         item = self.tree.GetSelection()
         tree = event.GetEventObject().parenttree
@@ -1072,8 +1101,11 @@ class ThotKeeper(wx.App):
             data = tree.GetItemData(item).GetData()
             if not data.day and not data.tag:
                 popup.Enable(self.tree_edit_id, False)
+                popup.Enable(self.tree_dup_id, False)
+                popup.Enable(self.tree_delete_id, False)
         else:
             popup.Enable(self.tree_edit_id, False)
+            popup.Enable(self.tree_dup_id, False)
             popup.Enable(self.tree_delete_id, False)
         popup.parenttree = tree
         tree.PopupMenu(popup)
