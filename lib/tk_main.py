@@ -885,13 +885,13 @@ class ThotKeeper(wx.App):
         """Set the data on the entry form."""
         if self._RefuseUnsavedModifications():
             return False
+        
+        date = self._MakeDateTime(year, month, day)
+        self.cal.SetDate(date)
         firstid = self.entries.get_first_id(year, month, day)
         if id == -1:
             id = firstid
         self.entry_form_key = TKEntryKey(year, month, day, id)
-        date = wx.DateTime()
-        date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
-                         '%Y-%m-%d %H:%M:%S', date)
         label = date.Format("%A, %B %d, %Y")
         if firstid is not None and (id is None or id > firstid):
             label += " (%d)" % self.entries.get_id_pos(year, month, day, id)
