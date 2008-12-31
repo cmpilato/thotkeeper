@@ -23,56 +23,17 @@ from wx.html import HtmlEasyPrinting
 
 __version__ = "0.4-dev"
 
-# Placeholder for the configuration class.
-conf = None
-
 month_names = ['January', 'February', 'March', 'April', 
                'May', 'June', 'July', 'August', 
                'September', 'October', 'November', 'December']
 month_abbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-CONF_GROUP = 'options'
-CONF_FONT_NAME = CONF_GROUP + '/font-face'
-CONF_FONT_SIZE = CONF_GROUP + '/font-size'
-CONF_DATA_FILE = CONF_GROUP + '/data-file'
-CONF_POSITION = CONF_GROUP + '/window-position'
-CONF_SIZE = CONF_GROUP + '/window-size'
-
 
 ########################################################################
 ###
-###  CONFIGURATION/UPDATE ROUTINES
+###  UPDATE ROUTINES
 ###
-
-def AbsorbConf():
-    global conf
-    conf = wx.Config(style = wx.CONFIG_USE_LOCAL_FILE)
-    conf.font_face = conf.Read(CONF_FONT_NAME, 'Comic Sans MS')
-    conf.font_size = conf.ReadInt(CONF_FONT_SIZE, 12)
-    conf.data_file = conf.position = None
-    if conf.Exists(CONF_DATA_FILE):
-        conf.data_file = conf.Read(CONF_DATA_FILE)
-    if conf.Exists(CONF_POSITION):
-        position = conf.Read(CONF_POSITION).split(',')
-        conf.position = wx.Point(int(position[0]), int(position[1]))
-    size = conf.Read(CONF_SIZE, '600,400').split(',')
-    conf.size = wx.Size(int(size[0]), int(size[1]))
-
-def FlushConf():
-    global conf
-    wc = wx.ConfigBase_Get()
-    if conf.data_file:
-        wc.Write(CONF_DATA_FILE, conf.data_file)
-    wc.Write(CONF_FONT_NAME, conf.font_face)
-    wc.WriteInt(CONF_FONT_SIZE, conf.font_size)
-    if conf.position:
-        wc.Write(CONF_POSITION, "%d,%d" %
-                 (conf.position.x, conf.position.y))
-    if conf.size:
-        wc.Write(CONF_SIZE, "%d,%d" %
-                 (conf.size.GetWidth(), conf.size.GetHeight()))
-    wc.Flush()
 
 def CheckForUpdates():
     import httplib
@@ -108,6 +69,75 @@ def CheckForUpdates():
     raise Exception, "Unknown error checking for updates (status = %d)" \
           % (errcode)
 
+
+########################################################################
+###
+###  CONFIGURATION
+###
+
+class TKOptions:
+
+    """A class for managing ThotKeeper configuration options.  The
+    current collection of options accessible to consumers is:
+
+       font_face:  font face to use for entry display (string)
+       font_size:  size (in points) of the entry font (int)
+       data_file:  path of the journal file to use (string)
+       position:   location of the top-left window corner (wx.Point)
+       size:       size of the window (wx.Size)
+       
+    """
+    CONF_GROUP = 'options'
+    CONF_FONT_NAME = CONF_GROUP + '/font-face'
+    CONF_FONT_SIZE = CONF_GROUP + '/font-size'
+    CONF_DATA_FILE = CONF_GROUP + '/data-file'
+    CONF_POSITION = CONF_GROUP + '/window-position'
+    CONF_SIZE = CONF_GROUP + '/window-size'
+    
+    def __init__(self):
+        """Initialize the object, and set default values for
+        configuration options."""
+        self._SetDefaults()
+
+    def _SetDefaults(self):
+        """Set the configuration variables to their default values."""
+        self.font_face = 'Comic Sans MS'
+        self.font_size = 12
+        self.data_file = None
+        self.position = None
+        self.size = wx.Size(600, 400)
+
+    def Read(self):
+        """(Re-)read the stored configuration, applying settings atop
+        the default collection of values."""
+        self._SetDefaults()
+        conf = wx.Config(style = wx.CONFIG_USE_LOCAL_FILE)
+        self.font_face = conf.Read(self.CONF_FONT_NAME, self.font_face)
+        self.font_size = conf.ReadInt(self.CONF_FONT_SIZE, self.font_size)
+        if conf.Exists(self.CONF_DATA_FILE):
+            self.data_file = conf.Read(self.CONF_DATA_FILE)
+        if conf.Exists(self.CONF_POSITION):
+            position = conf.Read(self.CONF_POSITION).split(',')
+            self.position = wx.Point(int(position[0]), int(position[1]))
+        if conf.Exists(self.CONF_SIZE):
+            size = conf.Read(self.CONF_SIZE).split(',')
+            self.size = wx.Size(int(size[0]), int(size[1]))
+        
+    def Write(self):
+        """Store configuration values using whatever persistant
+        storage mechanism the system provides."""
+        conf = wx.ConfigBase_Get()
+        if self.data_file:
+            conf.Write(self.CONF_DATA_FILE, self.data_file)
+        conf.Write(self.CONF_FONT_NAME, self.font_face)
+        conf.WriteInt(self.CONF_FONT_SIZE, self.font_size)
+        if self.position:
+            conf.Write(self.CONF_POSITION,
+                       "%d,%d" % (self.position.x, self.position.y))
+        if self.size:
+            conf.Write(self.CONF_SIZE,
+                     "%d,%d" % (self.size.GetWidth(), self.size.GetHeight()))
+        conf.Flush()
 
 ########################################################################
 ###    
@@ -507,14 +537,14 @@ class ThotKeeper(wx.App):
 
     def OnInit(self):
         """wxWidgets calls this method to initialize the application"""
-        global conf
 
         # Who am I?
         self.SetVendorName("Red-Bean Software")
         self.SetAppName("ThotKeeper")
 
         # Get our persisted options into an easily addressable object.
-        AbsorbConf()
+        self.conf = TKOptions()
+        self.conf.Read()
 
         # Get the XML Resource class
         resource_path = os.path.join(os.path.dirname(sys.argv[0]),
@@ -618,8 +648,9 @@ class ThotKeeper(wx.App):
         self.tag_tree_root = self.tag_tree.GetRootId()
         
         # Set the default font size for the diary entry text widget.
-        self._SetFont(wx.Font(conf.font_size, wx.DEFAULT, wx.NORMAL, wx.NORMAL,
-                             False, conf.font_face))
+        self._SetFont(wx.Font(self.conf.font_size, wx.DEFAULT,
+                              wx.NORMAL, wx.NORMAL, False,
+                              self.conf.font_face))
         
         # Event handlers.  They are the key to the world.
         wx.EVT_CLOSE(self.frame, self._FrameClosure)
@@ -664,14 +695,14 @@ class ThotKeeper(wx.App):
         wx.EVT_MENU(self.tag_tree, self.tree_collapse_id, self._TreeCollapseMenu)
 
         # Size and position our frame.
-        self.frame.SetSize(conf.size)
-        if conf.position is not None:
-            self.frame.SetPosition(conf.position)
+        self.frame.SetSize(self.conf.size)
+        if self.conf.position is not None:
+            self.frame.SetPosition(self.conf.position)
         else:
             self.frame.Center()
 
         # Init the frame with no datafile.
-        old_conf_data_file = conf.data_file
+        old_conf_data_file = self.conf.data_file
         self._SetDataFile(None)
 
         # Now, show the frame.
@@ -693,22 +724,20 @@ class ThotKeeper(wx.App):
 
     def _SetFont(self, font):
         """Set the font used by the entry text field."""
-        global conf
         wx.BeginBusyCursor()
         self.ignore_text_event = True
         try:
             self.frame.FindWindowById(self.text_id).SetFont(font)
-            conf.font_face = font.GetFaceName()
-            conf.font_size = font.GetPointSize()
+            self.conf.font_face = font.GetFaceName()
+            self.conf.font_size = font.GetPointSize()
             self.options_dialog.FindWindowById(self.font_id).SetLabel(
-                "%s, %dpt" % (conf.font_face, conf.font_size))
+                "%s, %dpt" % (self.conf.font_face, self.conf.font_size))
         finally:
             self.ignore_text_event = False
             wx.EndBusyCursor()
     
     def _SetDataFile(self, datafile, create=False):
         """Set the active datafile, possible creating one on disk."""
-        global conf
         wx.Yield()
         wx.BeginBusyCursor()
         try:
@@ -717,7 +746,7 @@ class ThotKeeper(wx.App):
             self._SetEntryModified(False)
             self._SetDiaryModified(False)
             self.panel.Show(False)
-            conf.data_file = datafile
+            self.conf.data_file = datafile
             if datafile:
                 datafile = os.path.abspath(datafile)
                 if not os.path.exists(datafile) and not create:
@@ -890,8 +919,8 @@ class ThotKeeper(wx.App):
 
     def _FrameClosure(self, event):
         self.frame.SetStatusText("Quitting...")
-        conf.size = self.frame.GetSize()
-        conf.position = self.frame.GetPosition()
+        self.conf.size = self.frame.GetSize()
+        self.conf.position = self.frame.GetPosition()
         if event.CanVeto() and self._RefuseUnsavedModifications(True):
             event.Veto()
         else:
@@ -986,9 +1015,9 @@ class ThotKeeper(wx.App):
                                                          year, month, day,
                                                          id, tags))
             if path is None:
-                path = conf.data_file
+                path = self.conf.data_file
             self._SaveData(path, self.entries)
-            if path != conf.data_file:
+            if path != self.conf.data_file:
                 self._SetDataFile(path, False) 
             self._SetEntryModified(False)
             self._SetDiaryModified(False)
@@ -1049,7 +1078,7 @@ class ThotKeeper(wx.App):
                                                  data.day,
                                                  new_id,
                                                  entry.get_tags()))
-        self._SaveData(conf.data_file, self.entries)
+        self._SaveData(self.conf.data_file, self.entries)
 
     def _TreeDeleteMenu(self, event):
         item = self.tree.GetSelection()
@@ -1068,7 +1097,7 @@ class ThotKeeper(wx.App):
             wx.OK | wx.CANCEL | wx.ICON_QUESTION, self.frame):
             self.entries.remove_entry(data.year, data.month,
                                       data.day, data.id)
-            self._SaveData(conf.data_file, self.entries)
+            self._SaveData(self.conf.data_file, self.entries)
             dispyear, dispmonth, dispday, dispid = self._GetEntryFormKeys()
             if ((dispyear == data.year) & (dispmonth == data.month) & \
                 (dispday == data.day) & (dispid == data.id)):
@@ -1118,12 +1147,11 @@ class ThotKeeper(wx.App):
     def _FileNewMenu(self, event):
         if self._RefuseUnsavedModifications(True):
             return False
-        global conf
         directory = '.'
         if os.environ.has_key('HOME'):
             directory = os.environ['HOME']
-        if conf.data_file is not None:
-            directory = os.path.dirname(conf.data_file)
+        if self.conf.data_file is not None:
+            directory = os.path.dirname(self.conf.data_file)
         dialog = self._GetFileDialog("Create new data file", directory,
                                      wx.SAVE | wx.OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
@@ -1136,12 +1164,11 @@ class ThotKeeper(wx.App):
     def _FileOpenMenu(self, event):
         if self._RefuseUnsavedModifications(True):
             return False
-        global conf
         directory = '.'
         if os.environ.has_key('HOME'):
             directory = os.environ['HOME']
-        if conf.data_file is not None:
-            directory = os.path.dirname(conf.data_file)
+        if self.conf.data_file is not None:
+            directory = os.path.dirname(self.conf.data_file)
         dialog = self._GetFileDialog("Open existing data file", directory,
                                      wx.OPEN)
         if dialog.ShowModal() == wx.ID_OK:
@@ -1153,8 +1180,7 @@ class ThotKeeper(wx.App):
         self._SaveEntriesToPath(None)
         
     def _FileSaveAsMenu(self, event):
-        global conf
-        directory = os.path.dirname(conf.data_file)
+        directory = os.path.dirname(self.conf.data_file)
         dialog = self._GetFileDialog("Save as a new data file", directory,
                                      wx.SAVE | wx.OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
@@ -1285,7 +1311,7 @@ class ThotKeeper(wx.App):
                           "Update Check", wx.OK, self.frame)
         
     def OnExit(self):
-        FlushConf()
+        self.conf.Write()
 
 
 def main():
@@ -1306,6 +1332,4 @@ def main():
     tk = ThotKeeper(file)
     tk.MainLoop()
     tk.OnExit()
-    global conf
-    del conf
     
