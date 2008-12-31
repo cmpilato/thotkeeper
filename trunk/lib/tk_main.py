@@ -582,6 +582,7 @@ class ThotKeeper(wx.App):
         self.author_name_id = self.resources.GetXRCID('TKAuthorName')
         self.author_per_entry_id = self.resources.GetXRCID('TKAuthorPerEntry')
         self.tree_edit_id = self.resources.GetXRCID('TKTreeMenuEdit')
+        self.tree_redate_id = self.resources.GetXRCID('TKTreeMenuRedate')
         self.tree_dup_id = self.resources.GetXRCID('TKTreeMenuDuplicate')
         self.tree_delete_id = self.resources.GetXRCID('TKTreeMenuDelete')
         self.tree_expand_id = self.resources.GetXRCID('TKTreeMenuExpand')
@@ -616,8 +617,22 @@ class ThotKeeper(wx.App):
                                                         
         # fetch the rename tag dialog
         self.rename_tag_dialog = self.resources.LoadDialog(self.frame,
-                                                        'TKTagRename')
+                                                           'TKTagRename')
 
+        # Fetch the date change dialog, and replace the "unknown" XRC
+        # placeholder with a calendar widget.
+        self.change_date_dialog = self.resources.LoadDialog(self.frame,
+                                                            'TKChangeDate')
+        self.change_date_panel = self.change_date_dialog.FindWindowById(
+            self.resources.GetXRCID('TKChangeDatePanel'))
+        self.change_date_cal = wx.calendar.CalendarCtrl(parent=self.change_date_panel,
+                                                        style=wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
+        self.resources.AttachUnknownControl('TKChangeDateCalendar',
+                                            self.change_date_cal,
+                                            self.change_date_panel)
+        self.change_date_cal_id = self.resources.GetXRCID('TKChangeDateCalendar')
+        self.change_date_today_id = self.resources.GetXRCID('TKChangeDateToday')
+        
         # Fetch (and assign) our menu bar.
         self.menubar = self.resources.LoadMenuBar('TKMenuBar')
         self.frame.SetMenuBar(self.menubar)
@@ -681,6 +696,7 @@ class ThotKeeper(wx.App):
         wx.EVT_TREE_ITEM_ACTIVATED(self, self.datetree_id, self._TreeActivated)
         wx.EVT_RIGHT_DOWN(self.tree, self._TreePopup)
         wx.EVT_MENU(self.tree, self.tree_edit_id, self._TreeEditMenu)
+        wx.EVT_MENU(self.tree, self.tree_redate_id, self._TreeChangeDateMenu)
         wx.EVT_MENU(self.tree, self.tree_dup_id, self._TreeDuplicateMenu)
         wx.EVT_MENU(self.tree, self.tree_delete_id, self._TreeDeleteMenu)
         wx.EVT_MENU(self.tree, self.tree_expand_id, self._TreeExpandMenu)
@@ -689,6 +705,7 @@ class ThotKeeper(wx.App):
         wx.EVT_TREE_ITEM_ACTIVATED(self, self.tagtree_id, self._TreeActivated)
         wx.EVT_RIGHT_DOWN(self.tag_tree, self._TreePopup)
         wx.EVT_MENU(self.tag_tree, self.tree_edit_id, self._TreeEditMenu)
+        wx.EVT_MENU(self.tag_tree, self.tree_redate_id, self._TreeChangeDateMenu)
         wx.EVT_MENU(self.tag_tree, self.tree_dup_id, self._TreeDuplicateMenu)
         wx.EVT_MENU(self.tag_tree, self.tree_delete_id, self._TreeDeleteMenu)
         wx.EVT_MENU(self.tag_tree, self.tree_expand_id, self._TreeExpandMenu)
@@ -1036,6 +1053,63 @@ class ThotKeeper(wx.App):
             return
         self._SetEntryFormDate(data.year, data.month, data.day, data.id)
 
+    def _TreeChangeDateMenu(self, event):
+        tree = event.GetEventObject().parenttree
+        item = tree.GetSelection()
+        data = tree.GetItemData(item).GetData()
+        if not data.day:
+            wx.MessageBox("This operation is not currently supported.",
+                         "Entry Date Change Failed",
+                          wx.OK | wx.ICON_ERROR, self.frame)
+            return
+
+        # Get the current entry.
+        entry = self.entries.get_entry(data.year, data.month,
+                                       data.day, data.id)
+
+        # Ask the user what the new change should be.  We'll hook in a
+        # couple of custom event handlers here:  one catches
+        # double-clicks on the calendar as dialog-close-worthy events,
+        # and the other allows the dialog's "Today" button to set the
+        # dialog's selected calendar day.
+        def _ChangeDateCalendarChanged(event):
+            event.Skip()
+            self.change_date_dialog.EndModal(wx.ID_OK)
+        def _ChangeDateTodayClicked(event):
+            timestruct = time.localtime()
+            date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
+            self.change_date_cal.SetDate(date)
+        wx.calendar.EVT_CALENDAR(self, self.change_date_cal_id,
+                                 _ChangeDateCalendarChanged)
+        wx.EVT_BUTTON(self, self.change_date_today_id, _ChangeDateTodayClicked)
+        self.change_date_cal.SetDate(self._MakeDateTime(data.year, data.month, data.day))
+        if self.change_date_dialog.ShowModal() != wx.ID_OK:
+            return
+        
+        date = self.change_date_cal.GetDate()
+        new_year = date.GetYear()
+        new_month = date.GetMonth() + 1
+        new_day = date.GetDay()
+        if [new_year, new_month, new_day] != [data.year, data.month, data.day]:
+            # Save the entry as the last item on the new date, and delete
+            # the original entry.
+            new_id = self.entries.get_last_id(new_year, new_month, new_day)
+            if new_id is None:
+                new_id = 1
+            else:
+                new_id = new_id + 1
+            self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
+                                                     entry.get_subject(),
+                                                     entry.get_text(),
+                                                     new_year,
+                                                     new_month,
+                                                     new_day,
+                                                     new_id,
+                                                     entry.get_tags()))
+            self.entries.remove_entry(data.year, data.month,
+                                      data.day, data.id)
+            self._SaveData(self.conf.data_file, self.entries)
+
     def _RenameTag(self, tag):
         rename_tag_box = self.rename_tag_dialog.FindWindowById(self.rename_tag_id)
         rename_tag_box.SetValue(tag)
@@ -1131,10 +1205,12 @@ class ThotKeeper(wx.App):
             data = tree.GetItemData(item).GetData()
             if not data.day and not data.tag:
                 popup.Enable(self.tree_edit_id, False)
+                popup.Enable(self.tree_redate_id, False)
                 popup.Enable(self.tree_dup_id, False)
                 popup.Enable(self.tree_delete_id, False)
         else:
             popup.Enable(self.tree_edit_id, False)
+            popup.Enable(self.tree_redate_id, False)
             popup.Enable(self.tree_dup_id, False)
             popup.Enable(self.tree_delete_id, False)
         popup.parenttree = tree
@@ -1195,12 +1271,16 @@ class ThotKeeper(wx.App):
         self._SetEntryModified(False)
         self._SetEntryFormDate(int(year), int(month), int(day), id)
 
-    def _GetCurrentEntryPieces(self):
-        year, month, day, author, subject, text, id, tags \
-              = self._GetEntryFormBits()
+    def _MakeDateTime(self, year, month, day):
         date = wx.DateTime()
         date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
                          '%Y-%m-%d %H:%M:%S', date)
+        return date
+        
+    def _GetCurrentEntryPieces(self):
+        year, month, day, author, subject, text, id, tags \
+              = self._GetEntryFormBits()
+        date = self._MakeDateTime(year, month, day)
         datestr = date.Format("%A, %B %d, %Y")
         return datestr, subject, author, text
         
