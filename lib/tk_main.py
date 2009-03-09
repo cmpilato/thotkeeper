@@ -1287,6 +1287,8 @@ class ThotKeeper(wx.App):
     def _FilePreviewMenu(self, event):
         try:
             datestr, subject, author, text = self._GetCurrentEntryPieces()
+            if self.entries.get_author_global():
+                author = self.entries.get_author_name()
             self.printer.PreviewText(self.datafile, subject, author,
                                      datestr, text)
         except:
@@ -1295,6 +1297,8 @@ class ThotKeeper(wx.App):
     def _FilePrintMenu(self, event):
         try:
             datestr, subject, author, text = self._GetCurrentEntryPieces()
+            if self.entries.get_author_global():
+                author = self.entries.get_author_name()
             self.printer.Print(self.datafile, subject, author,
                                datestr, text)
         except:
