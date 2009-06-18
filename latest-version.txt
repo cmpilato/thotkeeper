@@ -1,2 +1,2 @@
-0.3
+0.4.0
 http://code.google.com/p/thotkeeper/downloads
