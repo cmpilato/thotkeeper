@@ -21,7 +21,7 @@ import wx.calendar
 import wx.xrc
 from wx.html import HtmlEasyPrinting
 
-__version__ = "0.4"
+__version__ = "0.3-dev"
 
 month_names = ['January', 'February', 'March', 'April', 
                'May', 'June', 'July', 'August', 
