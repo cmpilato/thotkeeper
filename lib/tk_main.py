@@ -152,7 +152,7 @@ class TKEntryKey:
         self.id = id
         self.tag = tag
 
-    def _compare_tags(self, other):
+    def _CompareTags(self, other):
         ### Because tags look like paths, we use basically the same
         ### algorithm as Subversion's svn_path_compare_paths().
         
@@ -195,7 +195,7 @@ class TKEntryKey:
         return cmp(char1, char2)
         
     def __cmp__(self, other):
-        tag_cmp = self._compare_tags(other)
+        tag_cmp = self._CompareTags(other)
         if self.year is not None and other.year is None:
             return -1
         if self.year is None and other.year is not None:
