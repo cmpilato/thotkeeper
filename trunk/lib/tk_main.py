@@ -535,6 +535,10 @@ class ThotKeeper(wx.App):
         self.datafile = None
         wx.App.__init__(self)
 
+    ### -----------------------------------------------------------------
+    ### Core wx.App Interfaces
+    ### -----------------------------------------------------------------
+
     def OnInit(self):
         """wxWidgets calls this method to initialize the application"""
 
@@ -546,10 +550,12 @@ class ThotKeeper(wx.App):
         self.conf = TKOptions()
         self.conf.Read()
 
-        # Get the XML Resource class
+        # Get the XML Resource class.
         resource_path = os.path.join(os.path.dirname(sys.argv[0]),
                                      'lib', 'tk_resources.xrc')
         self.resources = wx.xrc.XmlResource(resource_path)
+
+        # Store a bunch of resource IDs for easier access.
         self.calendar_id = self.resources.GetXRCID('TKCalendar')
         self.panel_id = self.resources.GetXRCID('TKPanel')
         self.datetree_id = self.resources.GetXRCID('TKDateTree')
@@ -568,11 +574,15 @@ class ThotKeeper(wx.App):
         self.file_save_id = self.resources.GetXRCID('TKMenuFileSave')
         self.file_saveas_id = self.resources.GetXRCID('TKMenuFileSaveAs')
         self.file_revert_id = self.resources.GetXRCID('TKMenuFileRevert')
-        self.file_preview_id = self.resources.GetXRCID('TKMenuFilePreview')
-        self.file_print_id = self.resources.GetXRCID('TKMenuFilePrint')
         self.file_options_id = self.resources.GetXRCID('TKMenuFileOptions')
         self.file_diary_options_id = self.resources.GetXRCID('TKMenuFileDiaryOptions')
         self.file_quit_id = self.resources.GetXRCID('TKMenuFileQuit')
+        self.entry_new_id = self.resources.GetXRCID('TKMenuEntryNew')
+        self.entry_duplicate_id = self.resources.GetXRCID('TKMenuEntryDuplicate')
+        self.entry_redate_id = self.resources.GetXRCID('TKMenuEntryRedate')
+        self.entry_delete_id = self.resources.GetXRCID('TKMenuEntryDelete')
+        self.entry_preview_id = self.resources.GetXRCID('TKMenuEntryPreview')
+        self.entry_print_id = self.resources.GetXRCID('TKMenuEntryPrint')
         self.help_update_id = self.resources.GetXRCID('TKMenuHelpUpdate')
         self.help_about_id = self.resources.GetXRCID('TKMenuHelpAbout')
         self.open_tool_id = self.resources.GetXRCID('TKToolOpen')
@@ -686,11 +696,15 @@ class ThotKeeper(wx.App):
         wx.EVT_MENU(self, self.file_save_id, self._FileSaveMenu)
         wx.EVT_MENU(self, self.file_saveas_id, self._FileSaveAsMenu)
         wx.EVT_MENU(self, self.file_revert_id, self._FileRevertMenu)
-        wx.EVT_MENU(self, self.file_preview_id, self._FilePreviewMenu)
-        wx.EVT_MENU(self, self.file_print_id, self._FilePrintMenu)
         wx.EVT_MENU(self, self.file_diary_options_id, self._FileDiaryOptionsMenu)
         wx.EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
         wx.EVT_MENU(self, self.file_quit_id, self._FileQuitMenu)
+        wx.EVT_MENU(self, self.entry_new_id, self._EntryNewMenu)
+        wx.EVT_MENU(self, self.entry_duplicate_id, self._EntryDuplicateMenu)
+        wx.EVT_MENU(self, self.entry_redate_id, self._EntryRedateMenu)
+        wx.EVT_MENU(self, self.entry_delete_id, self._EntryDeleteMenu)
+        wx.EVT_MENU(self, self.entry_preview_id, self._EntryPreviewMenu)
+        wx.EVT_MENU(self, self.entry_print_id, self._EntryPrintMenu)
         wx.EVT_MENU(self, self.help_update_id, self._HelpUpdateMenu)
         wx.EVT_MENU(self, self.help_about_id, self._HelpAboutMenu)
 
@@ -740,6 +754,13 @@ class ThotKeeper(wx.App):
         
         # Return a success flag
         return True
+
+    def OnExit(self):
+        self.conf.Write()
+
+    ### -----------------------------------------------------------------
+    ### Utility Functions
+    ### -----------------------------------------------------------------
 
     def _SetFont(self, font):
         """Set the font used by the entry text field."""
@@ -836,19 +857,6 @@ class ThotKeeper(wx.App):
                          "Write Error", wx.OK | wx.ICON_ERROR, self.frame)
             raise
             
-        
-    def _SetTitle(self):
-        title = "ThotKeeper%s%s" \
-                % (self.datafile and " - " + self.datafile or "",
-                   self.entry_modified and " [modified]" or "")
-        self.frame.SetTitle(title)
-        
-    def _UpdateAuthorBox(self):
-        show_author = not self.entries.get_author_global()
-        self.frame.FindWindowById(self.author_id).Show(show_author)
-        self.frame.FindWindowById(self.author_label_id).Show(show_author)
-        self.frame.Layout()
-
     def _RefuseUnsavedModifications(self, refuse_modified_options=False):
         """If there exist unsaved entry modifications, inform the user
         and return True.  Otherwise, return False."""
@@ -865,22 +873,33 @@ class ThotKeeper(wx.App):
             return True
         return False
 
+    def _SetTitle(self):
+        title = "ThotKeeper%s%s" \
+                % (self.datafile and " - " + self.datafile or "",
+                   self.entry_modified and " [modified]" or "")
+        self.frame.SetTitle(title)
+        
+    def _UpdateAuthorBox(self):
+        show_author = not self.entries.get_author_global()
+        self.frame.FindWindowById(self.author_id).Show(show_author)
+        self.frame.FindWindowById(self.author_label_id).Show(show_author)
+        self.frame.Layout()
+
     def _TextToTags(self, text):
-        # Convert tags to lowercase and split by commas
+        # Convert tags to lowercase and split by commas.
         tags = text.lower().split(',')
-        # Split each tag by '/', remove surrounding whitespace, remove empty sections
-        # then join back together again
-        tags = map(lambda x: '/'.join(
-                filter(None, 
-                    map(string.strip, 
-                        x.split('/')))), tags)
-        # Remove any empty tags and return
+
+        # Split each tag by '/', remove surrounding whitespace, remove
+        # empty sections then join back together again.
+        tags = map(lambda x: '/'.join(filter(None, 
+                                             map(string.strip, 
+                                                 x.split('/')))), tags)
+
+        # Remove any empty tags and return.
         return filter(None, tags)
         
     def _TagsToText(self, tags):
-        if not tags:
-            return ''
-        return reduce(lambda x, y: x+', '+y, tags)
+        return tags and ', '.join(tags) or ''
 
     ### FIXME: This function needs a new name
     def _SetEntryFormDate(self, year, month, day, id=-1):
@@ -906,36 +925,472 @@ class ThotKeeper(wx.App):
             self.frame.FindWindowById(self.next_id).Enable(False)
         self.frame.FindWindowById(self.date_id).SetLabel(label)
         text = subject = author = tags = ''
-        has_entry = 0
         entry = self.entries.get_entry(year, month, day, id)
         if entry is not None:
             text = entry.get_text()
             author = entry.get_author()
             subject = entry.get_subject()
-            tags = self._TagsToText(entry.get_tags())
+            tags = ', '.join(entry.get_tags() or [])
         self.frame.FindWindowById(self.author_id).SetValue(author)
         self.frame.FindWindowById(self.subject_id).SetValue(subject)
         self.frame.FindWindowById(self.text_id).SetValue(text)
         self.frame.FindWindowById(self.tags_id).SetValue(tags)
-        self._TogglePrintMenus(entry and True or False)
+        self._NotifyEntryLoaded(entry and True or False)
+        
+    def _NotifyEntryLoaded(self, is_loaded=True):
+        self._ToggleEntryMenus(is_loaded)
         self._SetEntryModified(False)
         
-    def _TogglePrintMenus(self, enable=True):
-        self.menubar.FindItemById(self.file_print_id).Enable(enable)
-        self.menubar.FindItemById(self.file_preview_id).Enable(enable)
-        
+    def _ToggleEntryMenus(self, is_loaded=True):
+        self.menubar.FindItemById(self.entry_duplicate_id).Enable(is_loaded)
+        self.menubar.FindItemById(self.entry_redate_id).Enable(is_loaded)
+        self.menubar.FindItemById(self.entry_delete_id).Enable(is_loaded)
+        self.menubar.FindItemById(self.entry_print_id).Enable(is_loaded)
+        self.menubar.FindItemById(self.entry_preview_id).Enable(is_loaded)
+
     def _SetEntryModified(self, enable=True):
         self.entry_modified = enable
         self.menubar.FindItemById(self.file_save_id).Enable(enable or self.diary_modified)
         self.menubar.FindItemById(self.file_revert_id).Enable(enable)
         if self.entry_modified:
-            self._TogglePrintMenus(True)
+            self._ToggleEntryMenus(True)
         self._SetTitle()
 
     def _SetDiaryModified(self, enable=True):
         self.diary_modified = enable
         self.menubar.FindItemById(self.file_save_id).Enable(enable or self.entry_modified)        
 
+    def _GetEntryFormKeys(self):
+        ### FIXME: This interface is ... hacky.
+        return self.entry_form_key.year, self.entry_form_key.month, \
+               self.entry_form_key.day, self.entry_form_key.id
+
+    def _GetEntryFormBits(self):
+        year, month, day, id = self._GetEntryFormKeys()
+        author = self.frame.FindWindowById(self.author_id).GetValue()
+        subject = self.frame.FindWindowById(self.subject_id).GetValue()
+        text = self.frame.FindWindowById(self.text_id).GetValue()
+        tags = self._TextToTags(
+                self.frame.FindWindowById(self.tags_id).GetValue())
+        return year, month, day, author, subject, text, id, tags
+        
+    def _GetFileDialog(self, title, flags):
+        directory = '.'
+        if os.environ.has_key('HOME'):
+            directory = os.environ['HOME']
+        if self.conf.data_file is not None:
+            directory = os.path.dirname(self.conf.data_file)
+        return wx.FileDialog(self.frame, title, directory, '',
+                            'ThotKeeper journal files (*.tkj)|*.tkj', flags)
+        
+    def _SaveEntriesToPath(self, path=None):
+        wx.Yield()
+        wx.BeginBusyCursor()
+        try:
+            if self.entry_modified:
+                year, month, day, author, subject, text, id, tags \
+                      = self._GetEntryFormBits()
+                if id is None:
+                    id = self.entries.get_last_id(year, month, day)
+                    if id is None:
+                        id = 1
+                    else:
+                        id = id + 1
+                    self.entry_form_key = TKEntryKey(year, month, day, id)
+                self.entries.store_entry(tk_data.TKEntry(author, subject, text,
+                                                         year, month, day,
+                                                         id, tags))
+            if path is None:
+                path = self.conf.data_file
+            self._SaveData(path, self.entries)
+            if path != self.conf.data_file:
+                self._SetDataFile(path, False) 
+            self._SetEntryModified(False)
+            self._SetDiaryModified(False)
+            self.frame.FindWindowById(self.next_id).Enable(True)
+        finally:
+            wx.EndBusyCursor()
+
+    def _RenameTag(self, tag):
+        rename_tag_box = self.rename_tag_dialog.FindWindowById(self.rename_tag_id)
+        rename_tag_box.SetValue(tag)
+        if self.rename_tag_dialog.ShowModal() == wx.ID_OK \
+                and rename_tag_box.GetValue() != tag:
+            self._SetDiaryModified(True)
+            def _UpdateSingleTag(current):
+                if current==tag:
+                    return rename_tag_box.GetValue()
+                if current.startswith(tag+'/'):
+                    return current.replace(tag, rename_tag_box.GetValue(),1)
+                return current
+            for en in self.entries.get_entries_by_partial_tag(tag):
+                updatedtags = map(_UpdateSingleTag, en.get_tags())
+                self.entries.store_entry(tk_data.TKEntry(en.author, en.subject, en.text,
+                                                         en.year, en.month, en.day,
+                                                         en.id, updatedtags))            
+
+    def _RedateEntry(self, year, month, day, id):
+        if self._RefuseUnsavedModifications(True):
+            return False
+        entry = self.entries.get_entry(year, month, day, id)
+
+        # Ask the user what the new change should be.  We'll hook in a
+        # couple of custom event handlers here:  one catches
+        # double-clicks on the calendar as dialog-close-worthy events,
+        # and the other allows the dialog's "Today" button to set the
+        # dialog's selected calendar day.
+        def _ChangeDateCalendarChanged(event):
+            event.Skip()
+            self.change_date_dialog.EndModal(wx.ID_OK)
+        def _ChangeDateTodayClicked(event):
+            timestruct = time.localtime()
+            date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
+            self.change_date_cal.SetDate(date)
+        wx.calendar.EVT_CALENDAR(self, self.change_date_cal_id,
+                                 _ChangeDateCalendarChanged)
+        wx.EVT_BUTTON(self, self.change_date_today_id, _ChangeDateTodayClicked)
+        self.change_date_cal.SetDate(self._MakeDateTime(year, month, day))
+        if self.change_date_dialog.ShowModal() != wx.ID_OK:
+            return
+        
+        date = self.change_date_cal.GetDate()
+        new_year = date.GetYear()
+        new_month = date.GetMonth() + 1
+        new_day = date.GetDay()
+        if [new_year, new_month, new_day] != [year, month, day]:
+            # Save the entry as the last item on the new date, and delete
+            # the original entry.
+            new_id = self.entries.get_last_id(new_year, new_month, new_day)
+            if new_id is None:
+                new_id = 1
+            else:
+                new_id = new_id + 1
+            self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
+                                                     entry.get_subject(),
+                                                     entry.get_text(),
+                                                     new_year,
+                                                     new_month,
+                                                     new_day,
+                                                     new_id,
+                                                     entry.get_tags()))
+            self.entries.remove_entry(year, month, day, id)
+            self._SaveData(self.conf.data_file, self.entries)
+            self._SetEntryFormDate(new_year, new_month, new_day, new_id)
+        
+    def _DuplicateEntry(self, year, month, day, id):
+        if self._RefuseUnsavedModifications(True):
+            return False
+        new_id = self.entries.get_last_id(year, month, day)
+        if new_id is None:
+            new_id = 1
+        else:
+            new_id = new_id + 1
+        entry = self.entries.get_entry(year, month, day, id)
+        self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
+                                                 entry.get_subject(),
+                                                 entry.get_text(),
+                                                 year,
+                                                 month,
+                                                 day,
+                                                 new_id,
+                                                 entry.get_tags()))
+        self._SaveData(self.conf.data_file, self.entries)
+        self._SetEntryFormDate(year, month, day, new_id)
+        
+    def _DeleteEntry(self, year, month, day, id):
+        if self._RefuseUnsavedModifications(True):
+            return False
+        entry = self.entries.get_entry(year, month, day, id)
+        if wx.OK == wx.MessageBox(
+            "Are you sure you want to delete this entry?\n\n"
+            "   Date: %04d-%02d-%02d\n"
+            "   Author: %s\n"
+            "   Subject:  %s\n"
+            "   Tags: %s" \
+            % (year, month, day, entry.get_author(),
+               entry.get_subject(), self._TagsToText(entry.get_tags())),
+            "Confirm Deletion",
+            wx.OK | wx.CANCEL | wx.ICON_QUESTION, self.frame):
+            self.entries.remove_entry(year, month, day, id)
+            self._SaveData(self.conf.data_file, self.entries)
+            dispyear, dispmonth, dispday, dispid = self._GetEntryFormKeys()
+            if ((dispyear == year) \
+                and (dispmonth == month) \
+                and (dispday == day) \
+                and (dispid == id)):
+                self._SetEntryModified(False)
+                self._SetEntryFormDate(dispyear, dispmonth, dispday)
+
+    def _MakeDateTime(self, year, month, day):
+        date = wx.DateTime()
+        date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
+                         '%Y-%m-%d %H:%M:%S', date)
+        return date
+        
+    def _GetCurrentEntryPieces(self):
+        year, month, day, author, subject, text, id, tags \
+              = self._GetEntryFormBits()
+        date = self._MakeDateTime(year, month, day)
+        datestr = date.Format("%A, %B %d, %Y")
+        return datestr, subject, author, text
+        
+    def _DiaryMenuEnable(self, enable):
+        self.menubar.FindItemById(self.file_diary_options_id).Enable(enable)
+        
+    ### -----------------------------------------------------------------
+    ### Tree Popup Menu Actions
+    ### -----------------------------------------------------------------
+
+    def _TreeEditMenu(self, event):
+        tree = event.GetEventObject().parenttree
+        item = tree.GetSelection()
+        data = tree.GetItemData(item).GetData()
+        if not data.day:
+            if data.tag:
+                self._RenameTag(data.tag)
+            event.Skip()
+            return
+        self._SetEntryFormDate(data.year, data.month, data.day, data.id)
+
+    def _TreeChangeDateMenu(self, event):
+        tree = event.GetEventObject().parenttree
+        item = tree.GetSelection()
+        data = tree.GetItemData(item).GetData()
+        if not data.day:
+            wx.MessageBox("This operation is not currently supported.",
+                         "Entry Date Change Failed",
+                          wx.OK | wx.ICON_ERROR, self.frame)
+            return
+        self._RedateEntry(data.year, data.month, data.day, data.id)
+
+    def _TreeDuplicateMenu(self, event):
+        item = self.tree.GetSelection()
+        tree = event.GetEventObject().parenttree
+        data = tree.GetItemData(item).GetData()
+        if not data.day:
+            wx.MessageBox("This operation is not currently supported.",
+                         "Duplication Failed",
+                          wx.OK | wx.ICON_ERROR, self.frame)
+            return
+        self._DuplicateEntry(data.year, data.month, data.day, data.id)
+        
+    def _TreeDeleteMenu(self, event):
+        item = self.tree.GetSelection()
+        tree = event.GetEventObject().parenttree
+        data = tree.GetItemData(item).GetData()
+        if not data.day:
+            wx.MessageBox("This operation is not currently supported.",
+                         "Deletion Failed", wx.OK | wx.ICON_ERROR, self.frame)
+            return
+        self._DeleteEntry(data.year, data.month, data.day, data.id)
+        
+    def _TreeExpandMenu(self, event):
+        tree = event.GetEventObject().parenttree
+        def _ExpandCallback(id):
+            tree.Expand(id)
+        tree.Walker(_ExpandCallback)
+    
+    def _TreeCollapseMenu(self, event):
+        tree = event.GetEventObject().parenttree
+        def _CollapseCallback(id):
+            tree.Collapse(id)
+        tree.Walker(_CollapseCallback)
+    
+    def _TreePopup(self, event):
+        tree = event.GetEventObject()
+        item, flags = tree.HitTest(event.GetPosition())
+        popup = self.resources.LoadMenu('TKTreePopup')
+        if item and flags & (wx.TREE_HITTEST_ONITEMBUTTON
+                             | wx.TREE_HITTEST_ONITEMICON
+                             | wx.TREE_HITTEST_ONITEMINDENT
+                             | wx.TREE_HITTEST_ONITEMLABEL
+                             | wx.TREE_HITTEST_ONITEMRIGHT
+                             | wx.TREE_HITTEST_ONITEMSTATEICON):
+            if not tree.IsSelected(item):
+                tree.SelectItem(item)
+            data = tree.GetItemData(item).GetData()
+            if not data.day and not data.tag:
+                popup.Enable(self.tree_edit_id, False)
+                popup.Enable(self.tree_redate_id, False)
+                popup.Enable(self.tree_dup_id, False)
+                popup.Enable(self.tree_delete_id, False)
+        else:
+            popup.Enable(self.tree_edit_id, False)
+            popup.Enable(self.tree_redate_id, False)
+            popup.Enable(self.tree_dup_id, False)
+            popup.Enable(self.tree_delete_id, False)
+        popup.parenttree = tree
+        tree.PopupMenu(popup)
+
+    ### -----------------------------------------------------------------
+    ### Main Menu Actions
+    ### -----------------------------------------------------------------
+ 
+    def _FileNewMenu(self, event):
+        if self._RefuseUnsavedModifications(True):
+            return False
+        dialog = self._GetFileDialog("Create new data file", wx.SAVE | wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            path = dialog.GetPath()
+            if len(path) < 5 or not path.endswith('.tkj'):
+                path = path + '.tkj'
+            self._SetDataFile(path, True)
+        dialog.Destroy()
+
+    def _FileOpenMenu(self, event):
+        if self._RefuseUnsavedModifications(True):
+            return False
+        dialog = self._GetFileDialog("Open existing data file", wx.OPEN)
+        if dialog.ShowModal() == wx.ID_OK:
+            path = dialog.GetPath()
+            self._SetDataFile(path, False)
+        dialog.Destroy()
+
+    def _FileSaveMenu(self, event):
+        self._SaveEntriesToPath(None)
+        
+    def _FileSaveAsMenu(self, event):
+        dialog = self._GetFileDialog("Save as a new data file", wx.SAVE | wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            path = dialog.GetPath()
+            if len(path) < 5 or not path.endswith('.tkj'):
+                path = path + '.tkj'
+            self._SaveEntriesToPath(path)
+        dialog.Destroy()
+
+    def _FileRevertMenu(self, event):
+        year, month, day, id = self._GetEntryFormKeys()
+        self._SetEntryModified(False)
+        self._SetEntryFormDate(int(year), int(month), int(day), id)
+
+    def _FileOptionsMenu(self, event):
+        oldfont = self.frame.FindWindowById(self.text_id).GetFont()
+        def _ChooseFontButton(event2):
+            text = self.frame.FindWindowById(self.text_id)
+            font_data = wx.FontData()
+            font_data.SetInitialFont(text.GetFont())
+            dialog = wx.FontDialog(self.options_dialog, font_data)
+            if dialog.ShowModal() == wx.ID_OK:
+                font = dialog.GetFontData().GetChosenFont()
+                self._SetFont(font)
+            dialog.Destroy()
+        wx.EVT_BUTTON(self, self.choose_font_id, _ChooseFontButton)
+        if self.options_dialog.ShowModal() != wx.ID_OK:
+            self._SetFont(oldfont)
+        
+    def _FileQuitMenu(self, event):
+        self.frame.Close()
+                 
+    def _FileDiaryOptionsMenu(self, event):
+        # Grab the controls
+        author_name_box = self.frame.FindWindowById(self.author_name_id)
+        author_global_radio = self.frame.FindWindowById(self.author_global_id)
+        author_per_entry_radio = \
+                self.frame.FindWindowById(self.author_per_entry_id)
+        # Enable/disable the author name box
+        def _ChooseAuthorGlobal(event2):
+            author_name_box.Enable(True)
+        def _ChooseAuthorPerEntry(event2):
+            author_name_box.Enable(False)
+        wx.EVT_RADIOBUTTON(self, self.author_global_id, _ChooseAuthorGlobal)
+        wx.EVT_RADIOBUTTON(self, self.author_per_entry_id, _ChooseAuthorPerEntry)
+        # Set the controls to the current settings
+        author_name = self.entries.get_author_name()
+        if (author_name == None):
+            author_name_box.SetValue("")
+        else:
+            author_name_box.SetValue(author_name)
+        if (self.entries.get_author_global()):
+            author_name_box.Enable(True)
+            author_global_radio.SetValue(True)
+        else:
+            author_name_box.Enable(False)
+            author_per_entry_radio.SetValue(True)
+        if (self.diary_options_dialog.ShowModal() == wx.ID_OK):
+            # Save the settings if OK pressed
+            if (author_name_box.GetValue() == ""):
+                self.entries.set_author_name(None)
+            else:
+                self.entries.set_author_name(author_name_box.GetValue())
+            self.entries.set_author_global(author_global_radio.GetValue())
+            self._UpdateAuthorBox() # Show/Hide the author box as needed
+            self._SetDiaryModified(True)
+
+    def _EntryNewMenu(self, event):
+        year, month, day, id = self._GetEntryFormKeys()
+        nextid = self.entries.get_next_id(year, month, day, id)
+        self._SetEntryFormDate(year, month, day, nextid)
+
+    def _EntryDuplicateMenu(self, event):
+        year, month, day, id = self._GetEntryFormKeys()
+        self._DuplicateEntry(year, month, day, id)
+
+    def _EntryRedateMenu(self, event):
+        year, month, day, id = self._GetEntryFormKeys()
+        self._RedateEntry(year, month, day, id)
+
+    def _EntryDeleteMenu(self, event):
+        year, month, day, id = self._GetEntryFormKeys()
+        self._DeleteEntry(year, month, day, id)
+        
+    def _EntryPreviewMenu(self, event):
+        try:
+            datestr, subject, author, text = self._GetCurrentEntryPieces()
+            if self.entries.get_author_global():
+                author = self.entries.get_author_name()
+            self.printer.PreviewText(self.datafile, subject, author,
+                                     datestr, text)
+        except:
+            raise
+    
+    def _EntryPrintMenu(self, event):
+        try:
+            datestr, subject, author, text = self._GetCurrentEntryPieces()
+            if self.entries.get_author_global():
+                author = self.entries.get_author_name()
+            self.printer.Print(self.datafile, subject, author,
+                               datestr, text)
+        except:
+            pass
+
+    def _HelpAboutMenu(self, event):
+        wx.MessageBox("ThotKeeper, version %s\n"
+                     "A personal daily journal application.\n"
+                     "\n"
+                     "Copyright (c) 2004-2008 C. Michael Pilato.  "
+                     "All rights reserved.\n"
+                     "\n"
+                     "ThotKeeper is open source software developed "
+                     "under the BSD License.  Question, comments, "
+                     "and code contributions are welcome.  Visit our "
+                     "website: http://www.thotkeeper.org/\n"
+                     % (__version__),
+                     "About ThotKeeper",
+                     wx.OK | wx.CENTER, self.frame)
+
+    def _HelpUpdateMenu(self, event):
+        new_version = None
+        try:
+            new_version, info_url = CheckForUpdates()
+        except Exception, e:
+            wx.MessageBox("Error occurred while checking for updates:  %s" \
+                          % (str(e)),
+                          "Update Check", wx.OK | wx.ICON_ERROR, self.frame)
+            return
+        if new_version is not None:
+            wx.MessageBox("A new version (%s) of ThotKeeper is available.\n" \
+                          "For more information, visit %s." \
+                          % (new_version, info_url),
+                          "Update Check", wx.OK, self.frame)
+        else:
+            wx.MessageBox("This version of ThotKeeper is the latest "
+                          "available.",
+                          "Update Check", wx.OK, self.frame)
+
+    ### -----------------------------------------------------------------
+    ### Miscellaneous Event Handlers
+    ### -----------------------------------------------------------------
+        
     def _FrameClosure(self, event):
         self.frame.SetStatusText("Quitting...")
         self.conf.size = self.frame.GetSize()
@@ -1001,403 +1456,6 @@ class ThotKeeper(wx.App):
             event.Skip()
             return
         self._SetEntryFormDate(data.year, data.month, data.day, data.id)
-
-    def _GetEntryFormKeys(self):
-        ### FIXME: This interface is ... hacky.
-        return self.entry_form_key.year, self.entry_form_key.month, \
-               self.entry_form_key.day, self.entry_form_key.id
-
-    def _GetEntryFormBits(self):
-        year, month, day, id = self._GetEntryFormKeys()
-        author = self.frame.FindWindowById(self.author_id).GetValue()
-        subject = self.frame.FindWindowById(self.subject_id).GetValue()
-        text = self.frame.FindWindowById(self.text_id).GetValue()
-        tags = self._TextToTags(
-                self.frame.FindWindowById(self.tags_id).GetValue())
-        return year, month, day, author, subject, text, id, tags
-        
-    def _SaveEntriesToPath(self, path=None):
-        wx.Yield()
-        wx.BeginBusyCursor()
-        try:
-            if self.entry_modified:
-                year, month, day, author, subject, text, id, tags \
-                      = self._GetEntryFormBits()
-                if id is None:
-                    id = self.entries.get_last_id(year, month, day)
-                    if id is None:
-                        id = 1
-                    else:
-                        id = id + 1
-                    self.entry_form_key = TKEntryKey(year, month, day, id)
-                self.entries.store_entry(tk_data.TKEntry(author, subject, text,
-                                                         year, month, day,
-                                                         id, tags))
-            if path is None:
-                path = self.conf.data_file
-            self._SaveData(path, self.entries)
-            if path != self.conf.data_file:
-                self._SetDataFile(path, False) 
-            self._SetEntryModified(False)
-            self._SetDiaryModified(False)
-            self.frame.FindWindowById(self.next_id).Enable(True)
-        finally:
-            wx.EndBusyCursor()
-
-    def _TreeEditMenu(self, event):
-        tree = event.GetEventObject().parenttree
-        item = tree.GetSelection()
-        data = tree.GetItemData(item).GetData()
-        if not data.day:
-            if data.tag:
-                self._RenameTag(data.tag)
-            event.Skip()
-            return
-        self._SetEntryFormDate(data.year, data.month, data.day, data.id)
-
-    def _TreeChangeDateMenu(self, event):
-        tree = event.GetEventObject().parenttree
-        item = tree.GetSelection()
-        data = tree.GetItemData(item).GetData()
-        if not data.day:
-            wx.MessageBox("This operation is not currently supported.",
-                         "Entry Date Change Failed",
-                          wx.OK | wx.ICON_ERROR, self.frame)
-            return
-
-        # Get the current entry.
-        entry = self.entries.get_entry(data.year, data.month,
-                                       data.day, data.id)
-
-        # Ask the user what the new change should be.  We'll hook in a
-        # couple of custom event handlers here:  one catches
-        # double-clicks on the calendar as dialog-close-worthy events,
-        # and the other allows the dialog's "Today" button to set the
-        # dialog's selected calendar day.
-        def _ChangeDateCalendarChanged(event):
-            event.Skip()
-            self.change_date_dialog.EndModal(wx.ID_OK)
-        def _ChangeDateTodayClicked(event):
-            timestruct = time.localtime()
-            date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
-            self.change_date_cal.SetDate(date)
-        wx.calendar.EVT_CALENDAR(self, self.change_date_cal_id,
-                                 _ChangeDateCalendarChanged)
-        wx.EVT_BUTTON(self, self.change_date_today_id, _ChangeDateTodayClicked)
-        self.change_date_cal.SetDate(self._MakeDateTime(data.year, data.month, data.day))
-        if self.change_date_dialog.ShowModal() != wx.ID_OK:
-            return
-        
-        date = self.change_date_cal.GetDate()
-        new_year = date.GetYear()
-        new_month = date.GetMonth() + 1
-        new_day = date.GetDay()
-        if [new_year, new_month, new_day] != [data.year, data.month, data.day]:
-            # Save the entry as the last item on the new date, and delete
-            # the original entry.
-            new_id = self.entries.get_last_id(new_year, new_month, new_day)
-            if new_id is None:
-                new_id = 1
-            else:
-                new_id = new_id + 1
-            self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
-                                                     entry.get_subject(),
-                                                     entry.get_text(),
-                                                     new_year,
-                                                     new_month,
-                                                     new_day,
-                                                     new_id,
-                                                     entry.get_tags()))
-            self.entries.remove_entry(data.year, data.month,
-                                      data.day, data.id)
-            self._SaveData(self.conf.data_file, self.entries)
-
-    def _RenameTag(self, tag):
-        rename_tag_box = self.rename_tag_dialog.FindWindowById(self.rename_tag_id)
-        rename_tag_box.SetValue(tag)
-        if self.rename_tag_dialog.ShowModal() == wx.ID_OK \
-                and rename_tag_box.GetValue() != tag:
-            self._SetDiaryModified(True)
-            def _UpdateSingleTag(current):
-                if current==tag:
-                    return rename_tag_box.GetValue()
-                if current.startswith(tag+'/'):
-                    return current.replace(tag, rename_tag_box.GetValue(),1)
-                return current
-            for en in self.entries.get_entries_by_partial_tag(tag):
-                updatedtags = map(_UpdateSingleTag, en.get_tags())
-                self.entries.store_entry(tk_data.TKEntry(en.author, en.subject, en.text,
-                                                         en.year, en.month, en.day,
-                                                         en.id, updatedtags))            
-            
-    def _TreeDuplicateMenu(self, event):
-        item = self.tree.GetSelection()
-        tree = event.GetEventObject().parenttree
-        data = tree.GetItemData(item).GetData()
-        if not data.day:
-            wx.MessageBox("This operation is not currently supported.",
-                         "Duplication Failed",
-                          wx.OK | wx.ICON_ERROR, self.frame)
-            return
-        new_id = self.entries.get_last_id(data.year, data.month, data.day)
-        if new_id is None:
-            new_id = 1
-        else:
-            new_id = new_id + 1
-        entry = self.entries.get_entry(data.year, data.month,
-                                       data.day, data.id)
-        self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
-                                                 entry.get_subject(),
-                                                 entry.get_text(),
-                                                 data.year,
-                                                 data.month,
-                                                 data.day,
-                                                 new_id,
-                                                 entry.get_tags()))
-        self._SaveData(self.conf.data_file, self.entries)
-
-    def _TreeDeleteMenu(self, event):
-        item = self.tree.GetSelection()
-        tree = event.GetEventObject().parenttree
-        data = tree.GetItemData(item).GetData()
-        if not data.day:
-            wx.MessageBox("This operation is not currently supported.",
-                         "Deletion Failed", wx.OK | wx.ICON_ERROR, self.frame)
-            return
-        position = self.entries.get_id_pos(data.year, data.month,
-                                           data.day, data.id)
-        if wx.OK == wx.MessageBox(
-            "Are you sure you want to delete the entry for " +
-            "%s-%s-%s (%s)?" % (data.year, data.month, data.day, position),
-            "Confirm Deletion",
-            wx.OK | wx.CANCEL | wx.ICON_QUESTION, self.frame):
-            self.entries.remove_entry(data.year, data.month,
-                                      data.day, data.id)
-            self._SaveData(self.conf.data_file, self.entries)
-            dispyear, dispmonth, dispday, dispid = self._GetEntryFormKeys()
-            if ((dispyear == data.year) & (dispmonth == data.month) & \
-                (dispday == data.day) & (dispid == data.id)):
-                self._SetEntryModified(False)
-                self._SetEntryFormDate(dispyear, dispmonth, dispday)
-
-    def _TreeExpandMenu(self, event):
-        tree = event.GetEventObject().parenttree
-        def _ExpandCallback(id):
-            tree.Expand(id)
-        tree.Walker(_ExpandCallback)
-    
-    def _TreeCollapseMenu(self, event):
-        tree = event.GetEventObject().parenttree
-        def _CollapseCallback(id):
-            tree.Collapse(id)
-        tree.Walker(_CollapseCallback)
-    
-    def _TreePopup(self, event):
-        tree = event.GetEventObject()
-        item, flags = tree.HitTest(event.GetPosition())
-        popup = self.resources.LoadMenu('TKTreePopup')
-        if item and flags & (wx.TREE_HITTEST_ONITEMBUTTON
-                             | wx.TREE_HITTEST_ONITEMICON
-                             | wx.TREE_HITTEST_ONITEMINDENT
-                             | wx.TREE_HITTEST_ONITEMLABEL
-                             | wx.TREE_HITTEST_ONITEMRIGHT
-                             | wx.TREE_HITTEST_ONITEMSTATEICON):
-            if not tree.IsSelected(item):
-                tree.SelectItem(item)
-            data = tree.GetItemData(item).GetData()
-            if not data.day and not data.tag:
-                popup.Enable(self.tree_edit_id, False)
-                popup.Enable(self.tree_redate_id, False)
-                popup.Enable(self.tree_dup_id, False)
-                popup.Enable(self.tree_delete_id, False)
-        else:
-            popup.Enable(self.tree_edit_id, False)
-            popup.Enable(self.tree_redate_id, False)
-            popup.Enable(self.tree_dup_id, False)
-            popup.Enable(self.tree_delete_id, False)
-        popup.parenttree = tree
-        tree.PopupMenu(popup)
- 
-    def _GetFileDialog(self, title, directory, flags):
-        return wx.FileDialog(self.frame, title, directory, '',
-                            'ThotKeeper journal files (*.tkj)|*.tkj', flags)
-        
-    def _FileNewMenu(self, event):
-        if self._RefuseUnsavedModifications(True):
-            return False
-        directory = '.'
-        if os.environ.has_key('HOME'):
-            directory = os.environ['HOME']
-        if self.conf.data_file is not None:
-            directory = os.path.dirname(self.conf.data_file)
-        dialog = self._GetFileDialog("Create new data file", directory,
-                                     wx.SAVE | wx.OVERWRITE_PROMPT)
-        if dialog.ShowModal() == wx.ID_OK:
-            path = dialog.GetPath()
-            if len(path) < 5 or not path.endswith('.tkj'):
-                path = path + '.tkj'
-            self._SetDataFile(path, True)
-        dialog.Destroy()
-
-    def _FileOpenMenu(self, event):
-        if self._RefuseUnsavedModifications(True):
-            return False
-        directory = '.'
-        if os.environ.has_key('HOME'):
-            directory = os.environ['HOME']
-        if self.conf.data_file is not None:
-            directory = os.path.dirname(self.conf.data_file)
-        dialog = self._GetFileDialog("Open existing data file", directory,
-                                     wx.OPEN)
-        if dialog.ShowModal() == wx.ID_OK:
-            path = dialog.GetPath()
-            self._SetDataFile(path, False)
-        dialog.Destroy()
-
-    def _FileSaveMenu(self, event):
-        self._SaveEntriesToPath(None)
-        
-    def _FileSaveAsMenu(self, event):
-        directory = os.path.dirname(self.conf.data_file)
-        dialog = self._GetFileDialog("Save as a new data file", directory,
-                                     wx.SAVE | wx.OVERWRITE_PROMPT)
-        if dialog.ShowModal() == wx.ID_OK:
-            path = dialog.GetPath()
-            if len(path) < 5 or not path.endswith('.tkj'):
-                path = path + '.tkj'
-            self._SaveEntriesToPath(path)
-        dialog.Destroy()
-
-    def _FileRevertMenu(self, event):
-        year, month, day, id = self._GetEntryFormKeys()
-        self._SetEntryModified(False)
-        self._SetEntryFormDate(int(year), int(month), int(day), id)
-
-    def _MakeDateTime(self, year, month, day):
-        date = wx.DateTime()
-        date.ParseFormat("%d-%d-%d 11:59:59" % (year, month, day),
-                         '%Y-%m-%d %H:%M:%S', date)
-        return date
-        
-    def _GetCurrentEntryPieces(self):
-        year, month, day, author, subject, text, id, tags \
-              = self._GetEntryFormBits()
-        date = self._MakeDateTime(year, month, day)
-        datestr = date.Format("%A, %B %d, %Y")
-        return datestr, subject, author, text
-        
-    def _FilePreviewMenu(self, event):
-        try:
-            datestr, subject, author, text = self._GetCurrentEntryPieces()
-            if self.entries.get_author_global():
-                author = self.entries.get_author_name()
-            self.printer.PreviewText(self.datafile, subject, author,
-                                     datestr, text)
-        except:
-            raise
-    
-    def _FilePrintMenu(self, event):
-        try:
-            datestr, subject, author, text = self._GetCurrentEntryPieces()
-            if self.entries.get_author_global():
-                author = self.entries.get_author_name()
-            self.printer.Print(self.datafile, subject, author,
-                               datestr, text)
-        except:
-            pass
-
-    def _FileOptionsMenu(self, event):
-        oldfont = self.frame.FindWindowById(self.text_id).GetFont()
-        def _ChooseFontButton(event2):
-            text = self.frame.FindWindowById(self.text_id)
-            font_data = wx.FontData()
-            font_data.SetInitialFont(text.GetFont())
-            dialog = wx.FontDialog(self.options_dialog, font_data)
-            if dialog.ShowModal() == wx.ID_OK:
-                font = dialog.GetFontData().GetChosenFont()
-                self._SetFont(font)
-            dialog.Destroy()
-        wx.EVT_BUTTON(self, self.choose_font_id, _ChooseFontButton)
-        if self.options_dialog.ShowModal() != wx.ID_OK:
-            self._SetFont(oldfont)
-        
-    def _FileQuitMenu(self, event):
-        self.frame.Close()
-                 
-    def _DiaryMenuEnable(self, enable):
-        self.menubar.FindItemById(self.file_diary_options_id).Enable(enable)
-        
-    def _FileDiaryOptionsMenu(self, event):
-        # Grab the controls
-        author_name_box = self.frame.FindWindowById(self.author_name_id)
-        author_global_radio = self.frame.FindWindowById(self.author_global_id)
-        author_per_entry_radio = \
-                self.frame.FindWindowById(self.author_per_entry_id)
-        # Enable/disable the author name box
-        def _ChooseAuthorGlobal(event2):
-            author_name_box.Enable(True)
-        def _ChooseAuthorPerEntry(event2):
-            author_name_box.Enable(False)
-        wx.EVT_RADIOBUTTON(self, self.author_global_id, _ChooseAuthorGlobal)
-        wx.EVT_RADIOBUTTON(self, self.author_per_entry_id, _ChooseAuthorPerEntry)
-        # Set the controls to the current settings
-        author_name = self.entries.get_author_name()
-        if (author_name == None):
-            author_name_box.SetValue("")
-        else:
-            author_name_box.SetValue(author_name)
-        if (self.entries.get_author_global()):
-            author_name_box.Enable(True)
-            author_global_radio.SetValue(True)
-        else:
-            author_name_box.Enable(False)
-            author_per_entry_radio.SetValue(True)
-        if (self.diary_options_dialog.ShowModal() == wx.ID_OK):
-            # Save the settings if OK pressed
-            if (author_name_box.GetValue() == ""):
-                self.entries.set_author_name(None)
-            else:
-                self.entries.set_author_name(author_name_box.GetValue())
-            self.entries.set_author_global(author_global_radio.GetValue())
-            self._UpdateAuthorBox() # Show/Hide the author box as needed
-            self._SetDiaryModified(True)
-        
-    def _HelpAboutMenu(self, event):
-        wx.MessageBox("ThotKeeper, version %s\n"
-                     "A personal daily journal application.\n"
-                     "\n"
-                     "Copyright (c) 2004-2008 C. Michael Pilato.  "
-                     "All rights reserved.\n"
-                     "\n"
-                     "ThotKeeper is open source software developed "
-                     "under the BSD License.  Question, comments, "
-                     "and code contributions are welcome.  Visit our "
-                     "website: http://www.thotkeeper.org/\n"
-                     % (__version__),
-                     "About ThotKeeper",
-                     wx.OK | wx.CENTER, self.frame)
-
-    def _HelpUpdateMenu(self, event):
-        new_version = None
-        try:
-            new_version, info_url = CheckForUpdates()
-        except Exception, e:
-            wx.MessageBox("Error occurred while checking for updates:  %s" \
-                          % (str(e)),
-                          "Update Check", wx.OK | wx.ICON_ERROR, self.frame)
-            return
-        if new_version is not None:
-            wx.MessageBox("A new version (%s) of ThotKeeper is available.\n" \
-                          "For more information, visit %s." \
-                          % (new_version, info_url),
-                          "Update Check", wx.OK, self.frame)
-        else:
-            wx.MessageBox("This version of ThotKeeper is the latest "
-                          "available.",
-                          "Update Check", wx.OK, self.frame)
-        
-    def OnExit(self):
-        self.conf.Write()
 
 
 def main():
