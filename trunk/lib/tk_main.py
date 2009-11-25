@@ -595,11 +595,13 @@ class ThotKeeper(wx.App):
         # Setup a printer object.
         self.printer = TKEntryPrinter()
         
-        # Note that our input file is not modified.
+        # Note that we have no outstanding data modifications.
         self.entry_modified = False
-        self.ignore_text_event = False
         self.diary_modified = False
-        
+
+        # We are not currently ignoring text events.
+        self.ignore_text_event = False
+
         # Fetch our main frame.
         self.frame = self.resources.LoadFrame(None, 'TKFrame')
 
@@ -725,7 +727,7 @@ class ThotKeeper(wx.App):
         # Now, show the frame.
         self.frame.Show(True)
         
-        #Disable the diary menu until a diary loaded
+        # Disable the diary menu until a diary loaded
         self._DiaryMenuEnable(False)
 
         # If we were not given a datafile, or the one we were given is
