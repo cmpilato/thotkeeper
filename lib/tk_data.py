@@ -243,6 +243,14 @@ class TKEntries:
             return day_keys[-1]
         except:
             return None
+
+    def get_new_id(self, year, month, day):
+        """Return the first unused id for a given day."""
+        id = self.get_last_id(year, month, day)
+        if id is None:
+            return None
+        else:
+            return id + 1
         
     def get_id_pos(self, year, month, day, id):
         """Return 1-based position of ID in the ordered list of
