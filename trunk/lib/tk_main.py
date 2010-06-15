@@ -578,6 +578,7 @@ class ThotKeeper(wx.App):
         self.file_diary_options_id = self.resources.GetXRCID('TKMenuFileDiaryOptions')
         self.file_quit_id = self.resources.GetXRCID('TKMenuFileQuit')
         self.entry_new_id = self.resources.GetXRCID('TKMenuEntryNew')
+        self.entry_new_today_id = self.resources.GetXRCID('TKMenuEntryNewToday')
         self.entry_duplicate_id = self.resources.GetXRCID('TKMenuEntryDuplicate')
         self.entry_redate_id = self.resources.GetXRCID('TKMenuEntryRedate')
         self.entry_delete_id = self.resources.GetXRCID('TKMenuEntryDelete')
@@ -700,6 +701,7 @@ class ThotKeeper(wx.App):
         wx.EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
         wx.EVT_MENU(self, self.file_quit_id, self._FileQuitMenu)
         wx.EVT_MENU(self, self.entry_new_id, self._EntryNewMenu)
+        wx.EVT_MENU(self, self.entry_new_today_id, self._EntryNewTodayMenu)
         wx.EVT_MENU(self, self.entry_duplicate_id, self._EntryDuplicateMenu)
         wx.EVT_MENU(self, self.entry_redate_id, self._EntryRedateMenu)
         wx.EVT_MENU(self, self.entry_delete_id, self._EntryDeleteMenu)
@@ -1318,8 +1320,13 @@ class ThotKeeper(wx.App):
 
     def _EntryNewMenu(self, event):
         year, month, day, id = self._GetEntryFormKeys()
-        nextid = self.entries.get_next_id(year, month, day, id)
-        self._SetEntryFormDate(year, month, day, nextid)
+        new_id = self.entries.get_new_id(year, month, day)
+        self._SetEntryFormDate(year, month, day, new_id)
+
+    def _EntryNewTodayMenu(self, event):
+        ts = time.localtime()
+        new_id = self.entries.get_new_id(ts[0], ts[1], ts[2])
+        self._SetEntryFormDate(ts[0], ts[1], ts[2], new_id)
 
     def _EntryDuplicateMenu(self, event):
         year, month, day, id = self._GetEntryFormKeys()
