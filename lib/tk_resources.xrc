@@ -99,15 +99,9 @@
         <label>&amp;Revert</label>
         <help>Save data.</help>
       </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="TKMenuFilePreview">
-        <label>Print Preview</label>
-        <help>Preview the printed output for the current entry.</help>
-      </object>
-      <object class="wxMenuItem" name="TKMenuFilePrint">
-        <label>Print...</label>
-        <accel>CTRL+P</accel>
-        <help>Print the current entry.</help>
+      <object class="wxMenuItem" name="TKMenuFileDiaryOptions">
+        <label>Diary Options...</label>
+        <help>Per diary options.</help>
       </object>
       <object class="wxMenuItem" name="TKMenuFileDiaryOptions">
         <label>Diary Options...</label>
@@ -123,6 +117,37 @@
         <label>&amp;Quit</label>
         <accel>CTRL+Q</accel>
         <help>Quit ThotKeeper.</help>
+      </object>
+    </object>
+    <object class="wxMenu">
+      <label>&amp;Entry</label>
+      <object class="wxMenuItem" name="TKMenuEntryNew">
+        <label>New &amp;Entry</label>
+        <accel>CTRL+E</accel>
+        <help>Create a new entry for the currently selected date</help>
+      </object>
+      <object class="wxMenuItem" name="TKMenuEntryDuplicate">
+        <label>Duplicate</label>
+        <help>Create a duplicate of the current entry</help>
+      </object>
+      <object class="wxMenuItem" name="TKMenuEntryRedate">
+        <label>Modify Date...</label>
+        <help>Modify the date associated with the current entry</help>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="TKMenuEntryDelete">
+        <label>Delete</label>
+        <help>Delete the current entry</help>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="TKMenuEntryPreview">
+        <label>Print Preview</label>
+        <help>Preview the printed output for the current entry.</help>
+      </object>
+      <object class="wxMenuItem" name="TKMenuEntryPrint">
+        <label>Print...</label>
+        <accel>CTRL+P</accel>
+        <help>Print the current entry.</help>
       </object>
     </object>
     <object class="wxMenu">
@@ -235,7 +260,7 @@
                         <orient>wxHORIZONTAL</orient>
                         <object class="sizeritem">
                           <object class="wxStaticText" name="TKEntryDate">
-                            <label/>
+                            <label></label>
                           </object>
                           <option>1</option>
                           <flag>wxALL|wxEXPAND</flag>
@@ -349,7 +374,9 @@
               <cols>2</cols>
               <rows>1</rows>
               <object class="sizeritem">
-                <object class="wxStaticText" name="TKFontName"/>
+                <object class="wxStaticText" name="TKFontName">
+                  <label></label>
+                </object>
                 <flag>wxALL|wxEXPAND</flag>
                 <border>5</border>
                 <minsize>200,-1</minsize>
@@ -403,6 +430,13 @@
     <object class="wxMenuItem" name="TKTreeMenuEdit">
       <label>Edit</label>
     </object>
+    <object class="wxMenuItem" name="TKTreeMenuDuplicate">
+      <label>Duplicate</label>
+    </object>
+    <object class="wxMenuItem" name="TKTreeMenuRedate">
+      <label>Modify Date...</label>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="TKTreeMenuDelete">
       <label>Delete</label>
     </object>
@@ -431,6 +465,54 @@
         </object>
         <flag>wxALL</flag>
         <border>5</border>
+      </object>
+      <rows>2</rows>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_OK">
+              <label>OK</label>
+              <default>1</default>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_CANCEL">
+              <label>Cancel</label>
+            </object>
+          </object>
+          <orient>wxHORIZONTAL</orient>
+        </object>
+        <flag>wxALIGN_CENTRE</flag>
+        <border>0</border>
+      </object>
+    </object>
+  </object>
+  <object class="wxDialog" name="TKChangeDate">
+    <title>Change Entry Date</title>
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <object class="sizeritem">
+        <object class="wxPanel" name="TKChangeDatePanel">
+          <object class="wxFlexGridSizer">
+            <object class="sizeritem">
+              <object class="unknown" name="TKChangeDateCalendar"/>
+              <flag>wxALL</flag>
+              <border>5</border>
+              <minsize>220,150</minsize>
+            </object>
+            <object class="sizeritem">
+              <object class="wxButton" name="TKChangeDateToday">
+                <label>Today</label>
+              </object>
+              <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+              <border>5</border>
+            </object>
+            <cols>1</cols>
+            <rows>2</rows>
+            <growablecols>0</growablecols>
+            <growablerows>0</growablerows>
+          </object>
+        </object>
       </object>
       <rows>2</rows>
       <object class="sizeritem">

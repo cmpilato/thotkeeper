@@ -1,6 +1,10 @@
-Version 0.4 (released ????-??-??)
+Version 0.4 (released 2009-06-18)
 
- *
+ * feature: support tag renaming (issue #17)
+ * feature: allow entry duplication (issue #34)
+ * feature: allow entry date tweaking (issue #33)
+ * fix: loading entry should reposition calendar focus (issue #32)
+ * fix: global author name not used when previewing/printing (issue #36)
 
 Version 0.3 (released 2008-07-04)
 
