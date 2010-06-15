@@ -126,6 +126,11 @@
         <accel>CTRL+E</accel>
         <help>Create a new entry for the currently selected date</help>
       </object>
+      <object class="wxMenuItem" name="TKMenuEntryNewToday">
+        <label>New Entry for &amp;Today</label>
+        <accel></accel>
+        <help>Create a new entry for the today</help>
+      </object>
       <object class="wxMenuItem" name="TKMenuEntryDuplicate">
         <label>Duplicate</label>
         <help>Create a duplicate of the current entry</help>
