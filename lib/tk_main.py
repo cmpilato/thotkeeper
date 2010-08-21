@@ -590,7 +590,6 @@ class ThotKeeper(wx.App):
 
         # Store a bunch of resource IDs for easier access.
         self.calendar_id = self.resources.GetXRCID('TKCalendar')
-        self.panel_id = self.resources.GetXRCID('TKPanel')
         self.datetree_id = self.resources.GetXRCID('TKDateTree')
         self.tagtree_id = self.resources.GetXRCID('TKTagTree')
         self.templatetree_id = self.resources.GetXRCID('TKTemplateTree')
@@ -607,6 +606,7 @@ class ThotKeeper(wx.App):
         self.file_open_id = self.resources.GetXRCID('TKMenuFileOpen')
         self.file_save_id = self.resources.GetXRCID('TKMenuFileSave')
         self.file_saveas_id = self.resources.GetXRCID('TKMenuFileSaveAs')
+        self.file_archive_id = self.resources.GetXRCID('TKMenuFileArchive')
         self.file_revert_id = self.resources.GetXRCID('TKMenuFileRevert')
         self.file_options_id = self.resources.GetXRCID('TKMenuFileOptions')
         self.file_diary_options_id = self.resources.GetXRCID('TKMenuFileDiaryOptions')
@@ -652,36 +652,24 @@ class ThotKeeper(wx.App):
         # Fetch our main frame.
         self.frame = self.resources.LoadFrame(None, 'TKFrame')
 
-        # Fetch our main panel.
-        self.panel = self.frame.FindWindowById(self.panel_id)
-        self.panel.Show(False)
+        # Fetch our panels.
+        self.panel = self.frame.FindWindowById(
+            self.resources.GetXRCID('TKPanel'))
+        self.date_panel = self.frame.FindWindowById(
+            self.resources.GetXRCID('TKDatePanel'))
 
-        # fetch our options dialog.
+        # Fetch our options dialog.
         self.options_dialog = self.resources.LoadDialog(self.frame,
                                                         'TKOptions')
 
-        # fetch the per-diary options dialog
+        # Fetch the per-diary options dialog
         self.diary_options_dialog = self.resources.LoadDialog(self.frame,
                                                               'TKDiaryOptions')
                                                         
-        # fetch the rename tag dialog
+        # Fetch the rename tag dialog
         self.rename_tag_dialog = self.resources.LoadDialog(self.frame,
                                                            'TKTagRename')
 
-        # Fetch the date change dialog, and replace the "unknown" XRC
-        # placeholder with a calendar widget.
-        self.change_date_dialog = self.resources.LoadDialog(self.frame,
-                                                            'TKChangeDate')
-        self.change_date_panel = self.change_date_dialog.FindWindowById(
-            self.resources.GetXRCID('TKChangeDatePanel'))
-        self.change_date_cal = wx.calendar.CalendarCtrl(parent=self.change_date_panel,
-                                                        style=wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
-        self.resources.AttachUnknownControl('TKChangeDateCalendar',
-                                            self.change_date_cal,
-                                            self.change_date_panel)
-        self.change_date_cal_id = self.resources.GetXRCID('TKChangeDateCalendar')
-        self.change_date_today_id = self.resources.GetXRCID('TKChangeDateToday')
-        
         # Fetch (and assign) our menu bar.
         self.menubar = self.resources.LoadMenuBar('TKMenuBar')
         self.frame.SetMenuBar(self.menubar)
@@ -691,10 +679,10 @@ class ThotKeeper(wx.App):
         self.statusbar.SetStatusWidths([-1, 100])
         
         # Replace "unknown" XRC placeholders with custom widgets.
-        self.cal = TKEventCal(parent=self.panel,
+        self.cal = TKEventCal(parent=self.date_panel,
                               style=wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
         self.resources.AttachUnknownControl('TKCalendar',
-                                            self.cal, self.panel)
+                                            self.cal, self.date_panel)
         tree = TKEventTree(parent=self.panel,
                            style=wx.TR_HAS_BUTTONS)
         self.resources.AttachUnknownControl('TKDateTree',
@@ -739,6 +727,7 @@ class ThotKeeper(wx.App):
         wx.EVT_MENU(self, self.file_open_id, self._FileOpenMenu)
         wx.EVT_MENU(self, self.file_save_id, self._FileSaveMenu)
         wx.EVT_MENU(self, self.file_saveas_id, self._FileSaveAsMenu)
+        wx.EVT_MENU(self, self.file_archive_id, self._FileArchiveMenu)
         wx.EVT_MENU(self, self.file_revert_id, self._FileRevertMenu)
         wx.EVT_MENU(self, self.file_diary_options_id, self._FileDiaryOptionsMenu)
         wx.EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
@@ -1025,13 +1014,13 @@ class ThotKeeper(wx.App):
                 self.frame.FindWindowById(self.tags_id).GetValue())
         return year, month, day, author, subject, text, id, tags
         
-    def _GetFileDialog(self, title, flags):
+    def _GetFileDialog(self, title, flags, basename=''):
         directory = '.'
         if os.environ.has_key('HOME'):
             directory = os.environ['HOME']
         if self.conf.data_file is not None:
             directory = os.path.dirname(self.conf.data_file)
-        return wx.FileDialog(self.frame, title, directory, '',
+        return wx.FileDialog(self.frame, title, directory, basename,
                             'ThotKeeper journal files (*.tkj)|*.tkj', flags)
         
     def _SaveEntriesToPath(self, path=None):
@@ -1080,31 +1069,55 @@ class ThotKeeper(wx.App):
                                                          en.year, en.month, en.day,
                                                          en.id, updatedtags))            
 
+    def _QueryChooseDate(self, title, default_date=None):
+        # Fetch the date selection dialog, and replace the "unknown" XRC
+        # placeholder with a calendar widget.
+        choose_date_dialog = self.resources.LoadDialog(self.frame, 'TKChooseDate')
+        choose_date_dialog.SetTitle(title)
+        choose_date_panel = choose_date_dialog.FindWindowById(
+            self.resources.GetXRCID('TKChooseDatePanel'))
+        choose_date_cal = wx.calendar.CalendarCtrl(parent=choose_date_panel)
+        self.resources.AttachUnknownControl('TKChooseDateCalendar',
+                                            choose_date_cal,
+                                            choose_date_panel)
+        choose_date_cal_id = self.resources.GetXRCID('TKChooseDateCalendar')
+        choose_date_today_id = self.resources.GetXRCID('TKChooseDateToday')
+
+        # Ask the user to select a date.  We'll hook in a couple of
+        # custom event handlers here:  one catches double-clicks on the
+        # calendar as dialog-close-worthy events, and the other allows
+        # the dialog's "Today" button to set the dialog's selected
+        # calendar day.
+        def _ChooseDateCalendarChanged(event):
+            event.Skip()
+            choose_date_dialog.EndModal(wx.ID_OK)
+        def _ChooseDateTodayClicked(event):
+            timestruct = time.localtime()
+            date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
+            choose_date_cal.SetDate(date)
+        wx.calendar.EVT_CALENDAR(self, choose_date_cal_id,
+                                 _ChooseDateCalendarChanged)
+        wx.EVT_BUTTON(self, choose_date_today_id, _ChooseDateTodayClicked)
+        if not default_date:
+            timestruct = time.localtime()
+            default_date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
+        choose_date_cal.SetDate(default_date)
+        if choose_date_dialog.ShowModal() != wx.ID_OK:
+            choose_date_dialog.Destroy()
+            return None
+        date = choose_date_cal.GetDate()
+        choose_date_dialog.Destroy()
+        return date
+        
     def _RedateEntry(self, year, month, day, id):
         if self._RefuseUnsavedModifications(True):
             return False
         entry = self.entries.get_entry(year, month, day, id)
 
-        # Ask the user what the new change should be.  We'll hook in a
-        # couple of custom event handlers here:  one catches
-        # double-clicks on the calendar as dialog-close-worthy events,
-        # and the other allows the dialog's "Today" button to set the
-        # dialog's selected calendar day.
-        def _ChangeDateCalendarChanged(event):
-            event.Skip()
-            self.change_date_dialog.EndModal(wx.ID_OK)
-        def _ChangeDateTodayClicked(event):
-            timestruct = time.localtime()
-            date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
-            self.change_date_cal.SetDate(date)
-        wx.calendar.EVT_CALENDAR(self, self.change_date_cal_id,
-                                 _ChangeDateCalendarChanged)
-        wx.EVT_BUTTON(self, self.change_date_today_id, _ChangeDateTodayClicked)
-        self.change_date_cal.SetDate(self._MakeDateTime(year, month, day))
-        if self.change_date_dialog.ShowModal() != wx.ID_OK:
+        date = self._QueryChooseDate('Select new entry date',
+                                     self._MakeDateTime(year, month, day))
+        if date is None:
             return
-        
-        date = self.change_date_cal.GetDate()
         new_year = date.GetYear()
         new_month = date.GetMonth() + 1
         new_day = date.GetDay()
@@ -1148,11 +1161,11 @@ class ThotKeeper(wx.App):
         self._SaveData(self.conf.data_file, self.entries)
         self._SetEntryFormDate(year, month, day, new_id)
         
-    def _DeleteEntry(self, year, month, day, id):
+    def _DeleteEntry(self, year, month, day, id, skip_verify=False):
         if self._RefuseUnsavedModifications(True):
             return False
         entry = self.entries.get_entry(year, month, day, id)
-        if wx.OK == wx.MessageBox(
+        if skip_verify or wx.OK == wx.MessageBox(
             "Are you sure you want to delete this entry?\n\n"
             "   Date: %04d-%02d-%02d\n"
             "   Author: %s\n"
@@ -1187,6 +1200,34 @@ class ThotKeeper(wx.App):
         
     def _DiaryMenuEnable(self, enable):
         self.menubar.FindItemById(self.file_diary_options_id).Enable(enable)
+
+    def _ArchiveEntriesBeforeDate(self, archive_path, year, month, day):
+        if self._RefuseUnsavedModifications(True):
+            return False
+
+        # First, clone the entries older than YEAR/MONTH/DAY.
+        new_entries = tk_data.TKEntries()
+        def _CloneEntryCB(entry):
+            entry_year, entry_month, entry_day = entry.get_date()
+            if (entry_year < year) \
+               or (entry_year == year \
+                   and entry_month < month) \
+               or (entry_year == year \
+                   and entry_month == month \
+                   and entry_day < day):
+                new_entries.store_entry(entry)
+        self.entries.enumerate_entries(_CloneEntryCB)
+
+        # Now write those suckers to a new place.
+        self._SaveData(archive_path, new_entries)
+
+        # Finally, delete the old entries from the current set.
+        def _DeleteEntryCB(entry):
+            entry_year, entry_month, entry_day = entry.get_date()
+            entry_id = entry.get_id()
+            self._DeleteEntry(entry_year, entry_month, entry_day, entry_id,
+                              skip_verify=True)
+        new_entries.enumerate_entries(_DeleteEntryCB)
         
     ### -----------------------------------------------------------------
     ### Tree Popup Menu Actions
@@ -1309,6 +1350,39 @@ class ThotKeeper(wx.App):
             self._SaveEntriesToPath(path)
         dialog.Destroy()
 
+    def _FileArchiveMenu(self, event):
+        date = self._QueryChooseDate('Archive files before which date?')
+        if date is None:
+            return
+
+        path = None
+        new_basename = ''
+        if self.conf.data_file is not None:
+            new_base, new_ext = os.path.splitext(os.path.basename(self.conf.data_file))
+            if not new_ext:
+                new_ext = '.tkj'
+            new_basename = new_base + '.archive' + new_ext
+        dialog = self._GetFileDialog("Archive to a new data file",
+                                     wx.SAVE | wx.OVERWRITE_PROMPT,
+                                     new_basename)
+        if dialog.ShowModal() == wx.ID_OK:
+            path = dialog.GetPath()
+        dialog.Destroy()
+        if path is None:
+            return
+        
+        if len(path) < 5 or not path.endswith('.tkj'):
+            path = path + '.tkj'
+        wx.Yield()
+        wx.BeginBusyCursor()
+        try:
+            self._ArchiveEntriesBeforeDate(path,
+                                           date.GetYear(),
+                                           date.GetMonth() + 1,
+                                           date.GetDay())
+        finally:
+            wx.EndBusyCursor()
+        
     def _FileRevertMenu(self, event):
         year, month, day, id = self._GetEntryFormKeys()
         self._SetEntryModified(False)
