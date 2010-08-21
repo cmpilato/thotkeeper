@@ -103,10 +103,6 @@
         <label>Diary Options...</label>
         <help>Per diary options.</help>
       </object>
-      <object class="wxMenuItem" name="TKMenuFileDiaryOptions">
-        <label>Diary Options...</label>
-        <help>Per diary options.</help>
-      </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="TKMenuFileOptions">
         <label>Preferences...</label>
