@@ -318,20 +318,47 @@
                   <border>10</border>
                 </object>
                 <object class="sizeritem">
-                  <object class="wxStaticBoxSizer">
-                    <label>ThotKeeper Entry</label>
-                    <orient>wxHORIZONTAL</orient>
-                    <object class="sizeritem">
-                      <object class="wxTextCtrl" name="TKEntryText">
-                        <style>wxTE_MULTILINE|wxTE_WORDWRAP</style>
+                  <object class="wxNotebook">
+                    <object class="notebookpage">
+                      <label>ThotKeeper Entry</label>
+                      <object class="wxPanel">
+                        <object class="wxFlexGridSizer">
+                          <cols>1</cols>
+                          <rows>1</rows>
+                          <growablerows>0</growablerows>
+                          <growablecols>0</growablecols>
+                          <object class="sizeritem">
+                            <object class="wxTextCtrl" name="TKEntryText">
+                              <style>wxTE_MULTILINE|wxTE_WORDWRAP</style>
+                            </object>
+                            <flag>wxALL|wxEXPAND</flag>
+                            <border>5</border>
+                          </object>
+                        </object>
                       </object>
-                      <option>1</option>
-                      <flag>wxALL|wxEXPAND</flag>
-                      <border>5</border>
+                      <selected>1</selected>
+                    </object>
+                    <object class="notebookpage">
+                      <label>Attachments</label>
+                      <object class="wxPanel">
+                        <object class="wxFlexGridSizer">
+                          <cols>1</cols>
+                          <rows>2</rows>
+                          <growablecols>0</growablecols>
+                          <growablerows>0</growablerows>
+                          <growablerows>1</growablerows>
+                          <object class="sizeritem">
+                            <object class="wxStaticText">
+                              <label>This feature is not yet implemented.</label>
+                            </object>
+                            <flag>wxALL|wxEXPAND</flag>
+                            <border>20</border>
+                          </object>
+                        </object>
+                      </object>
                     </object>
                   </object>
-                  <flag>wxALL|wxEXPAND</flag>
-                  <border>5</border>
+                  <flag>wxEXPAND</flag>
                 </object>
                 <growablecols>0</growablecols>
                 <growablerows>1</growablerows>
