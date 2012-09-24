@@ -349,7 +349,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
          </entries>
        </diary>
 
-    Version 1 (ThotKeeker 0.2): Adds an "id" attribute to entries for the
+    Version 1 (ThotKeeper 0.2): Adds an "id" attribute to entries for the
     purposes of distinguishing multiple entries for a given day.  Adds
     an optional <tags> tag to entries, which contains 1 or more <tag>
     tags.
@@ -370,7 +370,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
          </entries>
        </diary>
 
-    Version 2 (ThotKeeker 0.5): Adds optional elements (the
+    Version 2 (ThotKeeper 0.5): Adds optional elements (the
     <attachments> tag and its children) for tracking entry attachments
     -- such as images -- and descriptions thereof.
     
