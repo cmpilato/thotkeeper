@@ -52,19 +52,19 @@ except NameError:
 
 
 class TKEntryAttachment:
-    def __init__(self, description='', content_type=None, data=None):
+    def __init__(self, description='', filename=None, data=None):
         self.description = description
-        self.content_type = content_type
+        self.filename = filename
         self.data = data
+
+    def get_data(self):
+        return self.data
 
     def get_description(self):
         return self.description
 
-    def get_content_type(self):
-        return self.content_type
-
-    def get_data(self):
-        return self.data
+    def get_filename(self):
+        return self.filename
 
 class TKEntry:
     def __init__(self, author='', subject='', text='',
@@ -386,8 +386,9 @@ class TKDataParser(xml.sax.handler.ContentHandler):
              </tags>
              <text>CDATA</text>
              <attachments>
-               <attachment content-type="T">>
+               <attachment>
                  <description>CDATA</description>
+                 <filename>CDATA</filename>
                  <data>base64(DATA)</data>
                </attachment>
                ...
@@ -407,6 +408,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
     TKJ_TAG_DIARY   = 'diary'
     TKJ_TAG_ENTRIES = 'entries'
     TKJ_TAG_ENTRY   = 'entry'
+    TKJ_TAG_FILENAME    = 'filename'
     TKJ_TAG_SUBJECT = 'subject'
     TKJ_TAG_TAG     = 'tag'
     TKJ_TAG_TAGS    = 'tags'
@@ -421,6 +423,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         TKJ_TAG_DIARY   : [  ],
         TKJ_TAG_ENTRIES : [ TKJ_TAG_DIARY ],
         TKJ_TAG_ENTRY   : [ TKJ_TAG_ENTRIES ],
+        TKJ_TAG_FILENAME    : [ TKJ_TAG_ATTACHMENT ],
         TKJ_TAG_SUBJECT : [ TKJ_TAG_ENTRY ],
         TKJ_TAG_TAG     : [ TKJ_TAG_TAGS ],
         TKJ_TAG_TAGS    : [ TKJ_TAG_ENTRY ],
@@ -482,13 +485,15 @@ class TKDataParser(xml.sax.handler.ContentHandler):
             self.buffer = ''
         elif name == self.TKJ_TAG_TAGS:
             self.cur_entry['tags'] = []
+        elif name == self.TKJ_TAG_ATTACHMENTS:
+            self.cur_entry['attachments'] = []
         elif name == self.TKJ_TAG_ATTACHMENT:
             self.cur_attachment = dict(attrs)
-            self.cur_entry['attachments'] = []
         elif name == self.TKJ_TAG_SUBJECT \
              or name == self.TKJ_TAG_TAG \
              or name == self.TKJ_TAG_TEXT \
              or name == self.TKJ_TAG_DESC \
+             or name == self.TKJ_TAG_FILENAME \
              or name == self.TKJ_TAG_DATA:
             self.buffer = ''
 
@@ -531,9 +536,12 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         elif name == self.TKJ_TAG_DATA:
             self.cur_attachment['data'] = base64.decodestring(self.buffer)
             self.buffer = None
+        elif name == self.TKJ_TAG_FILENAME:
+            self.cur_attachment['filename'] = self.buffer
+            self.buffer = None
         elif name == self.TKJ_TAG_ATTACHMENT:
             attachment = TKEntryAttachment(self.cur_attachment['description'],
-                                           self.cur_attachment['content_type'],
+                                           self.cur_attachment['filename'],
                                            self.cur_attachment['data'])
             self.cur_entry['attachments'].append(attachment)
             self.cur_attachment = None
@@ -587,10 +595,11 @@ def unparse_data(datafile, entries):
             if len(attachments):
                 fp.write('   <attachments>\n')
                 for attachment in attachments:
-                  fp.write('     <attachment content_type="%s">\n'
-                           % (attachment.get_content_type().encode('utf8')))
+                  fp.write('     <attachment>\n')
                   fp.write('       <description>%s</description>\n'
                            % (attachment.get_description().encode('utf8')))
+                  fp.write('       <filename>%s</filename>\n'
+                           % (attachment.get_filename().encode('utf8')))
                   fp.write('       <data>%s</data>\n'
                            % (base64.encodestring(attachment.get_data())))
                   fp.write('     </attachment>\n')

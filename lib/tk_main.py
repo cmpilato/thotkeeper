@@ -568,6 +568,7 @@ class ThotKeeper(wx.App):
         self.subject_id = self.resources.GetXRCID('TKEntrySubject')
         self.tags_id = self.resources.GetXRCID('TKEntryTags')
         self.text_id = self.resources.GetXRCID('TKEntryText')
+        self.attachments_id = self.resources.GetXRCID("TKEntryAttachments")
         self.file_new_id = self.resources.GetXRCID('TKMenuFileNew')
         self.file_open_id = self.resources.GetXRCID('TKMenuFileOpen')
         self.file_save_id = self.resources.GetXRCID('TKMenuFileSave')
@@ -915,17 +916,35 @@ class ThotKeeper(wx.App):
         else:
             self.frame.FindWindowById(self.next_id).Enable(False)
         self.frame.FindWindowById(self.date_id).SetLabel(label)
-        text = subject = author = tags = ''
+        text = subject = author = tags = attachments = ''
         entry = self.entries.get_entry(year, month, day, id)
         if entry is not None:
             text = entry.get_text()
             author = entry.get_author()
             subject = entry.get_subject()
             tags = ', '.join(entry.get_tags() or [])
+            attachments = entry.get_attachments()
         self.frame.FindWindowById(self.author_id).SetValue(author)
         self.frame.FindWindowById(self.subject_id).SetValue(subject)
         self.frame.FindWindowById(self.text_id).SetValue(text)
         self.frame.FindWindowById(self.tags_id).SetValue(tags)
+
+        attachments_list = self.frame.FindWindowById(self.attachments_id)
+        attachments_list.ClearAll()
+        frame_width, xxx = self.frame.GetSizeTuple()
+        attachments_list.InsertColumn(0, "Description",
+                                      width=int(frame_width * 0.4))
+        attachments_list.InsertColumn(1, "Filename",
+                                      width=int(frame_width * 0.3))
+        if attachments:
+            attachments.reverse()
+            for attachment in attachments:
+                list_item = wx.ListItem()
+                idx = attachments_list.InsertItem(list_item)
+                attachments_list.SetStringItem(idx, 0,
+                                               attachment.get_description())
+                attachments_list.SetStringItem(idx, 1,
+                                               attachment.get_filename())
         self._NotifyEntryLoaded(entry and True or False)
         
     def _NotifyEntryLoaded(self, is_loaded=True):
@@ -1538,6 +1557,14 @@ class ThotKeeper(wx.App):
             return
         self._SetEntryFormDate(data.year, data.month, data.day, data.id)
 
+    ### -----------------------------------------------------------------
+    ### Debugging Stuff
+    ### -----------------------------------------------------------------
+
+    def _DebugMessage(self, msg):
+        wx.MessageBox(msg, "DEBUG MESSAGE",
+                      wx.OK | wx.ICON_ERROR, self.frame)
+        return
 
 def main():
     file = None
