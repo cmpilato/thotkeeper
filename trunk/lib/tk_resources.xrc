@@ -343,16 +343,15 @@
                       <object class="wxPanel">
                         <object class="wxFlexGridSizer">
                           <cols>1</cols>
-                          <rows>2</rows>
+                          <rows>1</rows>
                           <growablecols>0</growablecols>
                           <growablerows>0</growablerows>
-                          <growablerows>1</growablerows>
                           <object class="sizeritem">
-                            <object class="wxStaticText">
-                              <label>This feature is not yet implemented.</label>
+                            <object class="wxListCtrl" name="TKEntryAttachments">
+                              <style>wxLC_REPORT|wxLC_SINGLE_SEL</style>
                             </object>
                             <flag>wxALL|wxEXPAND</flag>
-                            <border>20</border>
+                            <border>5</border>
                           </object>
                         </object>
                       </object>
