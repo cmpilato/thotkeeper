@@ -3,7 +3,7 @@
 = Downloads =
 
 || *Filename* || *Description* || *Release Date* || *Size* ||
-|| [https://code.google.com/p/thotkeeper/source/browse/downloads/thotkeeper-0.4.0.tar.gz thotkeeper-0.4.0.tar.gz] || ThotKeeper 0.4.0 (tar.gz) || Jun 2009 || 20.6 KB ||
-|| [https://code.google.com/p/thotkeeper/source/browse/downloads/thotkeeper-0.4.0.zip thotkeeper-0.4.0.zip] || ThotKeeper 0.4.0 (zip) || Jun 2009 || 22.1 KB ||
-|| [https://code.google.com/p/thotkeeper/source/browse/downloads/thotkeeper-0.3.0.tar.gz thotkeeper-0.3.0.tar.gz] || ThotKeeper 0.3.0 (tar.gz) || Jul 2008 || 18.4 KB ||
-|| [https://code.google.com/p/thotkeeper/source/browse/downloads/thotkeeper-0.3.0.zip thotkeeper-0.3.0.zip] || ThotKeeper 0.3.0 (zip) || Jul 2008 || 20.2 KB ||
+|| [https://code.google.com/p/thotkeeper/svn/downloads/thotkeeper-0.4.0.tar.gz thotkeeper-0.4.0.tar.gz] || ThotKeeper 0.4.0 (tar.gz) || Jun 2009 || 20.6 KB ||
+|| [https://code.google.com/p/thotkeeper/svn/downloads/thotkeeper-0.4.0.zip thotkeeper-0.4.0.zip] || ThotKeeper 0.4.0 (zip) || Jun 2009 || 22.1 KB ||
+|| [https://code.google.com/p/thotkeeper/svn/downloads/thotkeeper-0.3.0.tar.gz thotkeeper-0.3.0.tar.gz] || ThotKeeper 0.3.0 (tar.gz) || Jul 2008 || 18.4 KB ||
+|| [https://code.google.com/p/thotkeeper/svn/downloads/thotkeeper-0.3.0.zip thotkeeper-0.3.0.zip] || ThotKeeper 0.3.0 (zip) || Jul 2008 || 20.2 KB ||
