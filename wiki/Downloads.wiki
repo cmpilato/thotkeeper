@@ -1,6 +1,6 @@
 #summary Downloads of ThotKeeper.
 
-= ThotKeeper Downloads =
+= Downloads =
 
 || *Filename* || *Description* || *Release Date* || *Size* ||
 || [https://code.google.com/p/thotkeeper/source/browse/downloads/thotkeeper-0.4.0.tar.gz thotkeeper-0.4.0.tar.gz] || ThotKeeper 0.4.0 (tar.gz) || Jun 2009 || 20.6 KB ||
