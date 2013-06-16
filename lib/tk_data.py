@@ -435,9 +435,9 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         self.buffer = None
         self.entries = entries
         self.tag_stack = []
-        # If we are loading a file, we want there to be no global author *unless*
-        # one is actually found in the file (but the default should still be
-        # True for new files
+        # If we are loading a file, we want there to be no global
+        # author *unless* one is actually found in the file (but the
+        # default should still be True for new files).
         self.entries.set_author_global(False)
         self.cur_attachment = None
 
