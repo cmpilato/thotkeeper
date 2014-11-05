@@ -52,10 +52,12 @@ except NameError:
 
 
 class TKEntryAttachment:
-    def __init__(self, description='', filename=None, data=None):
+    def __init__(self, description='', filename=None, data=None,
+                 content_type=None):
         self.description = description
         self.filename = filename
         self.data = data
+        self.content_type = content_type
 
     def get_data(self):
         return self.data
@@ -65,6 +67,10 @@ class TKEntryAttachment:
 
     def get_filename(self):
         return self.filename
+
+    def get_content_type(self):
+        return self.content_type
+
 
 class TKEntry:
     def __init__(self, author='', subject='', text='',
@@ -542,7 +548,8 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         elif name == self.TKJ_TAG_ATTACHMENT:
             attachment = TKEntryAttachment(self.cur_attachment['description'],
                                            self.cur_attachment['filename'],
-                                           self.cur_attachment['data'])
+                                           self.cur_attachment['data'],
+                                           self.cur_attachment['content-type'])
             self.cur_entry['attachments'].append(attachment)
             self.cur_attachment = None
         
