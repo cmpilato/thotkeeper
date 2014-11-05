@@ -16,6 +16,7 @@ import os.path
 import time
 import string
 import tk_data
+import tempfile
 import wx
 import wx.calendar
 import wx.xrc
@@ -700,6 +701,9 @@ class ThotKeeper(wx.App):
         wx.EVT_MENU(self, self.help_update_id, self._HelpUpdateMenu)
         wx.EVT_MENU(self, self.help_about_id, self._HelpAboutMenu)
 
+        # Event handlers for the Attachments list.
+        wx.EVT_LIST_ITEM_ACTIVATED(self, self.attachments_id, self._AttachmentActivated)
+
         # Event handlers for the Tree widget.
         wx.EVT_TREE_ITEM_ACTIVATED(self, self.datetree_id, self._TreeActivated)
         wx.EVT_RIGHT_DOWN(self.tree, self._TreePopup)
@@ -936,15 +940,19 @@ class ThotKeeper(wx.App):
                                       width=int(frame_width * 0.4))
         attachments_list.InsertColumn(1, "Filename",
                                       width=int(frame_width * 0.3))
+        attachments_list.InsertColumn(2, "Content-Type",
+                                      width=int(frame_width * 0.3))
         if attachments:
             attachments.reverse()
             for attachment in attachments:
                 list_item = wx.ListItem()
                 idx = attachments_list.InsertItem(list_item)
-                attachments_list.SetStringItem(idx, 0,
-                                               attachment.get_description())
-                attachments_list.SetStringItem(idx, 1,
-                                               attachment.get_filename())
+                att_desc = attachment.get_description()
+                att_name = attachment.get_filename()
+                att_type = attachment.get_content_type()
+                attachments_list.SetStringItem(idx, 0, att_desc)
+                attachments_list.SetStringItem(idx, 1, att_name)
+                attachments_list.SetStringItem(idx, 2, att_type)
         self._NotifyEntryLoaded(entry and True or False)
         
     def _NotifyEntryLoaded(self, is_loaded=True):
@@ -1198,7 +1206,22 @@ class ThotKeeper(wx.App):
             self._DeleteEntry(entry_year, entry_month, entry_day, entry_id,
                               skip_verify=True)
         new_entries.enumerate_entries(_DeleteEntryCB)
-        
+
+    def _LaunchDefaultApplication(self, filename):
+        try:
+            import subprocess
+            if sys.platform.startswith('darwin'):
+                subprocess.call(('open', filename))
+            elif os.name == 'nt':
+                os.startfile(filepath)
+            elif os.name == 'posix':
+                subprocess.call(('xdg-open', filename))
+        except:
+            wx.MessageBox("Failure launching default application.",
+                          "Application Launch Failed",
+                          wx.OK | wx.ICON_ERROR, self.frame)
+            return
+            
     ### -----------------------------------------------------------------
     ### Tree Popup Menu Actions
     ### -----------------------------------------------------------------
@@ -1557,6 +1580,25 @@ class ThotKeeper(wx.App):
             return
         self._SetEntryFormDate(data.year, data.month, data.day, data.id)
 
+    def _AttachmentActivated(self, event):
+        item = event.GetItem()
+        list = event.GetEventObject()
+        idx = event.GetIndex()
+        filename = list.GetItem(idx, 1).GetText()
+        entry = self.entries.get_entry(self.entry_form_key.year,
+                                       self.entry_form_key.month,
+                                       self.entry_form_key.day,
+                                       self.entry_form_key.id)
+        for attachment in entry.get_attachments():
+            if attachment.get_filename() == filename:
+                root, ext = os.path.splitext(filename)
+                handle, tmpfile = tempfile.mkstemp(suffix=ext)
+                fp = open(tmpfile, 'w')
+                fp.write(attachment.get_data())
+                fp.close()
+                self._LaunchDefaultApplication(tmpfile)
+                break
+        
     ### -----------------------------------------------------------------
     ### Debugging Stuff
     ### -----------------------------------------------------------------
