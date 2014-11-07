@@ -376,7 +376,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
          </entries>
        </diary>
 
-    Version 2 (ThotKeeper 0.5): Adds optional elements (the
+    Version 2 (unreleased): Adds optional elements (the
     <attachments> tag and its children) for tracking entry attachments
     -- such as images -- and descriptions thereof.
     
