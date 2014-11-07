@@ -328,7 +328,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
          </entries>
        </diary>
 
-    Version 1 (unreleased): Adds an "id" attribute to entries for the
+    Version 1 (ThotKeeper 0.2): Adds an "id" attribute to entries for the
     purposes of distinguishing multiple entries for a given day.  Adds
     an optional <tags> tag to entries, which contains 1 or more <tag>
     tags.
@@ -377,9 +377,9 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         self.entries = entries
         self.tag_stack = []
         self.entries.set_author_global(False)
-        # If we are loading a file, we want there to be no global author *unless*
-        # one is actually found in the file (but the default should still be
-        # True for new files
+        # If we are loading a file, we want there to be no global
+        # author *unless* one is actually found in the file (but the
+        # default should still be True for new files
 
     def _validate_tag(self, name, parent_tag):
         valid_parents = self._valid_parents[name]
