@@ -10,7 +10,6 @@
 #
 # Website: http://www.thotkeeper.org/
 
-import base64
 import os
 import shutil
 import tempfile
@@ -51,31 +50,9 @@ except NameError:
         return MySet()
 
 
-class TKEntryAttachment:
-    def __init__(self, description='', filename=None, data=None,
-                 content_type=None):
-        self.description = description
-        self.filename = filename
-        self.data = data
-        self.content_type = content_type
-
-    def get_data(self):
-        return self.data
-
-    def get_description(self):
-        return self.description
-
-    def get_filename(self):
-        return self.filename
-
-    def get_content_type(self):
-        return self.content_type
-
-
 class TKEntry:
     def __init__(self, author='', subject='', text='',
-                 year=None, month=None, day=None, id=None,
-                 tags=[], attachments=[]):
+                 year=None, month=None, day=None, id=None, tags=[]):
         self.author = author
         self.subject = subject
         self.text = text
@@ -84,7 +61,6 @@ class TKEntry:
         self.day = day
         self.id = id
         self.tags = tags
-        self.attachments = attachments
 
     def get_author(self):
         return self.author
@@ -103,9 +79,6 @@ class TKEntry:
     
     def get_tags(self):
         return self.tags
-
-    def get_attachments(self):
-        return self.attachments
     
 class TKEntries:
     def __init__(self):
@@ -355,7 +328,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
          </entries>
        </diary>
 
-    Version 1 (ThotKeeper 0.2): Adds an "id" attribute to entries for the
+    Version 1 (unreleased): Adds an "id" attribute to entries for the
     purposes of distinguishing multiple entries for a given day.  Adds
     an optional <tags> tag to entries, which contains 1 or more <tag>
     tags.
@@ -375,61 +348,23 @@ class TKDataParser(xml.sax.handler.ContentHandler):
            ...
          </entries>
        </diary>
-
-    Version 2 (ThotKeeper 0.5): Adds optional elements (the
-    <attachments> tag and its children) for tracking entry attachments
-    -- such as images -- and descriptions thereof.
-    
-       <diary version="1">
-         <author global="True/False">CDATA</author>
-         <entries>
-           <entry year="YYYY" month="M" day="D" id="N">
-             <author>CDATA</author>
-             <subject>CDATA</subject>
-             <tags>
-                <tag>CDATA</tag>
-                ...
-             </tags>
-             <text>CDATA</text>
-             <attachments>
-               <attachment>
-                 <description>CDATA</description>
-                 <filename>CDATA</filename>
-                 <data>base64(DATA)</data>
-               </attachment>
-               ...
-             </attachments>
-           </entry>
-           ...
-         </entries>
-       </diary>
-
+       
     """
 
-    TKJ_TAG_ATTACHMENT  = 'attachment'
-    TKJ_TAG_ATTACHMENTS = 'attachments'
     TKJ_TAG_AUTHOR  = 'author'
-    TKJ_TAG_DATA    = 'data'
-    TKJ_TAG_DESC    = 'description'
     TKJ_TAG_DIARY   = 'diary'
     TKJ_TAG_ENTRIES = 'entries'
     TKJ_TAG_ENTRY   = 'entry'
-    TKJ_TAG_FILENAME    = 'filename'
     TKJ_TAG_SUBJECT = 'subject'
     TKJ_TAG_TAG     = 'tag'
     TKJ_TAG_TAGS    = 'tags'
     TKJ_TAG_TEXT    = 'text'
 
     _valid_parents = {
-        TKJ_TAG_ATTACHMENT  : [ TKJ_TAG_ATTACHMENTS ],
-        TKJ_TAG_ATTACHMENTS : [ TKJ_TAG_ENTRY ],
         TKJ_TAG_AUTHOR  : [ TKJ_TAG_DIARY, TKJ_TAG_ENTRY ],
-        TKJ_TAG_DESC        : [ TKJ_TAG_ATTACHMENT ],
-        TKJ_TAG_DATA        : [ TKJ_TAG_ATTACHMENT ],
         TKJ_TAG_DIARY   : [  ],
         TKJ_TAG_ENTRIES : [ TKJ_TAG_DIARY ],
         TKJ_TAG_ENTRY   : [ TKJ_TAG_ENTRIES ],
-        TKJ_TAG_FILENAME    : [ TKJ_TAG_ATTACHMENT ],
         TKJ_TAG_SUBJECT : [ TKJ_TAG_ENTRY ],
         TKJ_TAG_TAG     : [ TKJ_TAG_TAGS ],
         TKJ_TAG_TAGS    : [ TKJ_TAG_ENTRY ],
@@ -441,11 +376,10 @@ class TKDataParser(xml.sax.handler.ContentHandler):
         self.buffer = None
         self.entries = entries
         self.tag_stack = []
-        # If we are loading a file, we want there to be no global
-        # author *unless* one is actually found in the file (but the
-        # default should still be True for new files).
         self.entries.set_author_global(False)
-        self.cur_attachment = None
+        # If we are loading a file, we want there to be no global author *unless*
+        # one is actually found in the file (but the default should still be
+        # True for new files
 
     def _validate_tag(self, name, parent_tag):
         valid_parents = self._valid_parents[name]
@@ -491,16 +425,9 @@ class TKDataParser(xml.sax.handler.ContentHandler):
             self.buffer = ''
         elif name == self.TKJ_TAG_TAGS:
             self.cur_entry['tags'] = []
-        elif name == self.TKJ_TAG_ATTACHMENTS:
-            self.cur_entry['attachments'] = []
-        elif name == self.TKJ_TAG_ATTACHMENT:
-            self.cur_attachment = dict(attrs)
         elif name == self.TKJ_TAG_SUBJECT \
              or name == self.TKJ_TAG_TAG \
-             or name == self.TKJ_TAG_TEXT \
-             or name == self.TKJ_TAG_DESC \
-             or name == self.TKJ_TAG_FILENAME \
-             or name == self.TKJ_TAG_DATA:
+             or name == self.TKJ_TAG_TEXT:
             self.buffer = ''
 
     def characters(self, ch):
@@ -521,8 +448,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
                                              int(self.cur_entry['month']),
                                              int(self.cur_entry['day']),
                                              int(self.cur_entry['id']),
-                                             self.cur_entry.get('tags', []),
-                                             self.cur_entry.get('attachments', [])))
+                                             self.cur_entry.get('tags', [])))
             self.cur_entry = None
         elif name == self.TKJ_TAG_AUTHOR:
             if self.cur_entry:
@@ -536,23 +462,6 @@ class TKDataParser(xml.sax.handler.ContentHandler):
             self.buffer = None
         elif name == self.TKJ_TAG_TAG:
             self.cur_entry['tags'].append(self.buffer)
-        elif name == self.TKJ_TAG_DESC:
-            self.cur_attachment['description'] = self.buffer
-            self.buffer = None
-        elif name == self.TKJ_TAG_DATA:
-            self.cur_attachment['data'] = base64.decodestring(self.buffer)
-            self.buffer = None
-        elif name == self.TKJ_TAG_FILENAME:
-            self.cur_attachment['filename'] = self.buffer
-            self.buffer = None
-        elif name == self.TKJ_TAG_ATTACHMENT:
-            attachment = TKEntryAttachment(self.cur_attachment['description'],
-                                           self.cur_attachment['filename'],
-                                           self.cur_attachment['data'],
-                                           self.cur_attachment['content-type'])
-            self.cur_entry['attachments'].append(attachment)
-            self.cur_attachment = None
-        
 
 def parse_data(datafile):
     """Parse an XML file, returning a TKEntries object."""
@@ -582,7 +491,6 @@ def unparse_data(datafile, entries):
             year, month, day = entry.get_date()
             id = entry.get_id()
             tags = entry.get_tags()
-            attachments = entry.get_attachments()
             fp.write('  <entry year="%s" month="%s" day="%s" id="%s">\n'
                      % (year, month, day, id))
             author = xml.sax.saxutils.escape(entry.get_author())
@@ -599,18 +507,6 @@ def unparse_data(datafile, entries):
                     fp.write('    <tag>%s</tag>\n'
                              % (xml.sax.saxutils.escape(tag.encode('utf8'))))
                 fp.write('   </tags>\n')
-            if len(attachments):
-                fp.write('   <attachments>\n')
-                for attachment in attachments:
-                  fp.write('     <attachment>\n')
-                  fp.write('       <description>%s</description>\n'
-                           % (attachment.get_description().encode('utf8')))
-                  fp.write('       <filename>%s</filename>\n'
-                           % (attachment.get_filename().encode('utf8')))
-                  fp.write('       <data>%s</data>\n'
-                           % (base64.encodestring(attachment.get_data())))
-                  fp.write('     </attachment>\n')
-                fp.write('   </attachments>\n')
             fp.write('   <text>%s</text>\n'
                      % (xml.sax.saxutils.escape(entry.get_text().encode('utf8'))))
             fp.write('  </entry>\n')

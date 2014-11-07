@@ -318,46 +318,20 @@
                   <border>10</border>
                 </object>
                 <object class="sizeritem">
-                  <object class="wxNotebook">
-                    <object class="notebookpage">
-                      <label>ThotKeeper Entry</label>
-                      <object class="wxPanel">
-                        <object class="wxFlexGridSizer">
-                          <cols>1</cols>
-                          <rows>1</rows>
-                          <growablerows>0</growablerows>
-                          <growablecols>0</growablecols>
-                          <object class="sizeritem">
-                            <object class="wxTextCtrl" name="TKEntryText">
-                              <style>wxTE_MULTILINE|wxTE_WORDWRAP</style>
-                            </object>
-                            <flag>wxALL|wxEXPAND</flag>
-                            <border>5</border>
-                          </object>
-                        </object>
+                  <object class="wxStaticBoxSizer">
+                    <label>ThotKeeper Entry</label>
+                    <orient>wxHORIZONTAL</orient>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="TKEntryText">
+                        <style>wxTE_MULTILINE|wxTE_WORDWRAP</style>
                       </object>
-                      <selected>1</selected>
-                    </object>
-                    <object class="notebookpage">
-                      <label>Attachments</label>
-                      <object class="wxPanel">
-                        <object class="wxFlexGridSizer">
-                          <cols>1</cols>
-                          <rows>1</rows>
-                          <growablecols>0</growablecols>
-                          <growablerows>0</growablerows>
-                          <object class="sizeritem">
-                            <object class="wxListCtrl" name="TKEntryAttachments">
-                              <style>wxLC_REPORT|wxLC_SINGLE_SEL</style>
-                            </object>
-                            <flag>wxALL|wxEXPAND</flag>
-                            <border>5</border>
-                          </object>
-                        </object>
-                      </object>
+                      <option>1</option>
+                      <flag>wxALL|wxEXPAND</flag>
+                      <border>5</border>
                     </object>
                   </object>
-                  <flag>wxEXPAND</flag>
+                  <flag>wxALL|wxEXPAND</flag>
+                  <border>5</border>
                 </object>
                 <growablecols>0</growablecols>
                 <growablerows>1</growablerows>
