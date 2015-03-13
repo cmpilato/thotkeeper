@@ -1,4 +1,4 @@
-![http://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-logo.jpg](http://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-logo.jpg)
+![https://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-logo.jpg](https://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-logo.jpg)
 
 ## ThotKeeper — cross-platform personal daily journaling ##
 
@@ -38,7 +38,7 @@ Others have since come along to help Mike develop ThotKeeper.
 
 | **Windows** | **Ubuntu Linux** |
 |:------------|:-----------------|
-| ![](http://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-win32-thumb.jpg)| ![](http://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-linux-thumb.jpg) |
+| ![](https://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-win32-thumb.jpg)| ![](https://github.com/cmpilato/thotkeeper/blob/master/www/thotkeeper-linux-thumb.jpg) |
 
 
 ## What You Need ##
