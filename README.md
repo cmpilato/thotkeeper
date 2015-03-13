@@ -21,17 +21,7 @@ means that when you run ThotKeeper on a Windows machine, it looks like
 a native Windows application; when running under Linux, it looks like
 a Linux/GTK application.
 
-Others have since come along to help Mike develop ThotKeeper. You can
-see their contributions — and even learn how to make some of your own
-— by visiting our [Source
-area](http://code.google.com/p/thotkeeper/source/checkout).
-
-## Download ThotKeeper ##
-
-You can download archived releases of ThotKeeper from our
-[Downloads](Downloads.md) page, or checkout the ThotKeeper [source
-code](http://code.google.com/p/thotkeeper/source/checkout) using
-Subversion.
+Others have since come along to help Mike develop ThotKeeper.
 
 ## Features ##
 
@@ -48,13 +38,14 @@ Subversion.
 
 | **Windows** | **Ubuntu Linux** |
 |:------------|:-----------------|
-| ![![](http://thotkeeper.googlecode.com/svn/www/thotkeeper-win32-thumb.jpg)](http://thotkeeper.googlecode.com/svn/www/thotkeeper-win32.jpg) | ![![](http://thotkeeper.googlecode.com/svn/www/thotkeeper-linux-thumb.jpg)](http://thotkeeper.googlecode.com/svn/www/thotkeeper-linux.jpg) |
+| ![](http://thotkeeper.googlecode.com/svn/www/thotkeeper-win32-thumb.jpg)| ![](http://thotkeeper.googlecode.com/svn/www/thotkeeper-linux-thumb.jpg) |
+
 
 ## What You Need ##
 
 To run ThotKeeper, you need a few bits of software:
 
-  * [ThotKeeper](http://code.google.com/p/thotkeeper/downloads/list) —
+  * [ThotKeeper](https://github.com/cmpilato/thotkeeper/releases) —
     This one's obvious, right?
   * [Python](http://www.python.org/) — the Python programming language
     (version 2.3 or greater)
