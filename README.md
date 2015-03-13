@@ -39,6 +39,7 @@ Others have since come along to help Mike develop ThotKeeper.
 | **Windows** | **Ubuntu Linux** |
 |:------------|:-----------------|
 | ![](http://thotkeeper.googlecode.com/svn/www/thotkeeper-win32-thumb.jpg)| ![](http://thotkeeper.googlecode.com/svn/www/thotkeeper-linux-thumb.jpg) |
+| ![ThotKeeper on Windows](http://thotkeeper.googlecode.com/svn/www/thotkeeper-win32.jpg) | ![ThotKeeper on Linux](http://thotkeeper.googlecode.com/svn/www/thotkeeper-linux.jpg) |
 
 
 ## What You Need ##
