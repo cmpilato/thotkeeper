@@ -12,8 +12,6 @@ means that when you run ThotKeeper on a Windows machine, it looks like
 a native Windows application; when running under Linux, it looks like
 a Linux/GTK application.
 
-Others have since come along to help Mike develop ThotKeeper.
-
 ## Features ##
 
   * Cross-platform functionality with native widgets
@@ -57,3 +55,5 @@ proprietary format. Mike figured that with a simple XML storage format
 and enough GUI goodness to navigate the hunks of information in the
 file, Amy might actually be encouraged to write more. So in 2004, he
 began working on ThotKeeper.
+
+Others have since come along to help Mike develop ThotKeeper.
