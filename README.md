@@ -5,12 +5,12 @@
 ThotKeeper is a simple, open source, cross-platform, daily journal
 application.
 
-ThotKeeper is written in the Python programming language, which means
-it runs on many different platforms. It's built around the wxPython
-toolkit, which uses native widgets on the various platforms. That
-means that when you run ThotKeeper on a Windows machine, it looks like
-a native Windows application; when running under Linux, it looks like
-a Linux/GTK application.
+ThotKeeper is written in the Python programming language and runs on
+many different platforms. It's built around the wxPython toolkit,
+which uses native widgets on the various platforms. That means that
+when you run ThotKeeper on a Windows machine, it looks like a native
+Windows application; when running under Linux, it looks like a
+Linux/GTK application.
 
 ## Features ##
 
