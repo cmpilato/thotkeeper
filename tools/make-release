@@ -14,7 +14,8 @@ import sys
 import os
 import shutil
 
-__repos_root__ = "http://thotkeeper.googlecode.com/svn"
+
+__tarball_base_url__ = "https://github.com/cmpilato/thotkeeper/tarball"
 
 
 def error_and_exit(errmsg):
@@ -35,7 +36,7 @@ TAGNAME (if provided; otherwise use trunk).
     sys.exit(0)
     
 
-def make_archive(export_source_url, export_target, eol_style, archive_cmds):
+def make_archive(export_source_url, export_target, archive_cmds):
     if os.path.exists(export_target):
         error_and_exit("Export target path '%s' already exists."
                        % (export_target))
@@ -43,8 +44,8 @@ def make_archive(export_source_url, export_target, eol_style, archive_cmds):
     cur_dir = os.getcwd()
     try:
         os.chdir(export_target)
-        os.system('svn export --force --native-eol %s --quiet %s .'
-                  % (eol_style, export_source_url))
+        os.system('wget -q -O - "%s" | tar xz --strip-components=1'
+                  % (export_source_url))
         for item in [ 'tools', 'notes' ]:  # add excluded items here
             rmpath = os.sep.join(item.split('/'))
             shutil.rmtree(rmpath)
@@ -58,30 +59,30 @@ def make_archive(export_source_url, export_target, eol_style, archive_cmds):
     
 def main():
     argc = len(sys.argv)
-    rel_url = "/trunk"
-    archive_name = "trunk"
+    rel_url = "/master"
+    archive_name = "master"
     if argc < 2:
         usage_and_exit("Not enough arguments.")
     if argc > 3:
         usage_and_exit("Too many arguments.")
     target_dir = os.path.normpath(sys.argv[1])
     if argc > 2:
-        rel_url = "/tags/" + sys.argv[2]
+        rel_url = sys.argv[2]
         archive_name = sys.argv[2]
     archive_base = "thotkeeper-%s" % (archive_name)
-    export_source_url = __repos_root__ + rel_url
+    export_source_url = __tarball_base_url__ + '/' + rel_url
     export_target = os.path.join(target_dir, archive_base)
 
     # Make a Unix-line-ending tarball.
-    make_archive(export_source_url, export_target, "LF",
+    make_archive(export_source_url, export_target,
                  ['tar cfz %s.tar.gz %s' % (archive_base, archive_base)])
                           
     # Make a Windows-line-ending ZIP archive.
-    make_archive(export_source_url, export_target, "CRLF",
+    make_archive(export_source_url, export_target,
                  ['zip -qor9 %s.zip %s' % (archive_base, archive_base)])
     
     # Print reminder about updating latest-version.txt
-    print "REMINDER:  If necessary, update latest-version.txt with new"
+    print "REMINDER:  If necessary, update latest-version.json with new"
     print "           release information."
         
 if __name__ == "__main__":
