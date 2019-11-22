@@ -67,7 +67,7 @@ def CheckForUpdates():
         return None, None
     http.close()
     raise Exception, "Unknown error checking for updates (status = %d)" \
-          % (errcode)
+          % (response.status)
 
 
 ########################################################################
