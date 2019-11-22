@@ -41,6 +41,8 @@ To run ThotKeeper, you need a few bits of software:
   * [wxPython](http://www.wxpython.org/) — Python interfaces to the
     wxWidgets cross-platform GUI library (version 2.8 or greater, and
     compiled for the correct version of Python)
+  * [Requests](https://2.python-requests.org/en/master/) — Python HTTP
+    library (required only for ThotKeeper check for updates feature)
 
 ## History ##
 

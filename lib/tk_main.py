@@ -11,6 +11,7 @@
 # Website: http://www.thotkeeper.org/
 
 import sys
+import json
 import os
 import os.path
 import time
@@ -36,8 +37,7 @@ month_abbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 ###
 
 def CheckForUpdates():
-    import httplib
-    import socket
+    import requests
     import re
 
     def _version_parse(version):
@@ -52,22 +52,20 @@ def CheckForUpdates():
             return [major, minor, patch]
         raise Exception, "Invalid version string '%s'" % (version)
         
-    update_host = "thotkeeper.googlecode.com"
-    update_path = "/svn/latest-version.txt"
-    http = httplib.HTTPConnection(update_host)
-    http.request("GET", update_path)
-    response = http.getresponse()
-    if response.status == 200:
-        contents = response.read().split('\n')
-        new_version = _version_parse(contents[0])
-        http.close()
+    update_url = "http://thotkeeper.org/latest-version.json"
+    response = requests.get(update_url, allow_redirects=True)
+    if response.status_code == 200:
+        try:
+            contents = response.json()
+        except Exception:
+            raise Exception, "Unable to parse JSON version information"
+        new_version = _version_parse(contents['version'])
         this_version = _version_parse(__version__)
         if new_version > this_version:
-            return '.'.join(map(lambda x: str(x), new_version)), contents[1]
+            return '.'.join(map(lambda x: str(x), new_version)), contents['url']
         return None, None
-    http.close()
     raise Exception, "Unknown error checking for updates (status = %d)" \
-          % (response.status)
+          % (response.status_code)
 
 
 ########################################################################
@@ -1454,13 +1452,13 @@ class ThotKeeper(wx.App):
         try:
             new_version, info_url = CheckForUpdates()
         except Exception, e:
-            wx.MessageBox("Error occurred while checking for updates:  %s" \
+            wx.MessageBox("Error occurred while checking for updates:\n%s" \
                           % (str(e)),
                           "Update Check", wx.OK | wx.ICON_ERROR, self.frame)
             return
         if new_version is not None:
             wx.MessageBox("A new version (%s) of ThotKeeper is available.\n" \
-                          "For more information, visit %s." \
+                          "For more information, visit:\n%s" \
                           % (new_version, info_url),
                           "Update Check", wx.OK, self.frame)
         else:
