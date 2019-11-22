@@ -46,9 +46,15 @@ def make_archive(export_source_url, export_target, archive_cmds):
         os.chdir(export_target)
         os.system('wget -q -O - "%s" | tar xz --strip-components=1'
                   % (export_source_url))
-        for item in [ 'tools', 'notes' ]:  # add excluded items here
+        # Remove excluded items
+        for item in ['tools',
+                     'notes',
+                     'www/latest-version.json']:
             rmpath = os.sep.join(item.split('/'))
-            shutil.rmtree(rmpath)
+            if os.path.isfile(rmpath):
+                os.unlink(rmpath)
+            else:
+                shutil.rmtree(rmpath)
         os.chdir('..')
         for cmd in archive_cmds:
             os.system(cmd)
