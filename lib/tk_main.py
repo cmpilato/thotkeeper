@@ -2,7 +2,7 @@
 #
 # ThotKeeper -- a personal daily journal application.
 #
-# Copyright (c) 2004-2019 C. Michael Pilato.  All rights reserved.
+# Copyright (c) 2004-2020 C. Michael Pilato.  All rights reserved.
 #
 # By using this file, you agree to the terms and conditions set forth in
 # the LICENSE file which can be found at the top level of the ThotKeeper
@@ -1436,7 +1436,7 @@ class ThotKeeper(wx.App):
         wx.MessageBox(
             "ThotKeeper - a personal daily journal application.\n"
             "\n"
-            "Copyright (c) 2004-2019 C. Michael Pilato.  All rights reserved.\n"
+            "Copyright (c) 2004-2020 C. Michael Pilato.  All rights reserved.\n"
             "\n"
             "ThotKeeper is open source software developed under the BSD "
             "License.  Question, comments, and code contributions are "
