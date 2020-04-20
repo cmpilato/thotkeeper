@@ -14,42 +14,10 @@ import os
 import shutil
 import tempfile
 import xml.sax
+from xml.sax.saxutils import escape as _xml_escape
 from functools import reduce
 
 TK_DATA_VERSION = 1
-
-# sorted() is new to Python 2.4, but an implementation of it that works for
-# our list-sorting needs is easy enough to patch in for older versions.
-try:
-    mysorted = sorted
-    del(mysorted)
-except NameError:
-    def sorted(list):
-        if list is None:
-            return None
-        newlist = list[:]
-        newlist.sort()
-        return newlist
-
-# sets (and the set() function) are new to Python 2.4, but an
-# implementation of it that works for our list-sorting needs is easy
-# enough to patch in for older versions.
-try:
-    myset = set()
-    del(myset)
-except NameError:
-    class MySet:
-        def __init__(self):
-            self.items = {}
-        def add(self, thing):
-            self.items[thing] = None
-        def remove(self, thing):
-            del self.items[thing]
-        def __iter__(self):
-            return list(self.items.keys()).__iter__()
-    def set():
-        return MySet()
-
 
 class TKEntry:
     def __init__(self, author='', subject='', text='',
@@ -80,7 +48,16 @@ class TKEntry:
     
     def get_tags(self):
         return self.tags
-    
+
+    def __eq__(self, other):
+        return ([self.year, self.month, self.day, self.id] == 
+                [other.year, other.month, other.day, other.id])
+
+    def __lt__(self, other):
+        return ([self.year, self.month, self.day, self.id] <
+                [other.year, other.month, other.day, other.id])
+
+
 class TKEntries:
     def __init__(self):
         self.entry_tree = {}
@@ -475,7 +452,7 @@ def unparse_data(datafile, entries):
     intermediate tempfile to try to reduce the chances of clobbering a
     previously-good datafile with a half-baked one."""
     fdesc, fname = tempfile.mkstemp()
-    fp = os.fdopen(fdesc, 'w')
+    fp = os.fdopen(fdesc, 'w', encoding='utf-8')
     try:
         fp.write('<?xml version="1.0"?>\n'
                  '<diary version="%d">\n' % (TK_DATA_VERSION))
@@ -492,22 +469,22 @@ def unparse_data(datafile, entries):
             tags = entry.get_tags()
             fp.write('  <entry year="%s" month="%s" day="%s" id="%s">\n'
                      % (year, month, day, id))
-            author = xml.sax.saxutils.escape(entry.get_author())
+            author = entry.get_author()
             if author:
                 fp.write('   <author>%s</author>\n'
-                         % (author.encode('utf8')))
-            subject = xml.sax.saxutils.escape(entry.get_subject())
+                         % (_xml_escape(author)))
+            subject = entry.get_subject()
             if subject:
                 fp.write('   <subject>%s</subject>\n'
-                         % (subject.encode('utf8')))
+                         % (_xml_escape(subject)))
             if len(tags):
                 fp.write('   <tags>\n')
                 for tag in tags:
                     fp.write('    <tag>%s</tag>\n'
-                             % (xml.sax.saxutils.escape(tag.encode('utf8'))))
+                             % (_xml_escape(tag)))
                 fp.write('   </tags>\n')
             fp.write('   <text>%s</text>\n'
-                     % (xml.sax.saxutils.escape(entry.get_text().encode('utf8'))))
+                     % (_xml_escape(entry.get_text())))
             fp.write('  </entry>\n')
         entries.enumerate_entries(_write_entry)
         fp.write(' </entries>\n</diary>\n')

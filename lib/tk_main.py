@@ -11,14 +11,12 @@
 # Website: http://www.thotkeeper.org/
 
 import sys
-import json
 import os
 import os.path
 import time
-import string
 import tk_data
 import wx
-import wx.calendar
+from wx.adv import (CalendarCtrl, CalendarDateAttr)
 import wx.xrc
 from wx.html import HtmlEasyPrinting
 
@@ -30,6 +28,9 @@ month_names = ['January', 'February', 'March', 'April',
 month_abbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+def cmp(a, b):
+    """Shim for the old Python2 cmp() function."""
+    return (a > b) - (a < b)
 
 ########################################################################
 ###
@@ -142,66 +143,64 @@ class TKOptions:
 ###  ENTRY KEY CLASS
 ###
 
+class TKEntryTag:
+    """ThotKeeper Entry tag name."""
+
+    def __init__(self, name):
+        self.name = (name or '').strip('/')
+        self.name_len = len(self.name)
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __gt__(self, other):
+        # Tag names look like multi-component paths and sort
+        # similarly, where children are "greater" than their parents,
+        # but less than greater siblings of their parents.  So this
+        # algorithm is adapted from Apache Subversion's
+        # svn_path_compare_paths() function.
+
+        # Skip past the common prefix of both names.
+        min_len = min(self.name_len, other.name_len)
+        i = 0
+        while (i < min_len) and (self.name[i] == other.name[i]):
+            i = i + 1
+
+        # Now compare the first non-common character in both names,
+        # treating '/' as a hierarchy separator.  If one doesn't have
+        # such a next character,
+        self_char = i < self.name_len and self.name[i] or '\0'
+        other_char = i < other.name_len and other.name[i] or '\0'
+        if self_char == '/' and i == other.name_len:
+            return False
+        if other_char == '/' and i == self.name_len:
+            return True
+        if self_char == '/' and i < self.name_len:
+            return True
+        if other_char == '/' and i < other.name_len:
+            return False
+        return self_char < other_char
+
+
 class TKEntryKey:
     def __init__(self, year, month, day, id, tag=None):
         self.year = year
         self.month = month
         self.day = day
         self.id = id
-        self.tag = tag
+        self.tag = TKEntryTag(tag)
 
-    def _CompareTags(self, other):
-        ### Because tags look like paths, we use basically the same
-        ### algorithm as Subversion's svn_path_compare_paths().
+    def __eq__(self, other):
+        return ([self.tag, self.year, self.month, self.day, self.id] ==
+                [other.tag, other.year, other.month, other.day, other.id])
         
-        self_tag = self.tag or ''
-        other_tag = other.tag or ''
-
-        # Easy case:  the tags are the same
-        if self_tag == other_tag:
-            return 0
-        
-        self_tag_len = len(self_tag)
-        other_tag_len = len(other_tag)
-        min_len = min(self_tag_len, other_tag_len)
-        i = 0
-
-        # Skip past common prefix
-        while (i < min_len) and (self_tag[i] == other_tag[i]):
-            i = i + 1
-
-        # Children are greater than their parents, but less than
-        # greater siblings of their parents
-        char1 = '\0'
-        char2 = '\0'
-        if (i < self_tag_len):
-            char1 = self_tag[i]
-        if (i < other_tag_len):
-            char2 = other_tag[i]
-
-        if (char1 == '/') and (i == other_tag_len):
-            return 1
-        if (char2 == '/') and (i == self_tag_len):
-            return -1
-        if (i < self_tag_len) and (char1 == '/'):
-            return -1
-        if (i < other_tag_len) and (char2 == '/'):
-            return 1
-
-        # Common prefix was skipped above, next character is compared
-        # to determine order
-        return cmp(char1, char2)
-        
-    def __cmp__(self, other):
-        tag_cmp = self._CompareTags(other)
+    def __lt__(self, other):
         if self.year is not None and other.year is None:
-            return -1
+            return True
         if self.year is None and other.year is not None:
-            return 1
-        if tag_cmp == 0:
-            return cmp([self.year, self.month, self.day, self.id],
-                       [other.year, other.month, other.day, other.id])
-        return -tag_cmp
+            return False
+        return ([self.tag, self.year, self.month, self.day, self.id] <
+                [other.tag, other.year, other.month, other.day, other.id])
 
 
 ########################################################################
@@ -217,8 +216,8 @@ class TKTreeCtrl(wx.TreeCtrl):
         return self.root_id
 
     def OnCompareItems(self, item1, item2):
-        data1 = self.GetItemData(item1).GetData()
-        data2 = self.GetItemData(item2).GetData()
+        data1 = self.GetItemData(item1)
+        data2 = self.GetItemData(item2)
         if data1 is None or data2 is None:
             return 0
         return cmp(data2, data1)  # reverse ordering
@@ -246,7 +245,7 @@ class TKTreeCtrl(wx.TreeCtrl):
                 child_id, cookie = self.GetFirstChild(item_id)
             if not child_id.IsOk():
                 break
-            child_data = self.GetItemData(child_id).GetData()
+            child_data = self.GetItemData(child_id)
             if child_data == data:
                 return child_id
         return None
@@ -281,7 +280,7 @@ class TKTreeCtrl(wx.TreeCtrl):
 class TKEventTree(TKTreeCtrl):
     def __init__(self, parent, style):
         TKTreeCtrl.__init__(self, parent, style)
-        root_data = wx.TreeItemData(TKEntryKey(None, None, None, None))
+        root_data = TKEntryKey(None, None, None, None)
         self.root_id = self.AddRoot('ThotKeeper Entries', -1, -1, root_data)
 
     def GetDateStack(self, year, month, day, id):
@@ -320,19 +319,19 @@ class TKEventTree(TKTreeCtrl):
             else:
                 subject = entry.get_subject()
                 if not stack[1]:
-                    data = wx.TreeItemData(TKEntryKey(year, None, None, None))
+                    data = TKEntryKey(year, None, None, None)
                     stack[1] = self.AppendItem(stack[0],
                                                str(year),
                                                -1, -1, data)
                     self.SortChildren(stack[0])
                 if not stack[2]:
-                    data = wx.TreeItemData(TKEntryKey(year, month, None, None))
+                    data = TKEntryKey(year, month, None, None)
                     stack[2] = self.AppendItem(stack[1],
                                                month_names[month - 1],
                                                -1, -1, data)
                     self.SortChildren(stack[1])
                 if not stack[3]:
-                    data = wx.TreeItemData(TKEntryKey(year, month, day, id))
+                    data = TKEntryKey(year, month, day, id)
                     stack[3] = self.AppendItem(stack[2],
                                                self._ItemLabel(day, subject),
                                                -1, -1, data)
@@ -357,7 +356,7 @@ class TKEventTree(TKTreeCtrl):
 class TKEventTagTree(TKTreeCtrl):
     def __init__(self, parent, style):
         TKTreeCtrl.__init__(self, parent, style)
-        root_data = wx.TreeItemData(TKEntryKey(None, None, None, None))
+        root_data = TKEntryKey(None, None, None, None)
         self.root_id = self.AddRoot('ThotKeeper Tags', -1, -1, root_data)
 
     def GetTagStack(self, tag, year, month, day, id):
@@ -413,16 +412,13 @@ class TKEventTagTree(TKTreeCtrl):
                     else:
                         newtag = newtag + '/' + tag_path[i]
                     if len(stack) == i + 1:
-                        data = wx.TreeItemData(TKEntryKey(None, None,
-                                                         None, None,
-                                                         newtag))
+                        data = TKEntryKey(None, None, None, None, newtag)
                         stack.append(self.AppendItem(stack[i], tag_path[i],
                                                      -1, -1, data))
                         self.SortChildren(stack[i])
                 subject = entry.get_subject()
                 if len(stack) == i + 2:
-                    data = wx.TreeItemData(TKEntryKey(year, month, day,
-                                                     id, newtag))
+                    data = TKEntryKey(year, month, day, id, newtag)
                     stack.append(self.AppendItem(stack[i + 1],
                                                  self._ItemLabel(day, month,
                                                                  year,
@@ -442,10 +438,10 @@ class TKEventTagTree(TKTreeCtrl):
 ###  EVENT CALENDAR SUBCLASS
 ###
 
-class TKEventCal(wx.calendar.CalendarCtrl):
+class TKEventCal(CalendarCtrl):
     def SetDayAttr(self, day, has_event):
         if has_event:
-            attr = wx.calendar.CalendarDateAttr()
+            attr = CalendarDateAttr()
             attr.SetTextColour(wx.RED)
             self.SetAttr(day, attr)
         else:
@@ -641,7 +637,7 @@ class ThotKeeper(wx.App):
         
         # Replace "unknown" XRC placeholders with custom widgets.
         self.cal = TKEventCal(parent=self.date_panel,
-                              style=wx.calendar.CAL_SEQUENTIAL_MONTH_SELECTION)
+                              style=wx.adv.CAL_SEQUENTIAL_MONTH_SELECTION)
         self.resources.AttachUnknownControl('TKCalendar',
                                             self.cal, self.date_panel)
         tree = TKEventTree(parent=self.panel,
@@ -674,9 +670,9 @@ class ThotKeeper(wx.App):
         wx.EVT_TEXT(self, self.author_id, self._EntryDataChanged)
         wx.EVT_TEXT(self, self.tags_id, self._EntryDataChanged)
         wx.EVT_TEXT(self, self.subject_id, self._EntryDataChanged)
-        wx.calendar.EVT_CALENDAR(self, self.calendar_id, self._CalendarChanged)
-        wx.calendar.EVT_CALENDAR_YEAR(self, self.calendar_id, self._CalendarDisplayChanged)
-        wx.calendar.EVT_CALENDAR_MONTH(self, self.calendar_id, self._CalendarDisplayChanged)
+        wx.adv.EVT_CALENDAR(self, self.calendar_id, self._CalendarChanged)
+        wx.adv.EVT_CALENDAR_YEAR(self, self.calendar_id, self._CalendarDisplayChanged)
+        wx.adv.EVT_CALENDAR_MONTH(self, self.calendar_id, self._CalendarDisplayChanged)
         wx.EVT_MENU(self, self.file_new_id, self._FileNewMenu)
         wx.EVT_MENU(self, self.file_open_id, self._FileOpenMenu)
         wx.EVT_MENU(self, self.file_save_id, self._FileSaveMenu)
@@ -874,16 +870,15 @@ class ThotKeeper(wx.App):
         self.frame.Layout()
 
     def _TextToTags(self, text):
-        # Convert tags to lowercase and split by commas.
-        tags = text.lower().split(',')
-
-        # Split each tag by '/', remove surrounding whitespace, remove
-        # empty sections then join back together again.
-        tags = ['/'.join([_f for _f in map(string.strip, 
-                                                 x.split('/')) if _f]) for x in tags]
-
-        # Remove any empty tags and return.
-        return [_f for _f in tags if _f]
+        # Convert tags string to lowercase and split by commas, then
+        # cleanup each tag (splitting on '/', stripping, removing
+        # empty sections, and rejoining).
+        tags = []
+        for tag in text.lower().split(','):
+            tag = '/'.join([x.strip() for x in tag.split('/')])
+            if tag:
+                tags.append(tag)
+        return tags
         
     def _TagsToText(self, tags):
         return tags and ', '.join(tags) or ''
@@ -1023,7 +1018,7 @@ class ThotKeeper(wx.App):
         choose_date_dialog.SetTitle(title)
         choose_date_panel = choose_date_dialog.FindWindowById(
             self.resources.GetXRCID('TKChooseDatePanel'))
-        choose_date_cal = wx.calendar.CalendarCtrl(parent=choose_date_panel)
+        choose_date_cal = wx.adv.CalendarCtrl(parent=choose_date_panel)
         self.resources.AttachUnknownControl('TKChooseDateCalendar',
                                             choose_date_cal,
                                             choose_date_panel)
@@ -1042,8 +1037,7 @@ class ThotKeeper(wx.App):
             timestruct = time.localtime()
             date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
             choose_date_cal.SetDate(date)
-        wx.calendar.EVT_CALENDAR(self, choose_date_cal_id,
-                                 _ChooseDateCalendarChanged)
+        wx.adv.EVT_CALENDAR(self, choose_date_cal_id, _ChooseDateCalendarChanged)
         wx.EVT_BUTTON(self, choose_date_today_id, _ChooseDateTodayClicked)
         if not default_date:
             timestruct = time.localtime()
@@ -1183,7 +1177,7 @@ class ThotKeeper(wx.App):
     def _TreeEditMenu(self, event):
         tree = event.GetEventObject().parenttree
         item = tree.GetSelection()
-        data = tree.GetItemData(item).GetData()
+        data = tree.GetItemData(item)
         if not data.day:
             if data.tag:
                 self._RenameTag(data.tag)
@@ -1194,7 +1188,7 @@ class ThotKeeper(wx.App):
     def _TreeChangeDateMenu(self, event):
         tree = event.GetEventObject().parenttree
         item = tree.GetSelection()
-        data = tree.GetItemData(item).GetData()
+        data = tree.GetItemData(item)
         if not data.day:
             wx.MessageBox("This operation is not currently supported.",
                          "Entry Date Change Failed",
@@ -1205,7 +1199,7 @@ class ThotKeeper(wx.App):
     def _TreeDuplicateMenu(self, event):
         item = self.tree.GetSelection()
         tree = event.GetEventObject().parenttree
-        data = tree.GetItemData(item).GetData()
+        data = tree.GetItemData(item)
         if not data.day:
             wx.MessageBox("This operation is not currently supported.",
                          "Duplication Failed",
@@ -1216,7 +1210,7 @@ class ThotKeeper(wx.App):
     def _TreeDeleteMenu(self, event):
         item = self.tree.GetSelection()
         tree = event.GetEventObject().parenttree
-        data = tree.GetItemData(item).GetData()
+        data = tree.GetItemData(item)
         if not data.day:
             wx.MessageBox("This operation is not currently supported.",
                          "Deletion Failed", wx.OK | wx.ICON_ERROR, self.frame)
@@ -1247,7 +1241,7 @@ class ThotKeeper(wx.App):
                              | wx.TREE_HITTEST_ONITEMSTATEICON):
             if not tree.IsSelected(item):
                 tree.SelectItem(item)
-            data = tree.GetItemData(item).GetData()
+            data = tree.GetItemData(item)
             if not data.day and not data.tag:
                 popup.Enable(self.tree_edit_id, False)
                 popup.Enable(self.tree_redate_id, False)
@@ -1268,7 +1262,8 @@ class ThotKeeper(wx.App):
     def _FileNewMenu(self, event):
         if self._RefuseUnsavedModifications(True):
             return False
-        dialog = self._GetFileDialog("Create new data file", wx.SAVE | wx.OVERWRITE_PROMPT)
+        dialog = self._GetFileDialog("Create new data file",
+                                     wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
             path = dialog.GetPath()
             if len(path) < 5 or not path.endswith('.tkj'):
@@ -1279,7 +1274,8 @@ class ThotKeeper(wx.App):
     def _FileOpenMenu(self, event):
         if self._RefuseUnsavedModifications(True):
             return False
-        dialog = self._GetFileDialog("Open existing data file", wx.OPEN)
+        dialog = self._GetFileDialog("Open existing data file",
+                                     wx.FD_OPEN)
         if dialog.ShowModal() == wx.ID_OK:
             path = dialog.GetPath()
             self._SetDataFile(path, False)
@@ -1289,7 +1285,8 @@ class ThotKeeper(wx.App):
         self._SaveEntriesToPath(None)
         
     def _FileSaveAsMenu(self, event):
-        dialog = self._GetFileDialog("Save as a new data file", wx.SAVE | wx.OVERWRITE_PROMPT)
+        dialog = self._GetFileDialog("Save as a new data file",
+                                     wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
             path = dialog.GetPath()
             if len(path) < 5 or not path.endswith('.tkj'):
@@ -1310,7 +1307,7 @@ class ThotKeeper(wx.App):
                 new_ext = '.tkj'
             new_basename = new_base + '.archive' + new_ext
         dialog = self._GetFileDialog("Archive to a new data file",
-                                     wx.SAVE | wx.OVERWRITE_PROMPT,
+                                     wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                                      new_basename)
         if dialog.ShowModal() == wx.ID_OK:
             path = dialog.GetPath()
@@ -1529,7 +1526,7 @@ class ThotKeeper(wx.App):
     def _TreeActivated(self, event):
         item = event.GetItem()
         tree = event.GetEventObject()
-        data = tree.GetItemData(item).GetData()
+        data = tree.GetItemData(item)
         if not data.day:
             event.Skip()
             return
