@@ -125,7 +125,7 @@ class TKOptions:
     def Write(self):
         """Store configuration values using whatever persistant
         storage mechanism the system provides."""
-        conf = wx.ConfigBase_Get()
+        conf = wx.ConfigBase.Get()
         if self.data_file:
             conf.Write(self.CONF_DATA_FILE, self.data_file)
         conf.Write(self.CONF_FONT_NAME, self.font_face)
@@ -662,54 +662,55 @@ class ThotKeeper(wx.App):
                               self.conf.font_face))
         
         # Event handlers.  They are the key to the world.
-        wx.EVT_CLOSE(self.frame, self._FrameClosure)
-        wx.EVT_BUTTON(self, self.today_id, self._TodayButtonActivated)
-        wx.EVT_BUTTON(self, self.next_id, self._NextButtonActivated)
-        wx.EVT_BUTTON(self, self.prev_id, self._PrevButtonActivated)
-        wx.EVT_TEXT(self, self.text_id, self._EntryDataChanged)
-        wx.EVT_TEXT(self, self.author_id, self._EntryDataChanged)
-        wx.EVT_TEXT(self, self.tags_id, self._EntryDataChanged)
-        wx.EVT_TEXT(self, self.subject_id, self._EntryDataChanged)
-        wx.adv.EVT_CALENDAR(self, self.calendar_id, self._CalendarChanged)
-        wx.adv.EVT_CALENDAR_YEAR(self, self.calendar_id, self._CalendarDisplayChanged)
-        wx.adv.EVT_CALENDAR_MONTH(self, self.calendar_id, self._CalendarDisplayChanged)
-        wx.EVT_MENU(self, self.file_new_id, self._FileNewMenu)
-        wx.EVT_MENU(self, self.file_open_id, self._FileOpenMenu)
-        wx.EVT_MENU(self, self.file_save_id, self._FileSaveMenu)
-        wx.EVT_MENU(self, self.file_saveas_id, self._FileSaveAsMenu)
-        wx.EVT_MENU(self, self.file_archive_id, self._FileArchiveMenu)
-        wx.EVT_MENU(self, self.file_revert_id, self._FileRevertMenu)
-        wx.EVT_MENU(self, self.file_diary_options_id, self._FileDiaryOptionsMenu)
-        wx.EVT_MENU(self, self.file_options_id, self._FileOptionsMenu)
-        wx.EVT_MENU(self, self.file_quit_id, self._FileQuitMenu)
-        wx.EVT_MENU(self, self.entry_new_id, self._EntryNewMenu)
-        wx.EVT_MENU(self, self.entry_new_today_id, self._EntryNewTodayMenu)
-        wx.EVT_MENU(self, self.entry_duplicate_id, self._EntryDuplicateMenu)
-        wx.EVT_MENU(self, self.entry_redate_id, self._EntryRedateMenu)
-        wx.EVT_MENU(self, self.entry_delete_id, self._EntryDeleteMenu)
-        wx.EVT_MENU(self, self.entry_preview_id, self._EntryPreviewMenu)
-        wx.EVT_MENU(self, self.entry_print_id, self._EntryPrintMenu)
-        wx.EVT_MENU(self, self.help_update_id, self._HelpUpdateMenu)
-        wx.EVT_MENU(self, self.help_about_id, self._HelpAboutMenu)
+        self.frame.Bind(wx.EVT_CLOSE, self._FrameClosure)
+        self.Bind(wx.EVT_BUTTON, self._TodayButtonActivated, id=self.today_id)
+        self.Bind(wx.EVT_BUTTON, self._NextButtonActivated, id=self.next_id)
+        self.Bind(wx.EVT_BUTTON, self._PrevButtonActivated, id=self.prev_id)
+        self.Bind(wx.EVT_TEXT, self._EntryDataChanged, id=self.text_id)
+        self.Bind(wx.EVT_TEXT, self._EntryDataChanged, id=self.author_id)
+        self.Bind(wx.EVT_TEXT, self._EntryDataChanged, id=self.tags_id)
+        self.Bind(wx.EVT_TEXT, self._EntryDataChanged, id=self.subject_id)
+        self.Bind(wx.adv.EVT_CALENDAR, self._CalendarChanged, id=self.calendar_id)
+        self.Bind(wx.adv.EVT_CALENDAR_YEAR, self._CalendarDisplayChanged, id=self.calendar_id)
+        self.Bind(wx.adv.EVT_CALENDAR_MONTH, self._CalendarDisplayChanged, id=self.calendar_id)
+        self.Bind(wx.EVT_MENU, self._FileNewMenu, id=self.file_new_id)
+        self.Bind(wx.EVT_MENU, self._FileOpenMenu, id=self.file_open_id)
+        self.Bind(wx.EVT_MENU, self._FileSaveMenu, id=self.file_save_id)
+        self.Bind(wx.EVT_MENU, self._FileSaveAsMenu, id=self.file_saveas_id)
+        self.Bind(wx.EVT_MENU, self._FileArchiveMenu, id=self.file_archive_id)
+        self.Bind(wx.EVT_MENU, self._FileRevertMenu, id=self.file_revert_id)
+        self.Bind(wx.EVT_MENU, self._FileDiaryOptionsMenu, id=self.file_diary_options_id)
+        self.Bind(wx.EVT_MENU, self._FileOptionsMenu, id=self.file_options_id)
+        self.Bind(wx.EVT_MENU, self._FileQuitMenu, id=self.file_quit_id)
+        self.Bind(wx.EVT_MENU, self._EntryNewMenu, id=self.entry_new_id)
+        self.Bind(wx.EVT_MENU, self._EntryNewTodayMenu, id=self.entry_new_today_id)
+        self.Bind(wx.EVT_MENU, self._EntryDuplicateMenu, id=self.entry_duplicate_id)
+        self.Bind(wx.EVT_MENU, self._EntryRedateMenu, id=self.entry_redate_id)
+        self.Bind(wx.EVT_MENU, self._EntryDeleteMenu, id=self.entry_delete_id)
+        self.Bind(wx.EVT_MENU, self._EntryPreviewMenu, id=self.entry_preview_id)
+        self.Bind(wx.EVT_MENU, self._EntryPrintMenu, id=self.entry_print_id)
+        self.Bind(wx.EVT_MENU, self._HelpUpdateMenu, id=self.help_update_id)
+        self.Bind(wx.EVT_MENU, self._HelpAboutMenu, id=self.help_about_id)
 
         # Event handlers for the Tree widget.
-        wx.EVT_TREE_ITEM_ACTIVATED(self, self.datetree_id, self._TreeActivated)
-        wx.EVT_RIGHT_DOWN(self.tree, self._TreePopup)
-        wx.EVT_MENU(self.tree, self.tree_edit_id, self._TreeEditMenu)
-        wx.EVT_MENU(self.tree, self.tree_redate_id, self._TreeChangeDateMenu)
-        wx.EVT_MENU(self.tree, self.tree_dup_id, self._TreeDuplicateMenu)
-        wx.EVT_MENU(self.tree, self.tree_delete_id, self._TreeDeleteMenu)
-        wx.EVT_MENU(self.tree, self.tree_expand_id, self._TreeExpandMenu)
-        wx.EVT_MENU(self.tree, self.tree_collapse_id, self._TreeCollapseMenu)
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._TreeActivated, id=self.datetree_id)
+        self.tree.Bind(wx.EVT_RIGHT_DOWN, self._TreePopup)
+        self.tree.Bind(wx.EVT_MENU, self._TreeEditMenu, id=self.tree_edit_id)
+        self.tree.Bind(wx.EVT_MENU, self._TreeChangeDateMenu, id=self.tree_redate_id)
+        self.tree.Bind(wx.EVT_MENU, self._TreeDuplicateMenu, id=self.tree_dup_id)
+        self.tree.Bind(wx.EVT_MENU, self._TreeDeleteMenu, id=self.tree_delete_id)
+        self.tree.Bind(wx.EVT_MENU, self._TreeExpandMenu, id=self.tree_expand_id)
+        self.tree.Bind(wx.EVT_MENU, self._TreeCollapseMenu, id=self.tree_collapse_id)
         
-        wx.EVT_TREE_ITEM_ACTIVATED(self, self.tagtree_id, self._TreeActivated)
-        wx.EVT_RIGHT_DOWN(self.tag_tree, self._TreePopup)
-        wx.EVT_MENU(self.tag_tree, self.tree_edit_id, self._TreeEditMenu)
-        wx.EVT_MENU(self.tag_tree, self.tree_redate_id, self._TreeChangeDateMenu)
-        wx.EVT_MENU(self.tag_tree, self.tree_dup_id, self._TreeDuplicateMenu)
-        wx.EVT_MENU(self.tag_tree, self.tree_delete_id, self._TreeDeleteMenu)
-        wx.EVT_MENU(self.tag_tree, self.tree_expand_id, self._TreeExpandMenu)
-        wx.EVT_MENU(self.tag_tree, self.tree_collapse_id, self._TreeCollapseMenu)
+        # Event handlers for the Tag Tree widget.
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self._TreeActivated, id=self.tagtree_id)
+        self.tag_tree.Bind(wx.EVT_RIGHT_DOWN, self._TreePopup)
+        self.tag_tree.Bind(wx.EVT_MENU, self._TreeEditMenu, id=self.tree_edit_id)
+        self.tag_tree.Bind(wx.EVT_MENU, self._TreeChangeDateMenu, id=self.tree_redate_id)
+        self.tag_tree.Bind(wx.EVT_MENU, self._TreeDuplicateMenu, id=self.tree_dup_id)
+        self.tag_tree.Bind(wx.EVT_MENU, self._TreeDeleteMenu, id=self.tree_delete_id)
+        self.tag_tree.Bind(wx.EVT_MENU, self._TreeExpandMenu, id=self.tree_expand_id)
+        self.tag_tree.Bind(wx.EVT_MENU, self._TreeCollapseMenu, id=self.tree_collapse_id)
 
         # Size and position our frame.
         self.frame.SetSize(self.conf.size)
@@ -741,6 +742,7 @@ class ThotKeeper(wx.App):
 
     def OnExit(self):
         self.conf.Write()
+        return wx.App.OnExit(self)
 
     ### -----------------------------------------------------------------
     ### Utility Functions
@@ -1031,14 +1033,15 @@ class ThotKeeper(wx.App):
         # the dialog's "Today" button to set the dialog's selected
         # calendar day.
         def _ChooseDateCalendarChanged(event):
+            sys.stderr.write("date-changed")
             event.Skip()
             choose_date_dialog.EndModal(wx.ID_OK)
         def _ChooseDateTodayClicked(event):
             timestruct = time.localtime()
             date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
             choose_date_cal.SetDate(date)
-        wx.adv.EVT_CALENDAR(self, choose_date_cal_id, _ChooseDateCalendarChanged)
-        wx.EVT_BUTTON(self, choose_date_today_id, _ChooseDateTodayClicked)
+        self.Bind(wx.adv.EVT_CALENDAR, _ChooseDateCalendarChanged, id=choose_date_cal_id)
+        self.Bind(wx.EVT_BUTTON, _ChooseDateTodayClicked, id=choose_date_today_id)
         if not default_date:
             timestruct = time.localtime()
             default_date = self._MakeDateTime(timestruct[0], timestruct[1], timestruct[2])
@@ -1343,7 +1346,7 @@ class ThotKeeper(wx.App):
                 font = dialog.GetFontData().GetChosenFont()
                 self._SetFont(font)
             dialog.Destroy()
-        wx.EVT_BUTTON(self, self.choose_font_id, _ChooseFontButton)
+        self.Bind(wx.EVT_BUTTON, _ChooseFontButton, id=self.choose_font_id)
         if self.options_dialog.ShowModal() != wx.ID_OK:
             self._SetFont(oldfont)
         
@@ -1361,8 +1364,8 @@ class ThotKeeper(wx.App):
             author_name_box.Enable(True)
         def _ChooseAuthorPerEntry(event2):
             author_name_box.Enable(False)
-        wx.EVT_RADIOBUTTON(self, self.author_global_id, _ChooseAuthorGlobal)
-        wx.EVT_RADIOBUTTON(self, self.author_per_entry_id, _ChooseAuthorPerEntry)
+        self.Bind(wx.EVT_RADIOBUTTON, _ChooseAuthorGlobal, id=self.author_global_id)
+        self.Bind(wx.EVT_RADIOBUTTON, _ChooseAuthorPerEntry, id=self.author_per_entry_id)
         # Set the controls to the current settings
         author_name = self.entries.get_author_name()
         if (author_name == None):
@@ -1551,4 +1554,3 @@ def main():
     tk = ThotKeeper(file)
     tk.MainLoop()
     tk.OnExit()
-    
