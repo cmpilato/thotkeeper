@@ -50,7 +50,7 @@ def CheckForUpdates():
             except:
                 patch = -1
             return [major, minor, patch]
-        raise Exception, "Invalid version string '%s'" % (version)
+        raise Exception("Invalid version string '%s'" % (version))
         
     update_url = "http://thotkeeper.org/latest-version.json"
     response = requests.get(update_url, allow_redirects=True)
@@ -58,14 +58,14 @@ def CheckForUpdates():
         try:
             contents = response.json()
         except Exception:
-            raise Exception, "Unable to parse JSON version information"
+            raise Exception("Unable to parse JSON version information")
         new_version = _version_parse(contents['version'])
         this_version = _version_parse(__version__)
         if new_version > this_version:
-            return '.'.join(map(lambda x: str(x), new_version)), contents['url']
+            return '.'.join([str(x) for x in new_version]), contents['url']
         return None, None
-    raise Exception, "Unknown error checking for updates (status = %d)" \
-          % (response.status_code)
+    raise Exception("Unknown error checking for updates (status = %d)" \
+          % (response.status_code))
 
 
 ########################################################################
@@ -366,7 +366,7 @@ class TKEventTagTree(TKTreeCtrl):
         expected path is missing, the list will be truncated to only
         those segments which exist."""
 
-        tag_path = map(unicode, tag.split('/'))
+        tag_path = list(map(str, tag.split('/')))
         stack = []
         prev_id = root_id = self.GetRootItem()
         stack.append(root_id) # 0
@@ -400,7 +400,7 @@ class TKEventTagTree(TKTreeCtrl):
         wx.BeginBusyCursor()
         try:
             stack = self.GetTagStack(tag, year, month, day, id)
-            tag_path = map(unicode, tag.split('/'))
+            tag_path = list(map(str, tag.split('/')))
             expected_stack_len = len(tag_path) + 2  # root + tag pieces + entry
             if add == False:
                 if len(stack) == expected_stack_len:
@@ -518,8 +518,7 @@ class TKEntryPrinter(HtmlEasyPrinting):
 """ % (title or "(no title)",
        author or "(no author)",
        date or "(no date)",
-       ''.join(map(lambda x: '<p align="justify">' + x + '</p>\n',
-                   text.split('\n'))))
+       ''.join(['<p align="justify">' + x + '</p>\n' for x in text.split('\n')]))
 
     
 ########################################################################
@@ -791,7 +790,7 @@ class ThotKeeper(wx.App):
                 self.frame.SetStatusText('Loading %s...' % datafile)
                 try:
                     self.entries = tk_data.parse_data(datafile)
-                except tk_data.TKDataVersionException, e:
+                except tk_data.TKDataVersionException as e:
                     wx.MessageBox("Datafile format used by '%s' is not "
                                  "supported ." % (datafile),
                                  "Datafile Version Error",
@@ -813,10 +812,10 @@ class ThotKeeper(wx.App):
                 
                 self.tag_tree.CollapseTree()
                 self.tree.CollapseTree()
-                stack = filter(None, self.tree.GetDateStack(timestruct[0],
+                stack = [_f for _f in self.tree.GetDateStack(timestruct[0],
                                                             timestruct[1],
                                                             timestruct[2],
-                                                            None))
+                                                            None) if _f]
                 for item in stack:
                     self.tree.Expand(item)
                 self.entries.register_listener(self.tree.EntryChangedListener)
@@ -841,7 +840,7 @@ class ThotKeeper(wx.App):
     def _SaveData(self, path, entries):
         try:
             tk_data.unparse_data(path, entries)
-        except Exception, e:
+        except Exception as e:
             wx.MessageBox("Error writing datafile:\n%s" % (str(e)),
                          "Write Error", wx.OK | wx.ICON_ERROR, self.frame)
             raise
@@ -880,12 +879,11 @@ class ThotKeeper(wx.App):
 
         # Split each tag by '/', remove surrounding whitespace, remove
         # empty sections then join back together again.
-        tags = map(lambda x: '/'.join(filter(None, 
-                                             map(string.strip, 
-                                                 x.split('/')))), tags)
+        tags = ['/'.join([_f for _f in map(string.strip, 
+                                                 x.split('/')) if _f]) for x in tags]
 
         # Remove any empty tags and return.
-        return filter(None, tags)
+        return [_f for _f in tags if _f]
         
     def _TagsToText(self, tags):
         return tags and ', '.join(tags) or ''
@@ -965,7 +963,7 @@ class ThotKeeper(wx.App):
         
     def _GetFileDialog(self, title, flags, basename=''):
         directory = '.'
-        if os.environ.has_key('HOME'):
+        if 'HOME' in os.environ:
             directory = os.environ['HOME']
         if self.conf.data_file is not None:
             directory = os.path.dirname(self.conf.data_file)
@@ -1013,7 +1011,7 @@ class ThotKeeper(wx.App):
                     return current.replace(tag, rename_tag_box.GetValue(),1)
                 return current
             for en in self.entries.get_entries_by_partial_tag(tag):
-                updatedtags = map(_UpdateSingleTag, en.get_tags())
+                updatedtags = list(map(_UpdateSingleTag, en.get_tags()))
                 self.entries.store_entry(tk_data.TKEntry(en.author, en.subject, en.text,
                                                          en.year, en.month, en.day,
                                                          en.id, updatedtags))            
@@ -1452,7 +1450,7 @@ class ThotKeeper(wx.App):
         new_version = None
         try:
             new_version, info_url = CheckForUpdates()
-        except Exception, e:
+        except Exception as e:
             wx.MessageBox("Error occurred while checking for updates:\n%s" \
                           % (str(e)),
                           "Update Check", wx.OK | wx.ICON_ERROR, self.frame)
@@ -1545,9 +1543,9 @@ def main():
         if sys.argv[1] == '--update-check':
             new_version, info_url = CheckForUpdates()
             if new_version is not None:
-                print("A new version (%s) of ThotKeeper is available.\n" \
+                print(("A new version (%s) of ThotKeeper is available.\n" \
                       "For more information, visit %s." \
-                      % (new_version, info_url))
+                      % (new_version, info_url)))
             else:
                 print("This version of ThotKeeper is the latest available.")
             return
