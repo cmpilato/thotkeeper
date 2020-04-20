@@ -29,7 +29,6 @@ Linux/GTK application.
 |:------------|:-----------------|
 | ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-win32-thumb.jpg)| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-linux-thumb.jpg) |
 
-
 ## What You Need ##
 
 To run ThotKeeper, you need a few bits of software:
@@ -37,11 +36,11 @@ To run ThotKeeper, you need a few bits of software:
   * [ThotKeeper](https://github.com/cmpilato/thotkeeper/releases) —
     This one's obvious, right?
   * [Python](http://www.python.org/) — the Python programming language
-    (version 2.3 or greater)
+    (version 3.4 or greater)
   * [wxPython](http://www.wxpython.org/) — Python interfaces to the
-    wxWidgets cross-platform GUI library (version 2.8 or greater, and
-    compiled for the correct version of Python)
-  * [Requests](https://2.python-requests.org/en/master/) — Python HTTP
+    wxWidgets cross-platform GUI library (version 4.0.0 or greater, and
+    compiled for Python 3)
+  * [Requests](https://requests.readthedocs.io/en/master/) — Python HTTP
     library (required only for ThotKeeper check for updates feature)
 
 ## History ##
