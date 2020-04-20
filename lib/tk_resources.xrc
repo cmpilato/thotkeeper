@@ -170,7 +170,7 @@
   <object class="wxFrame" name="TKFrame">
     <title>ThotKeeper -- a personal daily journal application.</title>
     <centered>1</centered>
-    <style>wxDEFAULT_FRAME_STYLE|wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxTAB_TRAVERSAL</style>
+    <style>wxDEFAULT_FRAME_STYLE|wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxTAB_TRAVERSAL</style>
     <object class="wxFlexGridSizer">
       <cols>1</cols>
       <rows>1</rows>
