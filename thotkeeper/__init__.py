@@ -1,5 +1,3 @@
-#!/usr/bin/python
-#
 # ThotKeeper -- a personal daily journal application.
 #
 # Copyright (c) 2004-2020 C. Michael Pilato.  All rights reserved.
@@ -545,8 +543,7 @@ class ThotKeeper(wx.App):
         self.conf.Read()
 
         # Get the XML Resource class.
-        resource_path = os.path.join(os.path.dirname(__file__),
-                                     'tk_resources.xrc')
+        resource_path = os.path.join(os.path.dirname(__file__), 'resources.xrc')
         self.resources = wx.xrc.XmlResource(resource_path)
 
         # Store a bunch of resource IDs for easier access.

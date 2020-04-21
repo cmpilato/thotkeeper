@@ -1,5 +1,3 @@
-#!/usr/bin/python
-#
 # ThotKeeper -- a personal daily journal application.
 #
 # Copyright (c) 2004-2020 C. Michael Pilato.  All rights reserved.
