@@ -14,11 +14,12 @@ import sys
 import os
 import os.path
 import time
-import tk_data
 import wx
 from wx.adv import (CalendarCtrl, CalendarDateAttr)
 import wx.xrc
 from wx.html import HtmlEasyPrinting
+from .entries import (TKEntries, TKEntry)
+from .parser import (TKDataVersionException, parse_data, unparse_data)
 
 __version__ = "0.5-dev"
 
@@ -544,8 +545,8 @@ class ThotKeeper(wx.App):
         self.conf.Read()
 
         # Get the XML Resource class.
-        resource_path = os.path.join(os.path.dirname(sys.argv[0]),
-                                     'lib', 'tk_resources.xrc')
+        resource_path = os.path.join(os.path.dirname(__file__),
+                                     'tk_resources.xrc')
         self.resources = wx.xrc.XmlResource(resource_path)
 
         # Store a bunch of resource IDs for easier access.
@@ -787,8 +788,8 @@ class ThotKeeper(wx.App):
                     self._SaveData(datafile, None)
                 self.frame.SetStatusText('Loading %s...' % datafile)
                 try:
-                    self.entries = tk_data.parse_data(datafile)
-                except tk_data.TKDataVersionException as e:
+                    self.entries = parse_data(datafile)
+                except TKDataVersionException as e:
                     wx.MessageBox("Datafile format used by '%s' is not "
                                  "supported ." % (datafile),
                                  "Datafile Version Error",
@@ -837,7 +838,7 @@ class ThotKeeper(wx.App):
 
     def _SaveData(self, path, entries):
         try:
-            tk_data.unparse_data(path, entries)
+            unparse_data(path, entries)
         except Exception as e:
             wx.MessageBox("Error writing datafile:\n%s" % (str(e)),
                          "Write Error", wx.OK | wx.ICON_ERROR, self.frame)
@@ -981,9 +982,9 @@ class ThotKeeper(wx.App):
                     else:
                         id = id + 1
                     self.entry_form_key = TKEntryKey(year, month, day, id)
-                self.entries.store_entry(tk_data.TKEntry(author, subject, text,
-                                                         year, month, day,
-                                                         id, tags))
+                self.entries.store_entry(TKEntry(author, subject, text,
+                                                 year, month, day,
+                                                 id, tags))
             if path is None:
                 path = self.conf.data_file
             self._SaveData(path, self.entries)
@@ -1009,9 +1010,9 @@ class ThotKeeper(wx.App):
                 return current
             for en in self.entries.get_entries_by_partial_tag(tag):
                 updatedtags = list(map(_UpdateSingleTag, en.get_tags()))
-                self.entries.store_entry(tk_data.TKEntry(en.author, en.subject, en.text,
-                                                         en.year, en.month, en.day,
-                                                         en.id, updatedtags))            
+                self.entries.store_entry(TKEntry(en.author, en.subject, en.text,
+                                                 en.year, en.month, en.day,
+                                                 en.id, updatedtags))            
 
     def _QueryChooseDate(self, title, default_date=None):
         # Fetch the date selection dialog, and replace the "unknown" XRC
@@ -1073,14 +1074,14 @@ class ThotKeeper(wx.App):
                 new_id = 1
             else:
                 new_id = new_id + 1
-            self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
-                                                     entry.get_subject(),
-                                                     entry.get_text(),
-                                                     new_year,
-                                                     new_month,
-                                                     new_day,
-                                                     new_id,
-                                                     entry.get_tags()))
+            self.entries.store_entry(TKEntry(entry.get_author(),
+                                             entry.get_subject(),
+                                             entry.get_text(),
+                                             new_year,
+                                             new_month,
+                                             new_day,
+                                             new_id,
+                                             entry.get_tags()))
             self.entries.remove_entry(year, month, day, id)
             self._SaveData(self.conf.data_file, self.entries)
             self._SetEntryFormDate(new_year, new_month, new_day, new_id)
@@ -1094,14 +1095,14 @@ class ThotKeeper(wx.App):
         else:
             new_id = new_id + 1
         entry = self.entries.get_entry(year, month, day, id)
-        self.entries.store_entry(tk_data.TKEntry(entry.get_author(),
-                                                 entry.get_subject(),
-                                                 entry.get_text(),
-                                                 year,
-                                                 month,
-                                                 day,
-                                                 new_id,
-                                                 entry.get_tags()))
+        self.entries.store_entry(TKEntry(entry.get_author(),
+                                         entry.get_subject(),
+                                         entry.get_text(),
+                                         year,
+                                         month,
+                                         day,
+                                         new_id,
+                                         entry.get_tags()))
         self._SaveData(self.conf.data_file, self.entries)
         self._SetEntryFormDate(year, month, day, new_id)
         
@@ -1150,7 +1151,7 @@ class ThotKeeper(wx.App):
             return False
 
         # First, clone the entries older than YEAR/MONTH/DAY.
-        new_entries = tk_data.TKEntries()
+        new_entries = TKEntries()
         def _CloneEntryCB(entry):
             entry_year, entry_month, entry_day = entry.get_date()
             if (entry_year < year) \
