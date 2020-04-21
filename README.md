@@ -38,12 +38,10 @@ To run ThotKeeper, you need a few bits of software:
   * [Python](http://www.python.org/) — the Python programming language
   * [wxPython](http://www.wxpython.org/) — Python interfaces to the
     wxWidgets cross-platform GUI library
-  * [Requests](https://requests.readthedocs.io/en/master/) — Python HTTP
-    library
 
-See the `INSTALL` file in the root of your ThotKeeper package for
-details about which specific versions of the various dependencies are
-required and/or supported.
+For a complete list of dependecies (required and optional) and the
+specific versions thereof that ThotKeeper needs, see the `INSTALL`
+file in the root of your ThotKeeper package.
 
 ## History ##
 
