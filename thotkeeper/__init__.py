@@ -8,7 +8,10 @@
 #
 # Website: http://www.thotkeeper.org/
 
+"""ThotKeeper is a cross-platform personal daily journaling program."""
+
 import sys
+from argparse import ArgumentParser
 import os
 import os.path
 import time
@@ -69,7 +72,8 @@ def build_update_message(new_version, info_url):
     if new_version is not None:
         return (f'A new version ({new_version}) of ThotKeeper is available.\n'
                 f'For more information, visit:\n{info_url}')
-    return ('This version of ThotKeeper is the latest available.')
+    return (f'You are running the latest version ({__version__}) of '
+            f'ThotKeeper.')
 
 
 class TKOptions:
@@ -1572,14 +1576,25 @@ class ThotKeeper(wx.App):
 
 
 def main():
-    file = None
-    argc = len(sys.argv)
-    if argc > 1:
-        if sys.argv[1] == '--update-check':
-            print(build_update_message(*CheckForUpdates()))
-            return
-        else:
-            file = sys.argv[1]
-    tk = ThotKeeper(file)
+    parser = ArgumentParser(allow_abbrev=False,
+                            description=__doc__,
+                            epilog=f'Version: ThotKeeper {__version__}')
+    parser.add_argument('--file',
+                        metavar='FILE',
+                        help='the name of the ThotKeeper diary file')
+    parser.add_argument('--version',
+                        action='store_true',
+                        help='show version information')
+    parser.add_argument('--update-check',
+                        action='store_true',
+                        help='check for a new version of ThotKeeper')
+    args = parser.parse_args()
+    if args.version:
+        print(__version__)
+        return
+    if args.update_check:
+        print(build_update_message(*CheckForUpdates()))
+        return
+    tk = ThotKeeper(args.file)
     tk.MainLoop()
     tk.OnExit()
