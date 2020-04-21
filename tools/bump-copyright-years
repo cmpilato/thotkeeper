@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2004-2020 C. Michael Pilato.  All rights reserved.
+# Copyright (c) 2004-2020 C. Michael Pilato.    All rights reserved.
 #
 # By using this file, you agree to the terms and conditions set forth in
 # the LICENSE.html file which can be found at the top level of the ViewVC
@@ -23,46 +23,45 @@ _copyright_re = re.compile(r'Copyright (\(c\)|&copy;) ([0-9]{4}-)?([0-9]{4}) '
                            r'C. Michael Pilato')
 
 def replace_end_year(path, year):
-  updated = False
-  lines = open(path, 'r').readlines()
-  for i in range(len(lines)):
-    line = lines[i]
-    new_line = None
-    m = _copyright_re.search(line)
-    if not m:
-      continue 
-    if m.group(2):
-      lines[i] = line[:m.start(3)] + year + line[m.end(3):]
-      open(path, 'w').write(''.join(lines))
-    elif m.group(3) != year:
-      lines[i] = line[:m.end(3)] + '-' + year + line[m.end(3):]
-      open(path, 'w').write(''.join(lines))
+    updated = False
+    lines = open(path, 'r').readlines()
+    for i in range(len(lines)):
+        line = lines[i]
+        new_line = None
+        m = _copyright_re.search(line)
+        if not m:
+            continue 
+        if m.group(2):
+            lines[i] = line[:m.start(3)] + year + line[m.end(3):]
+            open(path, 'w').write(''.join(lines))
+        elif m.group(3) != year:
+            lines[i] = line[:m.end(3)] + '-' + year + line[m.end(3):]
+            open(path, 'w').write(''.join(lines))
 
 def bump_years_recursive(target_dir, year):
-  children = os.listdir(target_dir)
-  for child in children:
-    child_path = os.path.join(target_dir, child)
-    if os.path.isfile(child_path):
-      replace_end_year(child_path, year)
-    elif os.path.isdir(child_path):
-      bump_years_recursive(child_path, year)
+    children = os.listdir(target_dir)
+    for child in children:
+        child_path = os.path.join(target_dir, child)
+        if os.path.isfile(child_path):
+            replace_end_year(child_path, year)
+        elif os.path.isdir(child_path):
+            bump_years_recursive(child_path, year)
 
 def bump_years(target_dir):
-  year = time.strftime('%Y')
-  long_date = time.strftime('%B %d, %Y')
-  bump_years_recursive(target_dir, year)
-  sys.stdout.write("Copyright years bumped.\n\n")
-    
+    year = time.strftime('%Y')
+    long_date = time.strftime('%B %d, %Y')
+    bump_years_recursive(target_dir, year)
+    sys.stdout.write("Copyright years bumped.\n\n")
+        
 if __name__ == "__main__":
-  try:
-    target_dir = sys.argv[1]
-  except:
-    sys.stderr.write("""\
+    try:
+        target_dir = sys.argv[1]
+    except:
+        sys.stderr.write("""\
 Usage: bump-copyright-years DIRECTORY
 
 Recursively update the copyright years associated with files carrying
-the 'C. Michael Pilato' in and under DIRECTORY to include the current
-year.
+'C. Michael Pilato' in and under DIRECTORY to include the current year.
 """)
-    sys.exit(1)
-  bump_years(target_dir)
+        sys.exit(1)
+    bump_years(target_dir)
