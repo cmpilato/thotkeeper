@@ -795,7 +795,7 @@ class ThotKeeper(wx.App):
                 self.frame.SetStatusText('Loading %s...' % datafile)
                 try:
                     self.entries = parse_data(datafile)
-                except TKDataVersionException as e:
+                except TKDataVersionException:
                     wx.MessageBox((f'Datafile format used by "{datafile}" is '
                                    f'not supported.'),
                                   'Datafile Version Error',
@@ -846,7 +846,7 @@ class ThotKeeper(wx.App):
         try:
             unparse_data(path, entries)
         except Exception as e:
-            wx.MessageBox('Error writing datafile:\n{e}',
+            wx.MessageBox(f'Error writing datafile:\n{e}',
                           'Write Error',
                           wx.OK | wx.ICON_ERROR,
                           self.frame)
