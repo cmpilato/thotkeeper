@@ -19,7 +19,8 @@ import os
 import time
 import re
 
-_copyright_re = re.compile(r'Copyright (\(c\)|&copy;) ([0-9]{4}-)?([0-9]{4}) C. Michael Pilato')
+_copyright_re = re.compile(r'Copyright (\(c\)|&copy;) ([0-9]{4}-)?([0-9]{4}) '
+                           r'C. Michael Pilato')
 
 def replace_end_year(path, year):
   updated = False

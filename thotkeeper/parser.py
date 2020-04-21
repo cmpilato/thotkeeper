@@ -17,6 +17,7 @@ from .entries import (TKEntries, TKEntry)
 
 TK_DATA_VERSION = 1
 
+
 class TKDataVersionException(Exception):
     pass
 
@@ -47,7 +48,7 @@ class TKDataParser(xml.sax.handler.ContentHandler):
     purposes of distinguishing multiple entries for a given day.  Adds
     an optional <tags> tag to entries, which contains 1 or more <tag>
     tags.
-    
+
        <diary version="1">
          <author global="True/False">CDATA</author>
          <entries>
@@ -63,7 +64,6 @@ class TKDataParser(xml.sax.handler.ContentHandler):
            ...
          </entries>
        </diary>
-       
     """
 
     TKJ_TAG_AUTHOR  = 'author'
@@ -76,16 +76,16 @@ class TKDataParser(xml.sax.handler.ContentHandler):
     TKJ_TAG_TEXT    = 'text'
 
     _valid_parents = {
-        TKJ_TAG_AUTHOR  : [ TKJ_TAG_DIARY, TKJ_TAG_ENTRY ],
-        TKJ_TAG_DIARY   : [  ],
-        TKJ_TAG_ENTRIES : [ TKJ_TAG_DIARY ],
-        TKJ_TAG_ENTRY   : [ TKJ_TAG_ENTRIES ],
-        TKJ_TAG_SUBJECT : [ TKJ_TAG_ENTRY ],
-        TKJ_TAG_TAG     : [ TKJ_TAG_TAGS ],
-        TKJ_TAG_TAGS    : [ TKJ_TAG_ENTRY ],
-        TKJ_TAG_TEXT    : [ TKJ_TAG_ENTRY ],
+        TKJ_TAG_AUTHOR: [TKJ_TAG_DIARY, TKJ_TAG_ENTRY],
+        TKJ_TAG_DIARY: [],
+        TKJ_TAG_ENTRIES: [TKJ_TAG_DIARY],
+        TKJ_TAG_ENTRY: [TKJ_TAG_ENTRIES],
+        TKJ_TAG_SUBJECT: [TKJ_TAG_ENTRY],
+        TKJ_TAG_TAG: [TKJ_TAG_TAGS],
+        TKJ_TAG_TAGS: [TKJ_TAG_ENTRY],
+        TKJ_TAG_TEXT: [TKJ_TAG_ENTRY],
         }
-    
+
     def __init__(self, entries):
         self.cur_entry = None
         self.buffer = None
@@ -102,47 +102,47 @@ class TKDataParser(xml.sax.handler.ContentHandler):
             return
         if parent_tag and valid_parents and parent_tag in valid_parents:
             return
-        raise Exception("Unexpected tag (%s) in parent (%s)" \
+        raise Exception("Unexpected tag (%s) in parent (%s)"
                         % (name, parent_tag and parent_tag or ""))
-        
+
     def startElement(self, name, attrs):
         # Validate ...
         parent_tag = self.tag_stack and self.tag_stack[-1] or None
         self._validate_tag(name, parent_tag)
         self.tag_stack.append(name)
-        
+
         # ... and operate.
         if name == self.TKJ_TAG_DIARY:
             try:
                 version = int(attrs['version'])
-            except:
+            except Exception:
                 version = 0
             if version > TK_DATA_VERSION:
                 raise TKDataVersionException("Data version newer than program "
                                              "version; please upgrade.")
         elif name == self.TKJ_TAG_ENTRY:
             attr_names = list(attrs.keys())
-            if not (('month' in attr_names) \
-                    and ('year' in attr_names) \
-                    and ('day' in attr_names)):
+            if not (('month' in attr_names) and
+                    ('year' in attr_names) and
+                    ('day' in attr_names)):
                 raise Exception("Invalid XML file.")
             self.cur_entry = dict(attrs)
             if not ('id' in attr_names):
                 self.cur_entry['id'] = '1'
         elif name == self.TKJ_TAG_AUTHOR:
             if not self.cur_entry:
-                if (not 'global' in list(attrs.keys())):
+                if 'global' not in list(attrs.keys()):
                     raise Exception("Invalid XML file.")
-                if (attrs['global'].lower() == 'false'):
+                if attrs['global'].lower() == 'false':
                     self.entries.set_author_global(False)
                 else:
                     self.entries.set_author_global(True)
             self.buffer = ''
         elif name == self.TKJ_TAG_TAGS:
             self.cur_entry['tags'] = []
-        elif name == self.TKJ_TAG_SUBJECT \
-             or name == self.TKJ_TAG_TAG \
-             or name == self.TKJ_TAG_TEXT:
+        elif name in [self.TKJ_TAG_SUBJECT,
+                      self.TKJ_TAG_TAG,
+                      self.TKJ_TAG_TEXT]:
             self.buffer = ''
 
     def characters(self, ch):
@@ -171,12 +171,12 @@ class TKDataParser(xml.sax.handler.ContentHandler):
             else:
                 self.entries.set_author_name(self.buffer)
             self.buffer = None
-        elif name == self.TKJ_TAG_SUBJECT \
-             or name == self.TKJ_TAG_TEXT:
+        elif name in [self.TKJ_TAG_SUBJECT, self.TKJ_TAG_TEXT]:
             self.cur_entry[name] = self.buffer
             self.buffer = None
         elif name == self.TKJ_TAG_TAG:
             self.cur_entry['tags'].append(self.buffer)
+
 
 def parse_data(datafile):
     """Parse an XML file, returning a TKEntries object."""
@@ -185,7 +185,8 @@ def parse_data(datafile):
         handler = TKDataParser(entries)
         xml.sax.parse(datafile, handler)
     return entries
-    
+
+
 def unparse_data(datafile, entries):
     """Unparse a TKEntries object into an XML file, using an
     intermediate tempfile to try to reduce the chances of clobbering a
@@ -197,11 +198,12 @@ def unparse_data(datafile, entries):
                  '<diary version="%d">\n' % (TK_DATA_VERSION))
         if not entries:
             entries = TKEntries()
-        if (entries.get_author_name() != None):
-            fp.write(' <author global="%s">%s</author>\n' 
+        if entries.get_author_name() is not None:
+            fp.write(' <author global="%s">%s</author>\n'
                      % (entries.get_author_global() and "true" or "false",
                         entries.get_author_name().encode('utf8')))
         fp.write(' <entries>\n')
+
         def _write_entry(entry):
             year, month, day = entry.get_date()
             id = entry.get_id()

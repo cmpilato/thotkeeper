@@ -10,6 +10,7 @@
 
 from functools import reduce
 
+
 class TKEntry:
     def __init__(self, author='', subject='', text='',
                  year=None, month=None, day=None, id=None, tags=[]):
@@ -33,15 +34,15 @@ class TKEntry:
 
     def get_date(self):
         return self.year, self.month, self.day
-    
+
     def get_id(self):
         return self.id
-    
+
     def get_tags(self):
         return self.tags
 
     def __eq__(self, other):
-        return ([self.year, self.month, self.day, self.id] == 
+        return ([self.year, self.month, self.day, self.id] ==
                 [other.year, other.month, other.day, other.id])
 
     def __lt__(self, other):
@@ -63,7 +64,7 @@ class TKEntries:
         the diary entries changes.  FUNC is a callback which accepts
         the following: this instance, an event, year, month, and day."""
         self.listeners.append(func)
-        
+
     def register_tag_listener(self, func):
         self.tag_listeners.append(func)
 
@@ -84,14 +85,14 @@ class TKEntries:
                     ids.sort()
                     for id in ids:
                         func(self.get_entry(year, month, day, id))
-        
+
     def enumerate_tag_entries(self, func):
         tags = sorted(self.get_tags())
         for tag in tags:
             entries = sorted(self.get_entries_by_tag(tag))
             for entry in entries:
                 func(entry, tag)
-    
+
     def _update_tags(self, oldtags, newtags, entry):
         """Update the tag set association for ENTRY.  OLDTAGS are the
         tags is used to carry; NEWTAGS are the tags it now carries.
@@ -116,9 +117,9 @@ class TKEntries:
                 self.tag_tree[tag].remove(entry_key)
                 for func in self.tag_listeners:
                     func(tag, entry, False)
-                if not self.tag_tree[tag]: 
+                if not self.tag_tree[tag]:
                     del self.tag_tree[tag]
-        
+
     def store_entry(self, entry):
         year, month, day = entry.get_date()
         if year not in self.entry_tree:
@@ -136,7 +137,7 @@ class TKEntries:
         self._update_tags(oldtags, newtags, entry)
         for func in self.listeners:
             func(entry, year, month, day, id)
-                    
+
     def remove_entry(self, year, month, day, id):
         entry = self.entry_tree[year][month][day][id]
         oldtags = entry.tags
@@ -160,55 +161,56 @@ class TKEntries:
         """Return the months in YEAR which have days with associated
         TKEntry objects."""
         return list(self.entry_tree[year].keys())
-        
+
     def get_days(self, year, month):
         """Return the days in YEAR and MONTH which have associated
         TKEntry objects."""
         return list(self.entry_tree[year][month].keys())
-    
+
     def get_ids(self, year, month, day):
         """Return the IDS in YEAR, MONTH, and DAY which have associated
         TKEntry objects."""
         return list(self.entry_tree[year][month][day].keys())
-    
+
     def get_tags(self):
         return list(self.tag_tree.keys())
-    
+
     def get_entries_by_tag(self, tag):
         entry_keys = self.tag_tree[tag]
         return [self.entry_tree[x[0]][x[1]][x[2]][x[3]] for x in entry_keys]
-                   
+
     def get_entries_by_partial_tag(self, tagstart):
         """Return all the entries that start with tagstart"""
         tagstartsep = tagstart + '/'
-        taglist = [x for x in list(self.tag_tree.keys()) if ((x==tagstart) or (x.startswith(tagstartsep)))]
+        taglist = [x for x in list(self.tag_tree.keys())
+                   if ((x == tagstart) or (x.startswith(tagstartsep)))]
         entrylist = list(map(self.get_entries_by_tag, taglist))
-        return reduce(lambda x,y: x+y, entrylist)
-    
+        return reduce(lambda x, y: x + y, entrylist)
+
     def get_entry(self, year, month, day, id):
         """Return the TKEntry associated with YEAR, MONTH, and DAY,
         or None if no such entry exists."""
         try:
             return self.entry_tree[year][month][day][id]
-        except:
+        except Exception:
             return None
-    
+
     def get_first_id(self, year, month, day):
         """Return the id of the first entry for that day"""
         try:
             day_keys = list(self.entry_tree[year][month][day].keys())
             day_keys.sort()
             return day_keys[0]
-        except:
+        except Exception:
             return None
-        
+
     def get_last_id(self, year, month, day):
         """Return the id of the last entry for that day"""
         try:
             day_keys = list(self.entry_tree[year][month][day].keys())
             day_keys.sort()
             return day_keys[-1]
-        except:
+        except Exception:
             return None
 
     def get_new_id(self, year, month, day):
@@ -218,7 +220,7 @@ class TKEntries:
             return None
         else:
             return id + 1
-        
+
     def get_id_pos(self, year, month, day, id):
         """Return 1-based position of ID in the ordered list of
         entries for YEAR, MONTH, DAY.  If ID is not found, return the
@@ -227,13 +229,13 @@ class TKEntries:
         try:
             day_keys = list(self.entry_tree[year][month][day].keys())
             day_keys.sort()
-        except:
+        except Exception:
             day_keys = []
         try:
             return day_keys.index(id) + 1
-        except:
+        except Exception:
             return len(day_keys) + 1
-        
+
     def get_next_id(self, year, month, day, id):
         """Return the id of the entry (in the set of entries for YEAR,
         MONTH, DAY) which follows the entry for ID, or None if no
@@ -242,10 +244,10 @@ class TKEntries:
             day_keys = list(self.entry_tree[year][month][day].keys())
             day_keys.sort()
             idx = day_keys.index(id)
-            return day_keys[idx+1]
-        except:
+            return day_keys[idx + 1]
+        except Exception:
             return None
-        
+
     def get_prev_id(self, year, month, day, id):
         """Return the id of the entry (in the set of entries for YEAR,
         MONTH, DAY) which precedes the entry for ID, or the last entry
@@ -254,19 +256,18 @@ class TKEntries:
             day_keys = list(self.entry_tree[year][month][day].keys())
             day_keys.sort()
             idx = day_keys.index(id)
-            return day_keys[idx-1]
-        except:
+            return day_keys[idx - 1]
+        except Exception:
             return self.get_last_id(year, month, day)
 
     def get_author_name(self):
         return self.author_name
-    
+
     def get_author_global(self):
         return self.author_global
-    
+
     def set_author_name(self, name):
         self.author_name = name
-        
+
     def set_author_global(self, enable):
         self.author_global = enable
-
