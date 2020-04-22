@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=ThotKeeper
+Comment=Cross-platform personal daily journal
+Exec=/PATH/TO/THOTKEEPER/bin/thotkeeper
+Icon=/PATH/TO/THOTKEEPER/icons/thotkeeper.svg
+Terminal=false
+Categories=
