@@ -22,7 +22,7 @@ from wx.html import HtmlEasyPrinting
 from .entries import (TKEntries, TKEntry)
 from .parser import (TKDataVersionException, parse_data, unparse_data)
 
-__version__ = "0.5-dev"
+__version__ = "0.5.0-dev"
 
 month_names = ['January', 'February', 'March', 'April',
                'May', 'June', 'July', 'August',

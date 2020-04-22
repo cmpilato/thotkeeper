@@ -1,2 +1,1 @@
-include README.md CHANGES LICENSE
-include thotkeeper/resources.xrc
+include README.md INSTALL.md CHANGES LICENSE

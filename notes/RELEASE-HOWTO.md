@@ -31,12 +31,12 @@ Tag to release and push the tag upstream.
     > $ git tag -a -m "Tag the X.Y.Z release." X.Y.Z  
     > $ git push origin tag X.Y.Z
 
-Build the release archives with the `make-release` script.
+Build the release archives using setuptools.
 
-    > $ tools/make-release ~/Desktop X.Y.Z
+    > $ ./setup.py sdist --formats bztar,zip
 
-Make sure that the generated files have the right stuff (and don't have the
-wrong stuff).
+Make sure that the generated files (which will lands in `dist/`) have
+the right stuff (and don't have the wrong stuff).
 
 Now, edit the GitHub release (at https://github.com/cmpilato/thotkeeper/releases/tag/X.Y.Z):
 
@@ -51,7 +51,7 @@ Now, edit the GitHub release (at https://github.com/cmpilato/thotkeeper/releases
           * Fixed some bugs.
          ```
          
-    * Attach the release archive files (tar.gz and zip) to the release.
+    * Attach the release archive files (tar.bz2 and zip) to the release.
 
 ## After the Release ##
 
