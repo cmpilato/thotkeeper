@@ -7,3 +7,5 @@ ignore =
     E221,
     # E402 module level import not at top of file
     E402,
+    # W504 line break after binary operator
+    W504,
