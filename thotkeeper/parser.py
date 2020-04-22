@@ -201,7 +201,7 @@ def unparse_data(datafile, entries):
         if entries.get_author_name() is not None:
             fp.write(' <author global="%s">%s</author>\n'
                      % (entries.get_author_global() and "true" or "false",
-                        entries.get_author_name().encode('utf8')))
+                        _xml_escape(entries.get_author_name())))
         fp.write(' <entries>\n')
 
         def _write_entry(entry):
