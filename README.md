@@ -40,8 +40,8 @@ To run ThotKeeper, you need a few bits of software:
     wxWidgets cross-platform GUI library
 
 For a complete list of dependecies (required and optional) and the
-specific versions thereof that ThotKeeper needs, see the `INSTALL`
-file in the root of your ThotKeeper package.
+specific versions thereof that ThotKeeper needs, see the
+[INSTALL.md](./INSTALL.md) file in the root of your ThotKeeper package.
 
 ## History ##
 
