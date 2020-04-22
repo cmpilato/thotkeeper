@@ -20,6 +20,10 @@ setup(
     package_data={
         'thotkeeper': ['thotkeeper/*.xrc'],
     },
+    data_files=[
+        ('share/pixmaps', ['icons/thotkeeper.xpm']),
+        ('share/icons/hicolor/scalable/apps', ['icons/thotkeeper.svg']),
+    ],
     entry_points={
         'console_scripts': [
             'thotkeeper = thotkeeper:main',
