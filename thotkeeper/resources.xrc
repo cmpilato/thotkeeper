@@ -487,7 +487,7 @@
               <object class="unknown" name="TKChooseDateCalendar"/>
               <flag>wxALL</flag>
               <border>5</border>
-              <minsize>220,165</minsize>
+              <minsize>240,165</minsize>
             </object>
             <object class="sizeritem">
               <object class="wxButton" name="TKChooseDateToday">

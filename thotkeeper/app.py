@@ -12,7 +12,7 @@ import os
 import os.path
 import time
 import wx
-from wx.adv import (CalendarCtrl, CalendarDateAttr)
+from wx.adv import (GenericCalendarCtrl, CalendarDateAttr)
 import wx.xrc
 from wx.html import HtmlEasyPrinting
 from .version import __version__
@@ -367,7 +367,7 @@ class TKEventTagTree(TKTreeCtrl):
             wx.EndBusyCursor()
 
 
-class TKEventCal(CalendarCtrl):
+class TKEventCal(GenericCalendarCtrl):
     def SetDayAttr(self, day, has_event):
         if has_event:
             attr = CalendarDateAttr()
@@ -757,6 +757,8 @@ class ThotKeeper(wx.App):
                                   wx.OK | wx.ICON_ERROR,
                                   self.frame)
                     return
+                finally:
+                    self.frame.SetStatusText('')
                 timestruct = time.localtime()
 
                 def _AddEntryToTree(entry):
@@ -997,7 +999,9 @@ class ThotKeeper(wx.App):
         choose_date_dialog.SetTitle(title)
         choose_date_panel = choose_date_dialog.FindWindowById(
             self._GetXRCID('TKChooseDatePanel'))
-        choose_date_cal = wx.adv.CalendarCtrl(parent=choose_date_panel)
+        choose_date_cal = wx.adv.GenericCalendarCtrl(
+            parent=choose_date_panel,
+            style=wx.adv.CAL_SEQUENTIAL_MONTH_SELECTION)
         self.resources.AttachUnknownControl('TKChooseDateCalendar',
                                             choose_date_cal,
                                             choose_date_panel)
