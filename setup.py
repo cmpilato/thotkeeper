@@ -18,7 +18,7 @@ setup(
     url='https://github.com/cmpilato/thotkeeper',
     packages=find_packages(),
     package_data={
-        'thotkeeper': ['thotkeeper/*.xrc'],
+        'thotkeeper': ['*.xrc'],
     },
     data_files=[
         ('share/pixmaps', ['icons/thotkeeper.xpm']),
