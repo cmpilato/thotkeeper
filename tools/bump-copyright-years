@@ -48,6 +48,10 @@ def bump_years_recursive(target_dir, year):
     children = os.listdir(target_dir)
     for child in children:
         child_path = os.path.join(target_dir, child)
+        if child in [".git", ".svn"]:
+            sys.stderr.write("Skipping SCM administrative directory: %s\n"
+                             % (child_path))
+            continue
         if os.path.isfile(child_path):
             try:
                 replace_end_year(child_path, year)
