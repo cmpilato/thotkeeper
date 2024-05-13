@@ -27,7 +27,7 @@ Linux/GTK application.
 
 | **Windows** | **Ubuntu Linux** |
 |:------------|:-----------------|
-| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-win32-thumb.jpg)| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-linux-thumb.jpg) |
+| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-win32.jpg)| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-linux.jpg) |
 
 ## What You Need ##
 
