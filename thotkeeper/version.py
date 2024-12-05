@@ -1,6 +1,6 @@
 # ThotKeeper -- a personal daily journal application.
 #
-# Copyright (c) 2004-2021 C. Michael Pilato.  All rights reserved.
+# Copyright (c) 2004-2024 C. Michael Pilato.  All rights reserved.
 #
 # By using this file, you agree to the terms and conditions set forth in
 # the LICENSE file which can be found at the top level of the ThotKeeper
