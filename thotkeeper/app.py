@@ -6,7 +6,7 @@
 # the LICENSE file which can be found at the top level of the ThotKeeper
 # distribution.
 #
-# Website: http://www.thotkeeper.org/
+# Website: https://github.com/cmpilato/thotkeeper
 
 import os
 import os.path
@@ -1438,7 +1438,7 @@ class ThotKeeper(wx.App):
                        f'the BSD License.  Question, comments, and code '
                        f'contributions are welcome.\n'
                        f'\n'
-                       f'Website: http://www.thotkeeper.org/\n'
+                       f'Website: https://github.com/cmpilato/thotkeeper\n'
                        f'Version: {__version__}\n'),
                       'About ThotKeeper',
                       wx.OK | wx.CENTER,

@@ -6,7 +6,7 @@
 # the LICENSE file which can be found at the top level of the ThotKeeper
 # distribution.
 #
-# Website: http://www.thotkeeper.org/
+# Website: https://github.com/cmpilato/thotkeeper
 
 from functools import reduce
 

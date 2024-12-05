@@ -58,4 +58,4 @@ What If I Have Problems?
 ========================
 
 Question, comments, and code contributions are always welcome at
-http://www.thotkeeper.org/.
+our GitHub project page, https://github.com/cmpilato/thotkeeper.

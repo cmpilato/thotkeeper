@@ -6,7 +6,7 @@
 # the LICENSE file which can be found at the top level of the ThotKeeper
 # distribution.
 #
-# Website: http://www.thotkeeper.org/
+# Website: https://github.com/cmpilato/thotkeeper
 
 """ThotKeeper is a cross-platform personal daily journaling program."""
 
@@ -17,7 +17,8 @@ from .version import __version__
 
 def main():
     epilog = (f'You are running ThotKeeper version {__version__}.  '
-              f'See http://thotkeeper.org for more about this software.')
+              'See https://github.com/cmpilato/thotkeeper for more '
+              'about this software.')
     parser = ArgumentParser(allow_abbrev=False,
                             description=__doc__,
                             epilog=epilog)

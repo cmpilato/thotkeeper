@@ -6,14 +6,16 @@
 # the LICENSE file which can be found at the top level of the ThotKeeper
 # distribution.
 #
-# Website: http://www.thotkeeper.org/
+# Website: https://github.com/cmpilato/thotkeeper
 
 import requests
 from requests.exceptions import HTTPError
 from .version import (__version__, parse_version)
 
 
-def update_check(update_url='http://thotkeeper.org/latest-version.json'):
+LATEST_VERSION_URL = 'https://raw.githubusercontent.com/cmpilato/thotkeeper/refs/heads/master/www/latest-version.json'
+
+def update_check(update_url=LATEST_VERSION_URL):
     """Consult the contents of a web-accessible JSON file for the
     latest available version of ThotKeeper (and its download
     information).  Return a 2-tuple containing the new version and its
