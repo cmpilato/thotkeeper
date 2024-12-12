@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: thotkeeper
+  annotations:
+    github.com/project-slug: cmpilato/thotkeeper
+spec:
+  type: other
+  lifecycle: unknown
+  owner: cmpilato
