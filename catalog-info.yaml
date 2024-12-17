@@ -4,6 +4,7 @@ metadata:
   name: thotkeeper
   annotations:
     github.com/project-slug: cmpilato/thotkeeper
+    argocd/app-name: thotkeeper
 spec:
   type: other
   lifecycle: unknown
