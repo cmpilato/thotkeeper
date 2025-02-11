@@ -25,7 +25,7 @@ setup(
         ('share/icons/hicolor/scalable/apps', ['icons/thotkeeper.svg']),
     ],
     entry_points={
-        'console_scripts': [
+        'gui_scripts': [
             'thotkeeper = thotkeeper:main',
         ],
     },
