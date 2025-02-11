@@ -37,11 +37,9 @@ def replace_end_year(path, year):
         if m.group(2):
             lines[i] = line[:m.start(3)] + year + line[m.end(3):]
             open(path, 'w').write(''.join(lines))
-            break
         elif m.group(3) != year:
             lines[i] = line[:m.end(3)] + '-' + year + line[m.end(3):]
             open(path, 'w').write(''.join(lines))
-            break
 
 
 def bump_years_recursive(target_dir, year):

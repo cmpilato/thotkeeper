@@ -1431,7 +1431,7 @@ class ThotKeeper(wx.App):
     def _HelpAboutMenu(self, event):
         wx.MessageBox((f'ThotKeeper - a personal daily journal application.\n'
                        f'\n'
-                       f'Copyright (c) 2004-2020 C. Michael Pilato.  '
+                       f'Copyright (c) 2004-2025 C. Michael Pilato.  '
                        f'All rights reserved.\n'
                        f'\n'
                        f'ThotKeeper is open source software developed under '
