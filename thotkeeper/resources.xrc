@@ -197,7 +197,7 @@
                         <object class="wxButton" name="TKToday">
                           <label>Today</label>
                         </object>
-                        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+                        <flag>wxALL|wxEXPAND</flag>
                         <border>5</border>
                       </object>
                       <object class="sizeritem">
@@ -493,7 +493,7 @@
               <object class="wxButton" name="TKChooseDateToday">
                 <label>Today</label>
               </object>
-              <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+              <flag>wxALL|wxEXPAND</flag>
               <border>5</border>
             </object>
             <cols>1</cols>

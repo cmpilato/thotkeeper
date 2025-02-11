@@ -35,8 +35,8 @@ To run ThotKeeper, you need a few bits of software:
 
   * [ThotKeeper](https://github.com/cmpilato/thotkeeper/releases) —
     This one's obvious, right?
-  * [Python](http://www.python.org/) — the Python programming language
-  * [wxPython](http://www.wxpython.org/) — Python interfaces to the
+  * [Python](http://www.python.org/) 3.4+ — the Python programming language
+  * [wxPython](http://www.wxpython.org/) 4.2.0+ — Python interfaces to the
     wxWidgets cross-platform GUI library
 
 For a complete list of dependecies (required and optional) and the
