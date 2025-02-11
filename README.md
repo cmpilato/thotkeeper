@@ -1,4 +1,4 @@
-![https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-logo.jpg](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-logo.jpg)
+![https://raw.githubusercontent.com/cmpilato/thotkeeper/main/www/thotkeeper-logo.jpg](https://raw.githubusercontent.com/cmpilato/thotkeeper/main/www/thotkeeper-logo.jpg)
 
 ## ThotKeeper — cross-platform personal daily journaling ##
 
@@ -27,7 +27,7 @@ Linux/GTK application.
 
 | **Windows** | **Ubuntu Linux** |
 |:------------|:-----------------|
-| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-win32.jpg)| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/master/www/thotkeeper-linux.jpg) |
+| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/main/www/thotkeeper-win32.jpg)| ![](https://raw.githubusercontent.com/cmpilato/thotkeeper/main/www/thotkeeper-linux.jpg) |
 
 ## What You Need ##
 

@@ -1,9 +1,9 @@
 # Releasing ThotKeeper #
 
-Primary development of ThotKeeper occurs on `master` branch.  We use
+Primary development of ThotKeeper occurs on `main` branch.  We use
 feature branches for larger things, but currently have no need for
 published release branches.  At the moment, the general approach to
-releases involves tagging a small variant of the current `master` and
+releases involves tagging a small variant of the current `main` and
 blessing that as a release.
 
 ## Release Process ##
@@ -55,10 +55,10 @@ Now, edit the GitHub release (at https://github.com/cmpilato/thotkeeper/releases
 
 ## After the Release ##
 
-After releasing a new version, we need to make sure that `master` is ready to
+After releasing a new version, we need to make sure that `main` is ready to
 continue on into the future.  So switch back to that branch.
 
-    > $ git checkout master
+    > $ git checkout main
   
 Merge the changes you made on the release branch.
 

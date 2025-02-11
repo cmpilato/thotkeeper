@@ -14,7 +14,7 @@ from .version import (__version__, parse_version)
 
 
 LATEST_VERSION_URL = ('https://raw.githubusercontent.com/cmpilato/thotkeeper/'
-                      'refs/heads/master/www/latest-version.json')
+                      'refs/heads/main/www/latest-version.json')
 
 
 def update_check(update_url=LATEST_VERSION_URL):
