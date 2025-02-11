@@ -1,0 +1,40 @@
+[build-system]
+requires = [
+    "setuptools>=64",
+    "wheel",
+    "setuptools_scm>=8",
+    "twine",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thotkeeper"
+dynamic = ["version"]
+authors = [
+    {name="C. Michael Pilato", email="cmpilato@red-bean.com"},
+]
+description = "ThotKeeper - cross-platform personal daily journaling"
+dependencies = []
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = []
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+fallback_version = "0.0.0"
+
+[project.scripts]
+thotkeeper = "thotkeeper:main"
+
+[tool.black]
+line-length = 100
+
+[tool.mypy]
+strict = true
+exclude = []

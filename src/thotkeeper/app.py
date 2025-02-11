@@ -15,9 +15,11 @@ import wx
 from wx.adv import (GenericCalendarCtrl, CalendarDateAttr)
 import wx.xrc
 from wx.html import HtmlEasyPrinting
-from .version import __version__
-from .entries import (TKEntries, TKEntry)
-from .parser import (TKDataVersionException, parse_data, unparse_data)
+from thotkeeper.version import __version__
+from thotkeeper.entries import (TKEntries, TKEntry)
+from thotkeeper.parser import (
+    TKDataVersionException, parse_data, unparse_data
+)
 
 
 month_names = ['January', 'February', 'March', 'April',
@@ -1446,8 +1448,8 @@ class ThotKeeper(wx.App):
 
     def _HelpUpdateMenu(self, event):
         new_version = None
-        from .utils import (update_check, get_update_message)
         try:
+            from thotkeeper.utils import (update_check, get_update_message)
             new_version, info_url = update_check()
         except Exception as e:
             wx.MessageBox((f'Error occurred while checking for updates\n'

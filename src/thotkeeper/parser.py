@@ -13,7 +13,7 @@ import shutil
 import tempfile
 import xml.sax
 from xml.sax.saxutils import escape as _xml_escape
-from .entries import (TKEntries, TKEntry)
+from thotkeeper.entries import (TKEntries, TKEntry)
 
 TK_DATA_VERSION = 1
 
