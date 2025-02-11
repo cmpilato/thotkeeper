@@ -1,14 +1,20 @@
-Version ??? (released ????-??-??)
+ChangeLog
+=========
 
- * now requires Python 3.4 or better (issue #48)
+Version ??? (released ????-??-??)
+-----------------------------------
+
+ * now require Python 3 (issue #48)
 
 Version 0.4.1 (released 2019-11-22)
+-----------------------------------
 
  * miscellaneous UI enhancements
  * feature: entry archive support (issue #43)
  * fix: broken check for updates (issue #46)
 
 Version 0.4.0 (released 2009-06-18)
+-----------------------------------
 
  * feature: support tag renaming (issue #17)
  * feature: allow entry duplication (issue #34)
@@ -17,12 +23,14 @@ Version 0.4.0 (released 2009-06-18)
  * fix: global author name not used when previewing/printing (issue #36)
 
 Version 0.3.0 (released 2008-07-04)
+-----------------------------------
 
  * feature: add "check for updates" support
  * fix: support international character (issue #24)
  * fix: tag support not working on Python 2.3 (issue #25)
 
 Version 0.2.0 (released 2008-05-19)
+-----------------------------------
 
  * feature: multiple entries per day (issue #1)
  * feature: heirarchical entry tags (issues #2, #3, #11)
@@ -36,5 +44,6 @@ Version 0.2.0 (released 2008-05-19)
  * fix: stale entry form on entry removal (issue #9)
 
 Version 0.1.0 (released 2008-03-24)
+-----------------------------------
 
  * initial release

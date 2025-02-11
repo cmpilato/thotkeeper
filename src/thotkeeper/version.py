@@ -8,8 +8,13 @@
 #
 # Website: https://github.com/cmpilato/thotkeeper
 
+from importlib import metadata
 
-__version__ = "1.0.0-dev"
+
+try:
+    __version__ = metadata.version("thotkeeper")
+except metadata.PackageNotFoundError:
+    __version__ = "9.9.9-dev"
 
 
 def parse_version(version):

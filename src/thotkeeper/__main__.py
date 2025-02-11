@@ -8,5 +8,5 @@
 #
 # Website: https://github.com/cmpilato/thotkeeper
 
-from . import main
+from thotkeeper import main
 main()

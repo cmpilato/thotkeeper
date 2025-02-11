@@ -12,7 +12,7 @@
 
 import sys
 from argparse import ArgumentParser
-from .version import __version__
+from thotkeeper.version import __version__
 
 
 def main():
@@ -40,7 +40,7 @@ def main():
 
     # Checking for new versions of ThotKeeper?  We can manage that.
     if args.update_check:
-        from .utils import (get_update_message, update_check)
+        from thotkeeper.utils import (get_update_message, update_check)
         try:
             print(get_update_message(*update_check()))
         except Exception as e:
@@ -50,7 +50,7 @@ def main():
         return
 
     # If we get here, it's time to fire up the GUI application!
-    from .app import ThotKeeper
+    from thotkeeper.app import ThotKeeper
     tk = ThotKeeper(args.file)
     tk.MainLoop()
     tk.OnExit()

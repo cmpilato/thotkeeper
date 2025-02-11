@@ -10,11 +10,10 @@
 
 import requests
 from requests.exceptions import HTTPError
-from .version import (__version__, parse_version)
+from thotkeeper.version import (__version__, parse_version)
 
 
-LATEST_VERSION_URL = ('https://raw.githubusercontent.com/cmpilato/thotkeeper/'
-                      'refs/heads/main/www/latest-version.json')
+LATEST_VERSION_URL = ('http://thotkeeper.org/latest-version.json')
 
 
 def update_check(update_url=LATEST_VERSION_URL):

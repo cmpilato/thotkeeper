@@ -1,1 +1,2 @@
-include README.md INSTALL.md CHANGES LICENSE icons/*
+include src/thotkeeper/icons/*
+include src/thotkeeper/resources.xrc
